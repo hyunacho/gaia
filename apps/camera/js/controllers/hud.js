@@ -8,12 +8,20 @@ define(function(require) {
 
   var hud = new HudView();
 
+
   hud.on('flashToggle', onFlashToggle);
   hud.on('cameraToggle', onCameraToggle);
-  broadcast.on('cameraLoaded', onCameraLoaded);
+  broadcast.on('cameraConfigured', onCameraConfigured);
+  broadcast.on('cameraToggleStart', hud.disableButtons.bind(hud));
+  broadcast.on('cameraToggleEnd', hud.enableButtons.bind(hud));
 
-  function onCameraLoaded() {
-    hud.setFlashMode(camera.getFlashMode());
+
+  function onCameraConfigured() {
+    var hasFrontCamera = camera.hasFrontCamera();
+    var flashMode = camera.getFlashMode();
+
+    hud.showCameraToggleButton(hasFrontCamera);
+    hud.setFlashMode(flashMode);
   }
 
   function onFlashToggle() {

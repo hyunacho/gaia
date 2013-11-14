@@ -15,6 +15,7 @@ define(function(require) {
    */
   var View = function(el){
     this.el = el || document.createElement(this.tag);
+    this.el.className += this.className || '';
     this.els = {};
 
     // Initialize our 'faux' constructor
