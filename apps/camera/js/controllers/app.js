@@ -9,6 +9,7 @@ define(function(require) {
   var CameraSettings = require('models/settings');
   var ViewfinderView = require('views/viewfinder');
   var broadcast = require('broadcast');
+  var lockscreen = require('lockscreen');
   var find = require('utils/find');
   var DCF = require('dcf');
   var camera = window.Camera;
@@ -33,15 +34,19 @@ define(function(require) {
       camera.setCaptureMode(CAMERA_MODE_TYPE.CAMERA);
     }
 
+    // Temporary Globals
     window.CameraState = CameraState;
     window.CameraSettings = CameraSettings;
     window.ViewfinderView = new ViewfinderView(find('#viewfinder'));
-
     window.DCFApi = DCF;
 
     camera.loadCameraPreview(CameraState.get('cameraNumber'), function() {
       PerformanceTestingHelper.dispatch('camera-preview-loaded');
       camera.checkStorageSpace();
+
+      // Screen
+      lockscreen.disableTimeout();
+
       broadcast.emit('cameraLoaded');
     });
 
@@ -83,6 +88,18 @@ define(function(require) {
       ViewfinderView.setPreviewStream(null);
     });
 
+    // The screen wakelock should be on
+    // at all times except when the
+    // filmstrip preview is shown.
+    broadcast.on('filmstripItemPreview', function() {
+      lockscreen.enableTimeout();
+    });
+
+    // When the filmstrip preview is hidden
+    // we can enable the  again.
+    broadcast.on('filmstripPreviewHide', function() {
+      lockscreen.disableTimeout();
+    });
   };
 
   AppController.prototype = evt.mix({
