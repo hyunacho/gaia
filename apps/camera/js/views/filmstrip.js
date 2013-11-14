@@ -127,33 +127,35 @@ define(function(require) {
 
   function previewItem(index) {
     // Don't redisplay the item if it is already displayed
-    if (currentItemIndex === index)
+    if (currentItemIndex === index) {
       return;
+    }
 
     var item = items[index];
 
     if (item.isImage) {
       frame.displayImage(item.blob, item.width, item.height, item.preview,
                          item.rotation, item.mirrored);
-    }
-    else if (item.isVideo) {
+    } else if (item.isVideo) {
       frame.displayVideo(item.blob, item.poster,
                          item.width, item.height,
                          item.rotation);
     }
 
     preview.classList.remove('offscreen');
-    Camera.releaseScreenWakeLock();
     currentItemIndex = index;
 
     // Highlight the border of the thumbnail we're previewing
     // and clear the highlight on all others
     items.forEach(function(item, itemindex) {
-      if (itemindex === index)
+      if (itemindex === index) {
         item.element.classList.add('previewed');
-      else
+      } else {
         item.element.classList.remove('previewed');
+      }
     });
+
+    broadcast.emit('filmstripItemPreview');
   }
 
   function isPreviewShown() {
@@ -168,11 +170,14 @@ define(function(require) {
     ViewfinderView.el.play();        // Restart the viewfinder
     show(Camera.FILMSTRIP_DURATION); // Fade the filmstrip after a delay
     preview.classList.add('offscreen');
-    Camera.requestScreenWakeLock();
     frame.clear();
-    if (items.length > 0)
+
+    if (items.length > 0) {
       items[currentItemIndex].element.classList.remove('previewed');
+    }
+
     currentItemIndex = null;
+    broadcast.emit('filmstripPreviewHide');
    }
 
   function deleteCurrentItem() {

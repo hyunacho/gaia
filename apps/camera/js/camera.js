@@ -10,7 +10,6 @@ function padLeft(num, length) {
   return r;
 }
 
-var screenLock = null;
 var Camera = window.Camera = {
   _cameras: null,
   _captureMode: null,
@@ -138,13 +137,7 @@ var Camera = window.Camera = {
     }
 
     this.enableButtons();
-
-    // Dont let the phone go to sleep while the camera is
-    // active, user must manually close it
-    this.requestScreenWakeLock();
-
     this.setToggleCameraStyle();
-
 
     this.overlayCloseButton
       .addEventListener('click', this.cancelPick.bind(this));
@@ -237,18 +230,6 @@ var Camera = window.Camera = {
     }
   },
 
-  releaseScreenWakeLock: function() {
-    if (screenLock && Filmstrip.isPreviewShown()) {
-      screenLock.unlock();
-      screenLock = null;
-    }
-  },
-
-  requestScreenWakeLock: function() {
-    if (!screenLock && !Filmstrip.isPreviewShown()) {
-      screenLock = navigator.requestWakeLock('screen');
-    }
-  },
 
   enableButtons: function camera_enableButtons() {
     CameraState.enableButtons();
@@ -801,11 +782,11 @@ var Camera = window.Camera = {
   startPreview: function camera_startPreview() {
     var cameraNumber = CameraState.get('cameraNumber');
 
-    this.requestScreenWakeLock();
     ViewfinderView.startPreview();
     this.loadCameraPreview(cameraNumber, this.previewEnabled.bind(this));
 
     CameraState.set('previewActive', true);
+    broadcast.emit('previewStart');
   },
 
   previewEnabled: function() {
@@ -817,12 +798,13 @@ var Camera = window.Camera = {
 
   stopPreview: function camera_stopPreview() {
     try {
-      this.releaseScreenWakeLock();
 
       var recording = CameraState.get('recording');
+
       if (recording) {
         this.stopRecording();
       }
+
       this.hideFocusRing();
       this.disableButtons();
       ViewfinderView.stopPreview();
@@ -835,6 +817,8 @@ var Camera = window.Camera = {
     } finally {
       this.release();
     }
+
+    broadcast.emit('previewStop');
   },
 
   resumePreview: function camera_resumePreview() {
