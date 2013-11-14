@@ -100,18 +100,6 @@ var Camera = window.Camera = {
     return document.getElementById('focus-ring');
   },
 
-  get toggleButton() {
-    return document.getElementById('toggle-camera');
-  },
-
-  get toggleFlashBtn() {
-    return document.getElementById('toggle-flash');
-  },
-
-  get flashName() {
-    return document.querySelector('.js-flash-name');
-  },
-
   get cancelPickButton() {
     return document.getElementById('cancel-pick');
   },
@@ -137,7 +125,6 @@ var Camera = window.Camera = {
     }
 
     this.enableButtons();
-    this.setToggleCameraStyle();
 
     this.overlayCloseButton
       .addEventListener('click', this.cancelPick.bind(this));
@@ -233,14 +220,10 @@ var Camera = window.Camera = {
 
   enableButtons: function camera_enableButtons() {
     CameraState.enableButtons();
-
-    this.toggleFlashBtn.removeAttribute('disabled');
   },
 
   disableButtons: function camera_disableButtons() {
     CameraState.disableButtons();
-
-    this.toggleFlashBtn.setAttribute('disabled', 'disabled');
   },
 
   cancelPick: function camera_cancelPick() {
@@ -295,33 +278,18 @@ var Camera = window.Camera = {
 
     this.updateFlashUI();
 
-    // Disable the buttons so
-    // the user can't use them
-    // while we're switching.
-    // Then add the state class
-    // to the body to cause the
-    // viewfinder to fade out.
-    this.disableButtons();
-
     bodyClasses.add(stateClass);
     setTimeout(onFadeFinish, fadeTime);
 
     function onFadeFinish() {
       self.loadCameraPreview(cameraNumber, function() {
-        self.enableButtons();
         bodyClasses.remove(stateClass);
+        broadcast.emit('cameraToggleEnd');
       });
     }
 
-    this.setToggleCameraStyle();
-
     CameraState.set('cameraNumber', cameraNumber);
-  },
-
-  setToggleCameraStyle: function camera_setToggleCameraStyle() {
-    var cameraNumber = CameraState.get('cameraNumber');
-    var modeName = cameraNumber === 0 ? 'back' : 'front';
-    this.toggleButton.setAttribute('data-mode', modeName);
+    broadcast.emit('cameraToggleStart');
   },
 
   updateFlashUI: function camera_updateFlashUI() {
@@ -329,9 +297,8 @@ var Camera = window.Camera = {
     var cameraNumber = CameraState.get('cameraNumber');
     if (flash.supported[cameraNumber]) {
       this.setFlashMode();
-      this.toggleFlashBtn.classList.remove('hidden');
     } else {
-      this.toggleFlashBtn.classList.add('hidden');
+
       // alsways set flash mode as off while it is not supported.
       // It may be very useful at the case of video.
       this._cameraObj.flashMode = flash.modes[0];
@@ -735,12 +702,11 @@ var Camera = window.Camera = {
     }
   },
 
+  hasFrontCamera: function() {
+    return this._cameras.length > 1;
+  },
+
   enableCameraFeatures: function camera_enableCameraFeatures(capabilities) {
-    if (this._cameras.length > 1) {
-      this.toggleButton.classList.remove('hidden');
-    } else {
-      this.toggleButton.classList.add('hidden');
-    }
 
     // For checking flash support
     function isSubset(subset, set) {
@@ -763,8 +729,6 @@ var Camera = window.Camera = {
       flash.supported[cameraNumber] = isSubset(flash.modes, flashModes);
 
       this.updateFlashUI();
-    } else {
-      this.toggleFlashBtn.classList.add('hidden');
     }
 
     var focusModes = capabilities.focusModes;
@@ -777,6 +741,8 @@ var Camera = window.Camera = {
       support[FOCUS_MODE_TYPE.CONTINUOUS_VIDEO] =
         focusModes.indexOf(FOCUS_MODE_TYPE.CONTINUOUS_VIDEO) !== -1;
     }
+
+    broadcast.emit('cameraConfigured');
   },
 
   startPreview: function camera_startPreview() {

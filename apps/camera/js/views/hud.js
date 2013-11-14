@@ -8,6 +8,7 @@ define(function(require) {
   var find = require('utils/find');
 
   return View.extend({
+    className: 'hud',
     initialize: function() {
       this.el.innerHTML = this.render();
 
@@ -22,6 +23,7 @@ define(function(require) {
     },
 
     setFlashMode: function(mode) {
+      mode = mode || 'none';
       this.els.flash.setAttribute('data-mode', mode);
       this.els.flashModeName.textContent = mode;
     },
@@ -44,13 +46,25 @@ define(function(require) {
       this.emit('cameraToggle');
     },
 
+    disableButtons: function() {
+      this.el.classList.add('buttons-disabled');
+    },
+
+    enableButtons: function() {
+      this.el.classList.remove('buttons-disabled');
+    },
+
+    showCameraToggleButton: function(hasFrontCamera) {
+      this.el.classList.toggle('has-front-camera', hasFrontCamera);
+    },
+
     render: function() {
-      return '<div id="hud" class="hud">' +
-        '<a id="toggle-flash" class="toggle-flash rotates hidden js-toggle-flash">' +
-          '<div class="flash-text">Flash: <span class="flash-name js-flash-mode-name"></span></div>' +
-        '</a>' +
-        '<a id="toggle-camera" class="toggle-camera rotates hidden js-toggle-camera"></a>' +
-      '</div>';
+      return '<a class="toggle-flash rotates js-toggle-flash">' +
+        '<div class="flash-text">' +
+          'Flash: <span class="flash-name js-flash-mode-name"></span>' +
+        '</div>' +
+      '</a>' +
+      '<a class="toggle-camera rotates js-toggle-camera"></a>';
     }
   });
 });
