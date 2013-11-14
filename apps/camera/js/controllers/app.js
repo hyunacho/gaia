@@ -34,10 +34,12 @@ define(function(require) {
       camera.setCaptureMode(CAMERA_MODE_TYPE.CAMERA);
     }
 
+    var viewFinderView = new ViewfinderView(find('#viewfinder'));
+
     // Temporary Globals
     window.CameraState = CameraState;
     window.CameraSettings = CameraSettings;
-    window.ViewfinderView = new ViewfinderView(find('#viewfinder'));
+    window.ViewfinderView = viewFinderView;
     window.DCFApi = DCF;
 
     camera.loadCameraPreview(CameraState.get('cameraNumber'), function() {
@@ -63,6 +65,18 @@ define(function(require) {
         filmstrip.hide();
       }
     });
+
+    broadcast.on('loadCameraPreviewStart', onLoadCameraPreviewStart);
+    broadcast.on('loadCameraPreviewDone', onLoadCameraPreviewDone);
+
+    function onLoadCameraPreviewStart() {
+      viewFinderView.setPreviewStream(null);
+    }
+
+    function onLoadCameraPreviewDone(stream) {
+      viewFinderView.setPreviewStream(stream);
+      viewFinderView.startPreview();
+    }
 
     document.addEventListener('visibilitychange', function() {
       if (document.hidden) {

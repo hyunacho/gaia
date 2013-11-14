@@ -6,6 +6,7 @@ define(function(require) {
   var View = require('view');
   var bind = require('utils/bind');
   var Filmstrip = require('views/filmstrip');
+  var broadcast = require('broadcast');
 
   var lastTouchA = null,
       lastTouchB = null,
