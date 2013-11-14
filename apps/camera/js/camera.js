@@ -615,16 +615,13 @@ var Camera = window.Camera = {
   },
 
   loadCameraPreview: function camera_loadCameraPreview(cameraNumber, callback) {
-    ViewfinderView.setPreviewStream(null);
-    this._timeoutId = 0;
     this._cameras = navigator.mozCameras.getListOfCameras();
-    var options = {camera: this._cameras[cameraNumber]};
+    var options = { camera: this._cameras[cameraNumber] };
+    this._timeoutId = 0;
 
     function gotPreviewScreen(stream) {
-      ViewfinderView.setPreviewStream(stream);
-      ViewfinderView.startPreview();
-
       CameraState.set('previewActive', true);
+      broadcast.emit('loadCameraPreviewDone', stream);
 
       if (callback) {
         // Even though we have the stream now, the camera hardware hasn't
@@ -638,7 +635,6 @@ var Camera = window.Camera = {
           }
         };
       }
-
     }
 
     function gotCamera(camera) {
@@ -683,12 +679,14 @@ var Camera = window.Camera = {
 
     // If there is already a camera, we would have to release it first.
     if (this._cameraObj) {
-      this.release(function camera_release_callback() {
+      this.release(function() {
         navigator.mozCameras.getCamera(options, gotCamera.bind(this));
       });
     } else {
       navigator.mozCameras.getCamera(options, gotCamera.bind(this));
     }
+
+    broadcast.emit('loadCameraPreviewStart');
   },
 
   recordingStateChanged: function(msg) {
