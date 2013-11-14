@@ -332,7 +332,6 @@ var Camera = window.Camera = {
       });
     }
 
-    this.loadCameraPreview(cameraNumber, this.enableButtons.bind(this));
     this.setToggleCameraStyle();
 
     CameraState.set('cameraNumber', cameraNumber);
@@ -699,7 +698,8 @@ var Camera = window.Camera = {
       var availableThumbnailSizes = camera.capabilities.thumbnailSizes;
       this._cameraObj = camera;
 
-      var autoFocusSupported = camera.capabilities.focusModes.indexOf('auto') !== -1;
+      var autoFocusSupported =
+        camera.capabilities.focusModes.indexOf('auto') !== -1;
       CameraState.set('autoFocusSupported', autoFocusSupported);
 
       this.pickPictureSize(camera);
