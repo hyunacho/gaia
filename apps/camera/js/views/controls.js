@@ -6,6 +6,7 @@ define(function(require) {
   var View = require('view');
   var bind = require('utils/bind');
   var find = require('utils/find');
+  var camera = require('camera');
 
   var setBooleanAttribute = function(el, attribute, value) {
     if (value) {
@@ -92,15 +93,16 @@ define(function(require) {
         return;
       }
 
-      Camera.capture();
+      camera.capture();
     },
 
     galleryButtonHandler: function controls_galleryButtonHandler(event) {
       // Can't launch the gallery if the lockscreen is locked.
       // The button shouldn't even be visible in this case, but
       // let's be really sure here.
-      if (Camera._secureMode)
+      if (camera._secureMode) {
         return;
+      }
 
       // Launch the gallery with an activity
       var a = new MozActivity({
@@ -112,7 +114,7 @@ define(function(require) {
     },
 
     cancelPickButtonHandler: function controls_cancelPickButtonHandler(event) {
-      Camera.cancelPick();
+      camera.cancelPick();
     }
   });
 });

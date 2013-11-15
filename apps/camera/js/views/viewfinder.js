@@ -1,4 +1,3 @@
-/*global define*/
 
 define(function(require) {
   'use strict';
@@ -6,11 +5,13 @@ define(function(require) {
   var View = require('view');
   var bind = require('utils/bind');
   var Filmstrip = require('views/filmstrip');
+  var CameraState = require('models/state');
+  var Camera = require('camera');
 
-  var lastTouchA = null,
-      lastTouchB = null,
-      isScaling = false,
-      scale = 1.0;
+  var lastTouchA = null;
+  var lastTouchB = null;
+  var isScaling = false;
+  var scale = 1.0;
 
   var getNewTouchA = function(touches) {
     if (!lastTouchA) return null;
@@ -104,11 +105,9 @@ define(function(require) {
 
     setPreviewStream: function(previewStream) {
       this.el.mozSrcObject = previewStream;
-
-      this.el.onplay = function(e) { console.dir(e); };
     },
 
-    setStream: function(stream) {
+    setStream: function(stream, done) {
       this.setPreviewStream(stream);
       this.startPreview();
     },
