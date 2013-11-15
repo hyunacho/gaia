@@ -8,6 +8,7 @@ define(function(require) {
 
   var broadcast = require('broadcast');
   var orientation = require('orientation');
+  var camera = require('camera');
 
   // This array holds all the data we need for image and video previews
   var items = [];
@@ -58,7 +59,7 @@ define(function(require) {
   // In secure mode, we never want the user to see the share button.
   // We also remove the delete button because we currently can't
   // display confirmation dialogs in the system app.
-  if (Camera._secureMode) {
+  if (camera._secureMode) {
     shareButton.parentNode.removeChild(shareButton);
     deleteButton.parentNode.removeChild(deleteButton);
   }
@@ -168,7 +169,7 @@ define(function(require) {
     }
 
     ViewfinderView.el.play();        // Restart the viewfinder
-    show(Camera.FILMSTRIP_DURATION); // Fade the filmstrip after a delay
+    show(camera.FILMSTRIP_DURATION); // Fade the filmstrip after a delay
     preview.classList.add('offscreen');
     frame.clear();
 
@@ -183,7 +184,7 @@ define(function(require) {
   function deleteCurrentItem() {
     // The button should be gone, but hard exit from this function
     // just in case.
-    if (Camera._secureMode)
+    if (camera._secureMode)
       return;
 
     var item = items[currentItemIndex];
@@ -191,12 +192,12 @@ define(function(require) {
 
     if (item.isImage) {
       msg = navigator.mozL10n.get('delete-photo?');
-      storage = Camera._pictureStorage;
+      storage = camera._pictureStorage;
       filename = item.filename;
     }
     else {
       msg = navigator.mozL10n.get('delete-video?');
-      storage = Camera._videoStorage;
+      storage = camera._videoStorage;
       filename = item.filename;
     }
 
@@ -211,7 +212,7 @@ define(function(require) {
       // If this is a video file, delete its poster image as well
       if (item.isVideo) {
         var poster = filename.replace('.3gp', '.jpg');
-        var pictureStorage = Camera._pictureStorage;
+        var pictureStorage = camera._pictureStorage;
 
         pictureStorage.delete(poster).onerror = function(e) {
           console.warn('Failed to delete poster image', poster,
@@ -224,8 +225,10 @@ define(function(require) {
   }
 
   function shareCurrentItem() {
-    if (Camera._secureMode)
+    if (camera._secureMode) {
       return;
+    }
+
     var item = items[currentItemIndex];
     var type = item.isImage ? 'image/*' : 'video/*';
     var nameonly = item.filename.substring(item.filename.lastIndexOf('/') + 1);

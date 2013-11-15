@@ -5,7 +5,7 @@ define(function(require) {
   'use strict';
 
   var CameraState = require('models/state');
-  var camera = window.Camera;
+  var camera = require('camera');
 
   return function(controls, viewfinder) {
 

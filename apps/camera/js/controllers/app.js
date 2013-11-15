@@ -14,7 +14,7 @@ define(function(require) {
   var lockscreen = require('lockscreen');
   var find = require('utils/find');
   var DCF = require('dcf');
-  var camera = window.Camera;
+  var camera = require('camera');
 
   var controllers = {
     hud: require('controllers/hud'),
@@ -42,22 +42,12 @@ define(function(require) {
      */
 
     // Temporary Globals
-    window.CameraState = CameraState;
+    //window.CameraState = CameraState;
     window.CameraSettings = CameraSettings;
     window.ViewfinderView = viewfinder;
     window.DCFApi = DCF;
 
     PerformanceTestingHelper.dispatch('initialising-camera-preview');
-
-    // We dont want to initialise until we know what type of activity
-    // we are handling
-    var hasMessage = navigator.mozHasPendingMessage('activity');
-    var onActivity = camera.handleActivity.bind(camera);
-    navigator.mozSetMessageHandler('activity', onActivity);
-
-    if (hasMessage) {
-      return;
-    }
 
     // The activity may have defined a captureMode, otherwise
     // be default we use the camera

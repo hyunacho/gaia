@@ -3,7 +3,7 @@ define(function(require) {
   'use strict';
 
   var broadcast = require('broadcast');
-  var camera = window.Camera;
+  var camera = require('camera');
 
   return function(hud, viewfinder) {
 
