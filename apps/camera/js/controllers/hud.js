@@ -2,36 +2,39 @@
 define(function(require) {
   'use strict';
 
-  var HudView = require('views/hud');
   var broadcast = require('broadcast');
   var camera = window.Camera;
 
-  var hud = new HudView();
+  return function(hud, viewfinder) {
 
+    // Event wiring
+    hud.on('flashToggle', onFlashToggle);
+    hud.on('cameraToggle', onCameraToggle);
+    broadcast.on('cameraConfigured', onCameraConfigured);
+    broadcast.on('cameraToggleStart', hud.disableButtons.bind(hud));
+    broadcast.on('cameraToggleEnd', hud.enableButtons.bind(hud));
 
-  hud.on('flashToggle', onFlashToggle);
-  hud.on('cameraToggle', onCameraToggle);
-  broadcast.on('cameraConfigured', onCameraConfigured);
-  broadcast.on('cameraToggleStart', hud.disableButtons.bind(hud));
-  broadcast.on('cameraToggleEnd', hud.enableButtons.bind(hud));
+    function onCameraConfigured() {
+      var hasFrontCamera = camera.hasFrontCamera();
+      var flashMode = camera.getFlashModeName();
 
+      hud.showCameraToggleButton(hasFrontCamera);
+      hud.setFlashMode(flashMode);
+      console.log('onCameraConfigured', flashMode);
+    }
 
-  function onCameraConfigured() {
-    var hasFrontCamera = camera.hasFrontCamera();
-    var flashMode = camera.getFlashMode();
+    function onFlashToggle() {
+      var mode = camera.toggleFlash();
+      hud.setFlashMode(mode);
+    }
 
-    hud.showCameraToggleButton(hasFrontCamera);
-    hud.setFlashMode(flashMode);
-  }
-
-  function onFlashToggle() {
-    var mode = camera.toggleFlash();
-    hud.setFlashMode(mode);
-  }
-
-  function onCameraToggle() {
-    camera.toggleCamera();
-  }
-
-  document.body.appendChild(hud.el);
+    function onCameraToggle() {
+      viewfinder.fadeOut(function() {
+        camera.toggleCamera(function(stream) {
+          viewfinder.setStream(stream);
+          viewfinder.fadeIn();
+        });
+      });
+    }
+  };
 });

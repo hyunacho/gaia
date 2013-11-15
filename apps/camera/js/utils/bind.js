@@ -10,7 +10,8 @@ define(function(require) {
    * @param  {Function} fn
    */
   var exports = function(el, name, fn, context) {
-    el.addEventListener(name, fn.bind(context));
+    if (context) fn = fn.bind(context);
+    el.addEventListener(name, fn);
   };
 
   /**

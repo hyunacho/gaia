@@ -10,7 +10,7 @@ function padLeft(num, length) {
   return r;
 }
 
-var Camera = window.Camera = {
+var Camera = {
   _cameras: null,
   _captureMode: null,
 
@@ -47,18 +47,16 @@ var Camera = window.Camera = {
 
   _flashState: {
     camera: {
-      defaultMode: 1,
+      defaultMode: 1, // default flash mode is 'auto'
       supported: [], // delay the array initialization to enableCameraFeatures.
       modes: ['off', 'auto', 'on'],
-      currentMode: [] // default flash mode is 'auto'
-                      // delay the array initialization when needed.
+      currentMode: [] // delay the array initialization when needed
     },
     video: {
-      defaultMode: 0,
+      defaultMode: 0, // default flash mode is 'off'
       supported: [], // delay the array initialization to enableCameraFeatures.
       modes: ['off', 'torch'],
-      currentMode: [] // default flash mode is 'off'
-                      // delay the array initialization when needed.
+      currentMode: [] // delay the array initialization when needed.
     }
   },
 
@@ -116,7 +114,8 @@ var Camera = window.Camera = {
     return document.getElementById('overlay-menu-storage');
   },
 
-  delayedInit: function camera_delayedInit() {
+  delayedInit: function() {
+
     if (!this._pendingPick) {
       CameraState.set({
         modeButtonHidden: false,
@@ -125,6 +124,7 @@ var Camera = window.Camera = {
     }
 
     this.enableButtons();
+    this.checkStorageSpace();
 
     this.overlayCloseButton
       .addEventListener('click', this.cancelPick.bind(this));
@@ -147,7 +147,6 @@ var Camera = window.Camera = {
     }
 
     this._storageState = STORAGE_STATE_TYPE.INIT;
-
     this._pictureStorage = navigator.getDeviceStorage('pictures');
     this._videoStorage = navigator.getDeviceStorage('videos'),
 
@@ -162,7 +161,9 @@ var Camera = window.Camera = {
     PerformanceTestingHelper.dispatch('startup-path-done');
   },
 
-  handleActivity: function camera_handleActivity(activity) {
+  handleActivity: function(activity) {
+    console.log('handleActivity');
+
     // default to allow both photos and videos
     var types = activity.source.data.type || ['image/*', 'video/*'];
     var mode = CAMERA_MODE_TYPE.CAMERA;
@@ -210,13 +211,8 @@ var Camera = window.Camera = {
     if (!CameraState.get('initialized')) {
       this.setCaptureMode(mode);
       this.init();
-    } else if (this._captureMode !== mode) {
-      // I dont think it is currently possible to get a pick activity
-      // with an initialized camera, but it may be in the future
-      this.changeMode(mode);
     }
   },
-
 
   enableButtons: function camera_enableButtons() {
     CameraState.enableButtons();
@@ -233,17 +229,15 @@ var Camera = window.Camera = {
     this._pendingPick = null;
   },
 
-  changeMode: function(mode) {
+  changeMode: function(mode, done) {
+    done = done || function(){};
+
     this.disableButtons();
     this.setCaptureMode(mode);
-    this.updateFlashUI();
+    this.setFlashMode();
     this.enableCameraFeatures(this._cameraObj.capabilities);
     this.setFocusMode();
 
-    function gotPreviewStream(stream) {
-      ViewfinderView.setPreviewStream(stream);
-      ViewfinderView.startPreview();
-    }
     Camera._cameraObj.onPreviewStateChange = function(state) {
       // We disabled the buttons above. Now we wait for the preview
       // stream to actually start up before we enable them again. If we
@@ -257,55 +251,22 @@ var Camera = window.Camera = {
       }
     };
     if (this._captureMode === CAMERA_MODE_TYPE.CAMERA) {
-      this._cameraObj.getPreviewStream(this._previewConfig,
-                                       gotPreviewStream.bind(this));
+      this._cameraObj.getPreviewStream(
+        this._previewConfig, done);
     } else {
       this._videoProfile.rotation = window.orientation.get();
-      this._cameraObj.getPreviewStreamVideoMode(this._videoProfile,
-                                                gotPreviewStream.bind(this));
+      this._cameraObj.getPreviewStreamVideoMode(
+        this._videoProfile, done);
     }
   },
 
-  toggleCamera: function camera_toggleCamera() {
-    var stateClass = 'is-toggling-camera';
-    var bodyClasses = document.body.classList;
-    var fadeTime = 800;
-    var self = this;
-
-    // turn off flash light
-    // before switch to front camera
+  toggleCamera: function(done) {
     var cameraNumber = 1 - CameraState.get('cameraNumber');
-
-    this.updateFlashUI();
-
-    bodyClasses.add(stateClass);
-    setTimeout(onFadeFinish, fadeTime);
-
-    function onFadeFinish() {
-      self.loadCameraPreview(cameraNumber, function() {
-        bodyClasses.remove(stateClass);
-        broadcast.emit('cameraToggleEnd');
-      });
-    }
-
+    this.loadCameraPreview(cameraNumber, done);
     CameraState.set('cameraNumber', cameraNumber);
-    broadcast.emit('cameraToggleStart');
   },
 
-  updateFlashUI: function camera_updateFlashUI() {
-    var flash = this._flashState[this._captureMode];
-    var cameraNumber = CameraState.get('cameraNumber');
-    if (flash.supported[cameraNumber]) {
-      this.setFlashMode();
-    } else {
-
-      // alsways set flash mode as off while it is not supported.
-      // It may be very useful at the case of video.
-      this._cameraObj.flashMode = flash.modes[0];
-    }
-  },
-
-  turnOffFlash: function camera_turnOffFlash() {
+  turnOffFlash: function() {
     var flash = this._flashState[this._captureMode];
     var cameraNumber = CameraState.get('cameraNumber');
     flash.currentMode[cameraNumber] = 0;
@@ -322,15 +283,20 @@ var Camera = window.Camera = {
     return this.setFlashMode();
   },
 
-  getFlashMode: function() {
+  getFlashModeName: function() {
     var flash = this._flashState[this._captureMode];
     var cameraNumber = CameraState.get('cameraNumber');
-    return flash.modes[flash.currentMode[cameraNumber]];
+    var flashMode = cameraNumber !== 1
+      ? flash.currentMode[cameraNumber]
+      : null;
+
+    return flash.modes[flashMode];
   },
 
-  setFlashMode: function camera_setFlashMode() {
+  setFlashMode: function() {
     var flash = this._flashState[this._captureMode];
     var cameraNumber = CameraState.get('cameraNumber');
+
     if ((typeof flash.currentMode[cameraNumber]) === 'undefined') {
       flash.currentMode[cameraNumber] = flash.defaultMode;
     }
@@ -593,7 +559,7 @@ var Camera = window.Camera = {
     };
   },
 
-  formatTimer: function camera_formatTimer(time) {
+  formatTimer: function(time) {
     var minutes = Math.floor(time / 60);
     var seconds = Math.round(time % 60);
     if (minutes < 60) {
@@ -606,7 +572,7 @@ var Camera = window.Camera = {
     return '';
   },
 
-  setCaptureMode: function camera_setCaptureMode(mode) {
+  setCaptureMode: function(mode) {
     if (this._captureMode) {
       document.body.classList.remove(this._captureMode);
     }
@@ -614,79 +580,104 @@ var Camera = window.Camera = {
     document.body.classList.add(mode);
   },
 
-  loadCameraPreview: function camera_loadCameraPreview(cameraNumber, callback) {
+  loadCameraPreview: function(cameraNumber, callback) {
     this._cameras = navigator.mozCameras.getListOfCameras();
     var options = { camera: this._cameras[cameraNumber] };
     this._timeoutId = 0;
 
     function gotPreviewScreen(stream) {
       CameraState.set('previewActive', true);
-      broadcast.emit('loadCameraPreviewDone', stream);
 
       if (callback) {
+        callback(stream);
+      }
+
+      // This is commented out because
+      // `onPreviewStateChange` was not firing.
+      // Need more info on this...
+
+      //if (callback) {
         // Even though we have the stream now, the camera hardware hasn't
         // started displaying it yet. We need to wait until the preview
         // has actually started displaying before calling the callback.
-        // See Bug 890427.
-        Camera._cameraObj.onPreviewStateChange = function(state) {
-          if (state === 'started') {
-            Camera._cameraObj.onPreviewStateChange = null;
-            callback();
-          }
-        };
-      }
+        // Ssee Bug 890427.
+        // Camera._cameraObj.onPreviewStateChange = function(state) {
+        //   console.log('onPreviewStateChange', callback);
+        //   if (state === 'started') {
+        //     Camera._cameraObj.onPreviewStateChange = null;
+        //     //callback(stream);
+        //   }
+        // };
+      //}
     }
 
     function gotCamera(camera) {
-      var thumbnailSize;
       var availableThumbnailSizes = camera.capabilities.thumbnailSizes;
-      this._cameraObj = camera;
+      var focusModes = camera.capabilities.focusModes;
+      var autoFocusSupported = !!~focusModes.indexOf('auto');
+      var thumbnailSize;
 
-      var autoFocusSupported =
-        camera.capabilities.focusModes.indexOf('auto') !== -1;
+      // Store the Gecko
+      // camera interface
+      Camera._cameraObj = camera;
+
       CameraState.set('autoFocusSupported', autoFocusSupported);
 
-      this.pickPictureSize(camera);
-      thumbnailSize = this.selectThumbnailSize(availableThumbnailSizes,
-                                               this._pictureSize);
+      Camera.pickPictureSize(camera);
+
+      thumbnailSize = Camera.selectThumbnailSize(
+        availableThumbnailSizes,
+        Camera._pictureSize);
+
       if (thumbnailSize) {
         camera.thumbnailSize = thumbnailSize;
       }
 
-      this.getPreferredSizes((function() {
-        this._videoProfile =
-          this.pickVideoProfile(camera.capabilities.recorderProfiles);
-          if (this._captureMode === CAMERA_MODE_TYPE.VIDEO) {
-            this._videoProfile.rotation = window.orientation.get();
-            this._cameraObj.getPreviewStreamVideoMode(
-              this._videoProfile, gotPreviewScreen.bind(this));
-          }
-      }).bind(this));
-      ViewfinderView.setPreviewSize(camera);
-      this.enableCameraFeatures(camera.capabilities);
-      this.setFocusMode();
+      Camera.getPreferredSizes(function() {
+        var recorderProfiles = camera.capabilities.recorderProfiles;
+        Camera._videoProfile = Camera.pickVideoProfile(recorderProfiles);
 
-      camera.onShutter = (function() {
-        // play shutter sound.
+        if (Camera._captureMode === CAMERA_MODE_TYPE.VIDEO) {
+          Camera._videoProfile.rotation = window.orientation.get();
+
+          Camera._cameraObj.getPreviewStreamVideoMode(
+            Camera._videoProfile,
+            gotPreviewScreen.bind(this));
+        }
+      });
+
+      Camera.enableCameraFeatures(camera.capabilities);
+      Camera.setFocusMode();
+
+      // This allows viewfinder to update
+      // the size of the video element.
+      broadcast.emit('cameraChange', camera);
+
+      camera.onShutter = function() {
         SoundEffect.playCameraShutterSound();
-      }).bind(this);
-      camera.onRecorderStateChange = this.recordingStateChanged.bind(this);
-      if (this._captureMode === CAMERA_MODE_TYPE.CAMERA) {
-        camera.getPreviewStream(this._previewConfig,
-                                gotPreviewScreen.bind(this));
+      };
+
+      camera.onRecorderStateChange = Camera.recordingStateChanged.bind(Camera);
+
+      if (Camera._captureMode === CAMERA_MODE_TYPE.CAMERA) {
+        camera.getPreviewStream(
+          Camera._previewConfig,
+          gotPreviewScreen.bind(Camera));
       }
     }
 
-    // If there is already a camera, we would have to release it first.
+    // If there is already a
+    // camera, we would have
+    // to release it first.
     if (this._cameraObj) {
-      this.release(function() {
-        navigator.mozCameras.getCamera(options, gotCamera.bind(this));
-      });
+      this.release(getCamera);
     } else {
-      navigator.mozCameras.getCamera(options, gotCamera.bind(this));
+      getCamera();
     }
 
-    broadcast.emit('loadCameraPreviewStart');
+    function getCamera() {
+      navigator.mozCameras.getCamera(options, gotCamera);
+    }
   },
 
   recordingStateChanged: function(msg) {
@@ -704,20 +695,25 @@ var Camera = window.Camera = {
     return this._cameras.length > 1;
   },
 
-  enableCameraFeatures: function camera_enableCameraFeatures(capabilities) {
+  enableCameraFeatures: function(capabilities) {
 
     // For checking flash support
     function isSubset(subset, set) {
+
       for (var i = 0; i < subset.length; i++) {
-        if (set.indexOf(subset[i]) == -1)
+        if (set.indexOf(subset[i]) == -1) {
           return false;
+        }
       }
+
       return true;
     }
 
     var flashModes = capabilities.flashModes;
     var cameraNumber = CameraState.get('cameraNumber');
+
     if (flashModes) {
+
       // Check camera flash support
       var flash = this._flashState[CAMERA_MODE_TYPE.CAMERA];
       flash.supported[cameraNumber] = isSubset(flash.modes, flashModes);
@@ -726,7 +722,7 @@ var Camera = window.Camera = {
       flash = this._flashState[CAMERA_MODE_TYPE.VIDEO];
       flash.supported[cameraNumber] = isSubset(flash.modes, flashModes);
 
-      this.updateFlashUI();
+      this.setFlashMode();
     }
 
     var focusModes = capabilities.focusModes;
@@ -743,49 +739,16 @@ var Camera = window.Camera = {
     broadcast.emit('cameraConfigured');
   },
 
-  startPreview: function camera_startPreview() {
+  startPreview: function() {
     var cameraNumber = CameraState.get('cameraNumber');
-
-    ViewfinderView.startPreview();
     this.loadCameraPreview(cameraNumber, this.previewEnabled.bind(this));
-
-    CameraState.set('previewActive', true);
-    broadcast.emit('previewStart');
   },
 
   previewEnabled: function() {
     this.enableButtons();
-    if (!this._pendingPick) {
-      setTimeout(this.initPositionUpdate.bind(this), PROMPT_DELAY);
-    }
   },
 
-  stopPreview: function camera_stopPreview() {
-    try {
-
-      var recording = CameraState.get('recording');
-
-      if (recording) {
-        this.stopRecording();
-      }
-
-      this.hideFocusRing();
-      this.disableButtons();
-      ViewfinderView.stopPreview();
-
-      CameraState.set('previewActive', false);
-
-      ViewfinderView.setPreviewStream(null);
-    } catch (ex) {
-      console.error('error while stopping preview', ex.message);
-    } finally {
-      this.release();
-    }
-
-    broadcast.emit('previewStop');
-  },
-
-  resumePreview: function camera_resumePreview() {
+  resumePreview: function() {
     this._cameraObj.resumePreview();
 
     CameraState.set('previewActive', true);
@@ -798,7 +761,7 @@ var Camera = window.Camera = {
           navigator.mozL10n.get('error-saving-text'));
   },
 
-  takePictureSuccess: function camera_takePictureSuccess(blob) {
+  takePictureSuccess: function(blob) {
     this._config.position = null;
 
     CameraState.set('manuallyFocused', false);
@@ -808,9 +771,10 @@ var Camera = window.Camera = {
 
     if (this._pendingPick) {
       // If we're doing a Pick, ask the user to confirm the image
-      ConfirmDialog.confirmImage(blob,
-                                 this.selectPressed.bind(this),
-                                 this.retakePressed.bind(this));
+      ConfirmDialog.confirmImage(
+        blob,
+        this.selectPressed.bind(this),
+        this.retakePressed.bind(this));
 
       // Just save the blob temporarily until the user presses "Retake" or
       // "Select".
@@ -834,7 +798,7 @@ var Camera = window.Camera = {
     }.bind(this));
   },
 
-  retakePressed: function camera_retakePressed() {
+  retakePressed: function() {
     this._savedMedia = null;
     if (this._captureMode === CAMERA_MODE_TYPE.CAMERA) {
       this.resumePreview();
@@ -843,10 +807,10 @@ var Camera = window.Camera = {
     }
   },
 
-  selectPressed: function camera_selectPressed() {
-    var self = this;
+  selectPressed: function() {
     var media = this._savedMedia;
     this._savedMedia = null;
+
     if (this._captureMode === CAMERA_MODE_TYPE.CAMERA) {
       this._resizeBlobIfNeeded(media.blob, function(resized_blob) {
         this._pendingPick.postResult({
@@ -988,22 +952,12 @@ var Camera = window.Camera = {
     }
   },
 
-  updateOverlay: function camera_updateOverlay() {
+  updateOverlay: function() {
     if (this._storageState === STORAGE_STATE_TYPE.INIT) {
       return false;
     }
 
-    var previewActive = CameraState.get('previewActive');
-
     if (this._storageState === STORAGE_STATE_TYPE.AVAILABLE) {
-      // Preview may have previously been paused if storage
-      // was not available
-      // Don't start the preview when confirm dialog is showing. The choices of
-      // ConfirmDialog call the startPreview or close this activity.
-      if (!previewActive && !document.hidden &&
-          !ConfirmDialog.isShowing()) {
-        this.startPreview();
-      }
       this.showOverlay(null);
       return false;
     }
@@ -1019,9 +973,8 @@ var Camera = window.Camera = {
       this.showOverlay('nospace');
       break;
     }
-    if (previewActive) {
-      this.stopPreview();
-    }
+
+    broadcast.emit('storageUnavailable');
     return true;
   },
 
@@ -1097,40 +1050,44 @@ var Camera = window.Camera = {
   },
 
   selectThumbnailSize: function(thumbnailSizes, pictureSize) {
-    var i;
     var screenWidth = window.innerWidth * window.devicePixelRatio;
     var screenHeight = window.innerHeight * window.devicePixelRatio;
     var pictureAspectRatio = pictureSize.width / pictureSize.height;
     var currentThumbnailSize;
-    var selectedThumbnailSize;
-    var currentThumbnailAspectRatio;
+    var i;
+
     // Coping the array to not modify the original
     var thumbnailSizes = thumbnailSizes.slice(0);
     if (!thumbnailSizes || !pictureSize) {
       return;
     }
+
     var thumbnailSizes = thumbnailSizes.slice(0);
     function imageSizeFillsScreen(pixelsWidth, pixelsHeight) {
       return ((pixelsWidth >= screenWidth || // portrait
                pixelsHeight >= screenHeight) &&
               (pixelsWidth >= screenHeight || // landscape
                pixelsHeight >= screenWidth));
-    };
+    }
+
     // Removes the sizes with the wrong aspect ratio
     thumbnailSizes = thumbnailSizes.filter(function(thumbnailSize) {
       var thumbnailAspectRatio = thumbnailSize.width / thumbnailSize.height;
       return Math.abs(thumbnailAspectRatio - pictureAspectRatio) < 0.05;
     });
+
     if (thumbnailSizes.length === 0) {
       console.error('Error while selecting thumbnail size. ' +
         'There are no thumbnail sizes that match the ratio of ' +
         'the selected picture size: ' + JSON.stringify(pictureSize));
       return;
     }
+
     // Sorting the array from smaller to larger sizes
     thumbnailSizes.sort(function(a, b) {
       return a.width * a.height - b.width * b.height;
     });
+
     for (i = 0; i < thumbnailSizes.length; ++i) {
       currentThumbnailSize = thumbnailSizes[i];
       if (imageSizeFillsScreen(currentThumbnailSize.width,
@@ -1138,6 +1095,7 @@ var Camera = window.Camera = {
         return currentThumbnailSize;
       }
     }
+
     return thumbnailSizes[thumbnailSizes.length - 1];
   },
 

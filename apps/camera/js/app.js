@@ -9,8 +9,6 @@ requirejs.config({ baseUrl: 'js' });
 require(['camera'], function() {
   require([
     'controllers/app',
-    'controllers/hud',
-    'controllers/controls',
     '/shared/js/async_storage.js',
     '/shared/js/blobview.js',
     '/shared/js/media/jpeg_metadata_parser.js',

@@ -9,6 +9,6 @@
   transition: opacity 400ms ease-in-out;
 }
 
-.is-toggling-camera .viewfinder {
+.viewfinder.fade-out {
   opacity: 0;
 }

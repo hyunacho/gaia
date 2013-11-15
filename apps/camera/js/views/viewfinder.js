@@ -6,7 +6,6 @@ define(function(require) {
   var View = require('view');
   var bind = require('utils/bind');
   var Filmstrip = require('views/filmstrip');
-  var broadcast = require('broadcast');
 
   var lastTouchA = null,
       lastTouchB = null,
@@ -105,6 +104,13 @@ define(function(require) {
 
     setPreviewStream: function(previewStream) {
       this.el.mozSrcObject = previewStream;
+
+      this.el.onplay = function(e) { console.dir(e); };
+    },
+
+    setStream: function(stream) {
+      this.setPreviewStream(stream);
+      this.startPreview();
     },
 
     startPreview: function() {
@@ -112,7 +118,25 @@ define(function(require) {
     },
 
     stopPreview: function() {
-      this.el.stop();
+      this.el.pause();
+    },
+
+    fadeOut: function(done) {
+      var fadeTime = 800;
+      this.el.classList.add('fade-out');
+
+      if (done) {
+        setTimeout(done, fadeTime);
+      }
+    },
+
+    fadeIn: function(done) {
+      var fadeTime = 800;
+      this.el.classList.remove('fade-out');
+
+      if (done) {
+        setTimeout(done, fadeTime);
+      }
     },
 
     setPreviewSize: function(camera) {
