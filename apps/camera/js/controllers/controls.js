@@ -1,46 +1,63 @@
+/*jshint laxbreak:true*/
+/*global CAMERA_MODE_TYPE*/
 
 define(function(require) {
   'use strict';
 
-  var cameraState = require('models/state');
-  var ControlsView = require('views/controls');
-  var find = require('utils/find');
+  var CameraState = require('models/state');
+  var camera = window.Camera;
 
-  var controlsView = new ControlsView(find('#controls'));
+  return function(controls, viewfinder) {
 
-  cameraState.on('change:recording', function(e) {
-    controlsView.setRecording(e.value);
-  });
+    controls.on('modeButtonToggle', onModeButtonToggle);
 
-  cameraState.on('change:modeButtonEnabled', function(e) {
-    controlsView.setModeButtonEnabled(e.value);
-  });
+    function onModeButtonToggle() {
+      var currentMode = camera._captureMode;
+      var isCameraMode = currentMode === CAMERA_MODE_TYPE.CAMERA;
+      var newMode = isCameraMode
+        ? CAMERA_MODE_TYPE.VIDEO
+        : CAMERA_MODE_TYPE.CAMERA;
 
-  cameraState.on('change:captureButtonEnabled', function(e) {
-    controlsView.setCaptureButtonEnabled(e.value);
-  });
+      camera.changeMode(newMode, function(stream) {
+        console.log('modeChanged');
+        viewfinder.setStream(stream);
+      });
+    }
 
-  cameraState.on('change:galleryButtonEnabled', function(e) {
-    controlsView.setGalleryButtonEnabled(e.value);
-  });
+    CameraState.on('change:recording', function(e) {
+      controls.setRecording(e.value);
+    });
 
-  cameraState.on('change:cancelPickButtonEnabled', function(e) {
-    controlsView.setCancelPickButtonEnabled(e.value);
-  });
+    CameraState.on('change:modeButtonEnabled', function(e) {
+      controls.setModeButtonEnabled(e.value);
+    });
 
-  cameraState.on('change:modeButtonHidden', function(e) {
-    controlsView.setModeButtonHidden(e.value);
-  });
+    CameraState.on('change:captureButtonEnabled', function(e) {
+      controls.setCaptureButtonEnabled(e.value);
+    });
 
-  cameraState.on('change:captureButtonHidden', function(e) {
-    controlsView.setCaptureButtonHidden(e.value);
-  });
+    CameraState.on('change:galleryButtonEnabled', function(e) {
+      controls.setGalleryButtonEnabled(e.value);
+    });
 
-  cameraState.on('change:galleryButtonHidden', function(e) {
-    controlsView.setGalleryButtonHidden(e.value);
-  });
+    CameraState.on('change:cancelPickButtonEnabled', function(e) {
+      controls.setCancelPickButtonEnabled(e.value);
+    });
 
-  cameraState.on('change:cancelPickButtonHidden', function(evt) {
-    controlsView.setCancelPickButtonHidden(evt.value);
-  });
+    CameraState.on('change:modeButtonHidden', function(e) {
+      controls.setModeButtonHidden(e.value);
+    });
+
+    CameraState.on('change:captureButtonHidden', function(e) {
+      controls.setCaptureButtonHidden(e.value);
+    });
+
+    CameraState.on('change:galleryButtonHidden', function(e) {
+      controls.setGalleryButtonHidden(e.value);
+    });
+
+    CameraState.on('change:cancelPickButtonHidden', function(evt) {
+      controls.setCancelPickButtonHidden(evt.value);
+    });
+  };
 });
