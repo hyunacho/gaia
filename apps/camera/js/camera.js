@@ -576,21 +576,22 @@ define(function(require){
         Camera.enableCameraFeatures(camera.capabilities);
         Camera.setFocusMode();
 
-        // This allows viewfinder to update
-        // the size of the video element.
-        broadcast.emit('cameraChange', camera);
-
         camera.onShutter = function() {
           SoundEffect.playCameraShutterSound();
         };
 
         camera.onRecorderStateChange = Camera.recordingStateChanged.bind(Camera);
 
+        // 'Camera' Mode
         if (Camera._captureMode === CAMERA_MODE_TYPE.CAMERA) {
           camera.getPreviewStream(
             Camera._previewConfig,
             gotPreviewScreen.bind(Camera));
         }
+
+        // This allows viewfinder to update
+        // the size of the video element.
+        Camera.emit('cameraChange', camera);
       }
 
       // If there is already a
