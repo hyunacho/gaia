@@ -117,10 +117,6 @@ define(function(require){
       return document.getElementById('storage-setting-button');
     },
 
-    get videoTimer() {
-      return document.getElementById('video-timer');
-    },
-
     get focusRing() {
       return document.getElementById('focus-ring');
     },
@@ -234,81 +230,34 @@ define(function(require){
     },
 
     capture: function() {
+
+      // If 'camera' mode
       if (Camera._captureMode === CAMERA_MODE_TYPE.CAMERA) {
         Camera.prepareTakePicture();
         return;
       }
 
-      var recording = cameraState.get('recording');
-      if (recording) {
+      // If 'video' mode
+      if (cameraState.get('recording')) {
         this.stopRecording();
-      }
-
-      else {
+      } else {
         this.startRecording();
       }
     },
 
     startRecording: function() {
+      var self = this;
+
       this._sizeLimitAlertActive = false;
-
-      var onerror = function() {
-        handleError('error-recording');
-      };
-      var onsuccess = (function onsuccess() {
-        document.body.classList.add('capturing');
-        // If the duration is too short, there may be no track been record. That
-        // creates corrupted video files. Because media file needs some samples.
-        // To have more information on video track, we wait for 500ms to have
-        // few video and audio samples, see bug 899864.
-        window.setTimeout(function() {
-          cameraState.set('captureButtonEnabled', true);
-        }, MIN_RECORDING_TIME);
-
-        cameraState.set('recording', true);
-
-        this.startRecordingTimer();
-
-        // User closed app while recording was trying to start
-        if (document.hidden) {
-          this.stopRecording();
-        }
-      }).bind(this);
-
-      var handleError = (function handleError(id) {
-        this.enableButtons();
-        alert(navigator.mozL10n.get(id + '-title') + '. ' +
-              navigator.mozL10n.get(id + '-text'));
-      }).bind(this);
-
       this.disableButtons();
 
-      var startRecording = (function startRecording(freeBytes) {
-        if (freeBytes < RECORD_SPACE_MIN) {
-          handleError('nospace');
-          return;
-        }
+      dcf.createDCFFilename(
+        this._videoStorage,
+        'video',
+        onFileNameCreated);
 
-        var config = {
-          rotation: window.orientation.get(),
-          maxFileSizeBytes: freeBytes - RECORD_SPACE_PADDING
-        };
-
-        if (this._pendingPick && this._pendingPick.source.data.maxFileSizeBytes) {
-          var maxFileSizeBytes = this._pendingPick.source.data.maxFileSizeBytes;
-          config.maxFileSizeBytes = Math.min(config.maxFileSizeBytes,
-                                             maxFileSizeBytes);
-        }
-        soundEffect.playRecordingStartSound();
-        this._cameraObj.startRecording(config,
-                                       this._videoStorage, this._videoPath,
-                                       onsuccess, onerror);
-      }).bind(this);
-
-      dcf.createDCFFilename(this._videoStorage,
-                               'video',
-                               (function(path, name) {
-        this._videoPath = path + name;
+      function onFileNameCreated(path, name) {
+        self._videoPath = path + name;
 
         // The CameraControl API will not automatically create directories
         // for the new file if they do not exist, so write a dummy file
@@ -316,45 +265,133 @@ define(function(require){
         // exists before recording starts.
         var dummyblob = new Blob([''], {type: 'video/3gpp'});
         var dummyfilename = path + '.' + name;
-        var req = this._videoStorage.addNamed(dummyblob, dummyfilename);
-        req.onerror = onerror;
-        req.onsuccess = (function fileCreated(e) {
-          // Extract video root directory string
+        var req = self._videoStorage.addNamed(dummyblob, dummyfilename);
+
+        req.onerror = onError;
+        req.onsuccess = function(e) {
+
+          // Extract video
+          // root directory string
           var absolutePath = e.target.result;
           var rootDirLength = absolutePath.length - dummyfilename.length;
-          this._videoRootDir = absolutePath.substring(0, rootDirLength);
+          self._videoRootDir = absolutePath.substring(0, rootDirLength);
 
-          this._videoStorage.delete(absolutePath); // No need to wait for success
-          // Determine the number of bytes available on disk.
-          var spaceReq = this._videoStorage.freeSpace();
-          spaceReq.onerror = onerror;
+          // No need to wait for success
+          self._videoStorage.delete(absolutePath);
+
+          // Determine the number
+          // of bytes available on disk.
+          var spaceReq = self._videoStorage.freeSpace();
+          spaceReq.onerror = onError;
           spaceReq.onsuccess = function() {
             startRecording(spaceReq.result);
           };
-        }).bind(this);
-      }).bind(this));
+        };
+      }
+
+      function onError() {
+        var id = 'error-recording';
+        self.enableButtons();
+        alert(
+          navigator.mozL10n.get(id + '-title') + '. ' +
+          navigator.mozL10n.get(id + '-text'));
+      }
+
+      function onSuccess() {
+        cameraState.set('recording', true);
+        self.startRecordingTimer();
+
+        // User closed app while
+        // recording was trying to start
+        if (document.hidden) {
+          self.stopRecording();
+        }
+
+        // If the duration is too short,
+        // the nno track may have been recorded.
+        // That creates corrupted video files.
+        // Because media file needs some samples.
+        //
+        // To have more information on video track,
+        // we wait for 500ms to have few video and
+        // audio samples, see bug 899864.
+        window.setTimeout(function() {
+          cameraState.set('captureButtonEnabled', true);
+        }, MIN_RECORDING_TIME);
+      }
+
+      function startRecording(freeBytes) {
+        if (freeBytes < RECORD_SPACE_MIN) {
+          handleError('nospace');
+          return;
+        }
+
+        var pickData = self._pendingPick && self._pendingPick.source.data;
+        var maxFileSizeBytes = pickData && pickData.maxFileSizeBytes;
+        var config = {
+          rotation: window.orientation.get(),
+          maxFileSizeBytes: freeBytes - RECORD_SPACE_PADDING
+        };
+
+        // If this camera session was
+        // instantiated by a 'pick' activity,
+        // it may have specified a maximum
+        // file size. If so, use it.
+        if (maxFileSizeBytes) {
+          config.maxFileSizeBytes = Math.min(
+            config.maxFileSizeBytes,
+            maxFileSizeBytes);
+        }
+
+        // Play a sound effect
+        soundEffect.playRecordingStartSound();
+
+        // Finally begin recording
+        self._cameraObj.startRecording(
+          config,
+          self._videoStorage,
+          self._videoPath,
+          onSuccess,
+          onError);
+      }
     },
 
     startRecordingTimer: function() {
+      var updateVideoTimer = this.updateVideoTimer.bind(this);
+
+      // Store a timestamp for when
+      // the video started recording
       this._videoStart = new Date().getTime();
-      this.videoTimer.textContent = this.formatTimer(0);
-      this._videoTimer =
-        window.setInterval(this.updateVideoTimer.bind(this), 1000);
+
+      // Keep a reference to the timer
+      this._videoTimer = setInterval(updateVideoTimer, 1000);
+
+      // Run it once before the
+      // first setInterval fires.
+      updateVideoTimer();
     },
 
     updateVideoTimer: function() {
-      var videoLength =
-        Math.round((new Date().getTime() - this._videoStart) / 1000);
-      this.videoTimer.textContent = this.formatTimer(videoLength);
+      var timestamp = new Date().getTime();
+      var ms = timestamp - this._videoStart;
+      var secs = Math.round(ms / 1000);
+      var formatted = this.formatTimer(secs);
+
+      // Fire an event so that
+      // our views can listen
+      // and visualise the event.
+      this.emit('videoTimeUpdate', formatted);
     },
 
     stopRecording: function() {
       var self = this;
-      this._cameraObj.stopRecording();
-      // play camcorder shutter sound while stop recording.
-      soundEffect.playRecordingEndSound();
 
+      this._cameraObj.stopRecording();
       cameraState.set('recording', false);
+
+      // play camcorder shutter
+      // sound while stop recording.
+      soundEffect.playRecordingEndSound();
 
       // Register a listener for writing completion of current video file
       (function(videoStorage, videofile) {
@@ -399,9 +436,10 @@ define(function(require){
         });
       })(this._videoStorage, this._videoRootDir + this._videoPath);
 
+      // Kill the timer
       window.clearInterval(this._videoTimer);
+
       this.enableButtons();
-      document.body.classList.remove('capturing');
     },
 
     saveVideoPosterImage: function saveVideoPosterImage(filename, callback) {
@@ -441,14 +479,16 @@ define(function(require){
             var videowidth = offscreenVideo.videoWidth;
             var videoheight = offscreenVideo.videoHeight;
 
-            // First, create a full-size unrotated poster image
+            // First, create a full-size
+            // unrotated poster image
             var postercanvas = document.createElement('canvas');
             var postercontext = postercanvas.getContext('2d');
             postercanvas.width = videowidth;
             postercanvas.height = videoheight;
             postercontext.drawImage(offscreenVideo, 0, 0);
 
-            // We're done with the offscreen video element now
+            // We're done with the
+            // offscreen video element now
             URL.revokeObjectURL(url);
             offscreenVideo.removeAttribute('src');
             offscreenVideo.load();
@@ -661,11 +701,7 @@ define(function(require){
 
     startPreview: function() {
       var cameraNumber = cameraState.get('cameraNumber');
-      this.loadCameraPreview(cameraNumber, null, this.previewEnabled.bind(this));
-    },
-
-    previewEnabled: function() {
-      this.enableButtons();
+      this.loadCameraPreview(cameraNumber, null, this.enableButtons.bind(this));
     },
 
     resumePreview: function() {
