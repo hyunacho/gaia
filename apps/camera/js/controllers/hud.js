@@ -30,8 +30,8 @@ define(function(require) {
 
     function onCameraToggle() {
       viewfinder.fadeOut(function() {
-        camera.toggleCamera(function(stream) {
-          viewfinder.setStream(stream);
+        camera.toggleCamera();
+        camera.loadStreamInto(viewfinder.el, function() {
           viewfinder.fadeIn();
         });
       });
