@@ -488,9 +488,6 @@ define(function(require){
     },
 
     setCaptureMode: function(mode) {
-      if (this._captureMode) {
-        document.body.classList.remove(this._captureMode);
-      }
       this._captureMode = mode;
       document.body.classList.add(mode);
     },
