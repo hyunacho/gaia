@@ -4,6 +4,7 @@
 define(function(require){
 
   var cameraState = require('models/state');
+  var soundEffect = require('soundeffect');
   var padLeft = require('utils/padleft');
   var broadcast = require('broadcast');
   var evt = require('libs/evt');
@@ -297,7 +298,7 @@ define(function(require){
           config.maxFileSizeBytes = Math.min(config.maxFileSizeBytes,
                                              maxFileSizeBytes);
         }
-        SoundEffect.playRecordingStartSound();
+        soundEffect.playRecordingStartSound();
         this._cameraObj.startRecording(config,
                                        this._videoStorage, this._videoPath,
                                        onsuccess, onerror);
@@ -350,7 +351,7 @@ define(function(require){
       var self = this;
       this._cameraObj.stopRecording();
       // play camcorder shutter sound while stop recording.
-      SoundEffect.playRecordingEndSound();
+      soundEffect.playRecordingEndSound();
 
       cameraState.set('recording', false);
 
@@ -570,7 +571,7 @@ define(function(require){
         Camera.setFocusMode();
 
         camera.onShutter = function() {
-          SoundEffect.playCameraShutterSound();
+          soundEffect.playCameraShutterSound();
         };
 
         camera.onRecorderStateChange = Camera.recordingStateChanged.bind(Camera);

@@ -4,17 +4,18 @@ define(function(require) {
   'use strict';
 
   var evt = require('libs/evt');
+  var HudView = require('views/hud');
   var cameraState = require('models/state');
   var CameraSettings = require('models/settings');
-  var HudView = require('views/hud');
   var ViewfinderView = require('views/viewfinder');
   var ControlsView = require('views/controls');
   var filmstrip = require('views/filmstrip');
-  var broadcast = require('broadcast');
+  var soundEffect = require('soundeffect');
   var lockscreen = require('lockscreen');
+  var broadcast = require('broadcast');
   var find = require('utils/find');
-  var DCF = require('dcf');
   var camera = require('camera');
+  var DCF = require('dcf');
 
   var controllers = {
     hud: require('controllers/hud'),
@@ -86,7 +87,7 @@ define(function(require) {
         cameraState.set('galleryButtonEnabled', false);
       }
 
-      SoundEffect.init();
+      soundEffect.init();
 
       if ('mozSettings' in navigator) {
         camera.getPreferredSizes();
