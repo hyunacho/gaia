@@ -489,7 +489,39 @@ define(function(require){
 
     setCaptureMode: function(mode) {
       this._captureMode = mode;
-      document.body.classList.add(mode);
+      this.emit('captureModeChange', mode);
+      return mode;
+    },
+
+    /**
+     * Loads a camera stream
+     * into a given video element.
+     *
+     * @param  {Element}   videoEl
+     * @param  {Function} done
+     */
+    loadStreamInto: function(videoEl, done) {
+      var cameraNumber = cameraState.get('cameraNumber');
+
+      this.loadCameraPreview(cameraNumber, function(stream) {
+        videoEl.mozSrcObject = stream;
+
+        // Even though we have the stream now,
+        // the camera hardware hasn't started
+        // displaying it yet.
+        //
+        // We need to wait until the preview
+        // has actually started displaying
+        // before calling the callback.
+        //
+        // Bug 890427.
+        Camera._cameraObj.onPreviewStateChange = function(state) {
+          if (state === 'started') {
+            Camera._cameraObj.onPreviewStateChange = null;
+            done();
+          }
+        };
+      });
     },
 
     loadCameraPreview: function(cameraNumber, callback) {
