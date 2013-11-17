@@ -1,17 +1,10 @@
-/*global broadcast*/
 
 'use strict';
 
-function padLeft(num, length) {
-  var r = String(num);
-  while (r.length < length) {
-    r = '0' + r;
-  }
-  return r;
-}
-
 define(function(require){
+
   var cameraState = require('models/state');
+  var padLeft = require('utils/padleft');
   var broadcast = require('broadcast');
   var evt = require('libs/evt');
 
