@@ -8,6 +8,7 @@ define(function(require) {
 
   var broadcast = require('broadcast');
   var orientation = require('orientation');
+  var cameraState = require('models/state');
   var camera = require('camera');
 
   // This array holds all the data we need for image and video previews
@@ -87,12 +88,15 @@ define(function(require) {
    */
   function show(time) {
     document.body.classList.remove('filmstriphidden');
+
     if (hideTimer) {
       clearTimeout(hideTimer);
       hideTimer = null;
     }
-    if (time)
+
+    if (time) {
       hideTimer = setTimeout(hide, time);
+    }
   }
 
   filmstrip.onclick = function(event) {

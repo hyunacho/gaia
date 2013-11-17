@@ -4,7 +4,7 @@ define(function(require) {
   'use strict';
 
   var evt = require('libs/evt');
-  var CameraState = require('models/state');
+  var cameraState = require('models/state');
   var CameraSettings = require('models/settings');
   var HudView = require('views/hud');
   var ViewfinderView = require('views/viewfinder');
@@ -113,7 +113,7 @@ define(function(require) {
       camera.cancelPositionUpdate();
 
       try {
-        var recording = CameraState.get('recording');
+        var recording = cameraState.get('recording');
         if (recording) {
           camera.stopRecording();
         }
@@ -121,7 +121,7 @@ define(function(require) {
         camera.hideFocusRing();
         camera.disableButtons();
         viewfinder.stopPreview();
-        CameraState.set('previewActive', false);
+        cameraState.set('previewActive', false);
         viewfinder.setPreviewStream(null);
       } catch (ex) {
         console.error('error while stopping preview', ex.message);
