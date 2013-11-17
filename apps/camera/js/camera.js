@@ -8,6 +8,7 @@ define(function(require){
   var padLeft = require('utils/padleft');
   var broadcast = require('broadcast');
   var evt = require('libs/evt');
+  var dcf = require('dcf');
 
   var Camera = evt.mix({
     _cameras: null,
@@ -304,7 +305,7 @@ define(function(require){
                                        onsuccess, onerror);
       }).bind(this);
 
-      DCFApi.createDCFFilename(this._videoStorage,
+      dcf.createDCFFilename(this._videoStorage,
                                'video',
                                (function(path, name) {
         this._videoPath = path + name;
@@ -761,7 +762,7 @@ define(function(require){
     },
 
     _addPictureToStorage: function(blob, callback) {
-      DCFApi.createDCFFilename(this._pictureStorage, 'image',
+      dcf.createDCFFilename(this._pictureStorage, 'image',
                                function(path, name) {
         var addreq = this._pictureStorage.addNamed(blob, path + name);
         addreq.onsuccess = function(e) {
