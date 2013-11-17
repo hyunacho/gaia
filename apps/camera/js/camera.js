@@ -255,7 +255,6 @@ define(function(require){
     },
 
     startRecording: function() {
-      // document.body.classList.add('recording');
       this._sizeLimitAlertActive = false;
 
       var onerror = function() {
@@ -355,7 +354,6 @@ define(function(require){
     },
 
     stopRecording: function() {
-      // document.body.classList.remove('recording');
       var self = this;
       this._cameraObj.stopRecording();
       // play camcorder shutter sound while stop recording.
