@@ -131,6 +131,16 @@ define(function(require) {
     deleteItem(data.path);
   }
 
+  function onRecordingChange(evt) {
+    var recording = evt.value;
+
+    // Hide the filmstrip to prevent the users from entering the
+    // preview mode after Camera starts recording button pressed
+    if (recording && isShown()) {
+      hide();
+    }
+  }
+
   function previewItem(index) {
     // Don't redisplay the item if it is already displayed
     if (currentItemIndex === index) {
