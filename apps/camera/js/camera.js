@@ -379,11 +379,15 @@ define(function(require){
                   video: video,
                   poster: poster
                 };
-                ConfirmDialog.confirmVideo(video, poster,
-                                           data.width, data.height, data.rotation,
-                                           self.selectPressed.bind(self),
-                                           self.retakePressed.bind(self));
 
+                ConfirmDialog.confirmVideo(
+                  video,
+                  poster,
+                  data.width,
+                  data.height,
+                  data.rotation,
+                  self.selectPressed.bind(self),
+                  self.retakePressed.bind(self));
               } else {
 
                 broadcast.emit('newVideo', {
