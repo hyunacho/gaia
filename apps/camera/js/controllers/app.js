@@ -15,7 +15,7 @@ define(function(require) {
   var broadcast = require('broadcast');
   var find = require('utils/find');
   var camera = require('camera');
-  var DCF = require('dcf');
+  var dcf = require('dcf');
 
   var controllers = {
     hud: require('controllers/hud'),
@@ -45,7 +45,6 @@ define(function(require) {
     // Temporary Globals
     window.CameraSettings = CameraSettings;
     window.ViewfinderView = viewfinder;
-    window.DCFApi = DCF;
 
     PerformanceTestingHelper.dispatch('initialising-camera-preview');
 
@@ -104,7 +103,7 @@ define(function(require) {
 
       cameraState.set('initialized', true);
 
-      DCFApi.init();
+      dcf.init();
       PerformanceTestingHelper.dispatch('startup-path-done');
     });
 
