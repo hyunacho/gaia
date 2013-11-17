@@ -604,7 +604,7 @@ define(function(require){
       }
 
       function getCamera() {
-        navigator.mozCameras.getCamera(options, gotCamera);
+        navigator.mozCameras.getCamera({ camera: cameras[cameraNumber] }, gotCamera);
       }
     },
 
@@ -666,7 +666,7 @@ define(function(require){
 
     startPreview: function() {
       var cameraNumber = cameraState.get('cameraNumber');
-      this.loadCameraPreview(cameraNumber, this.previewEnabled.bind(this));
+      this.loadCameraPreview(cameraNumber, null, this.previewEnabled.bind(this));
     },
 
     previewEnabled: function() {
@@ -903,7 +903,7 @@ define(function(require){
       return true;
     },
 
-    prepareTakePicture: function camera_takePicture() {
+    prepareTakePicture: function() {
       this.disableButtons();
 
       if (this._callAutoFocus) {
@@ -914,7 +914,7 @@ define(function(require){
       }
     },
 
-    autoFocusDone: function camera_autoFocusDone(success) {
+    autoFocusDone: function(success) {
       if (!success) {
         this.enableButtons();
         this.focusRing.setAttribute('data-state', 'fail');
@@ -925,22 +925,28 @@ define(function(require){
       this.takePicture();
     },
 
-    takePicture: function camera_takePicture() {
+    takePicture: function() {
       this._config.rotation = window.orientation.get();
       this._cameraObj.pictureSize = this._pictureSize;
       this._config.dateTime = Date.now() / 1000;
-      // We do not attach our current position to the exif of photos
-      // that are taken via an activity as that leaks position information
+
+      // We do not attach our current
+      // position to the exif of photos
+      // that are taken via an activity.
+      //
+      // As it leaks position information
       // to other apps without permission
       if (this._position && !this._pendingPick) {
         this._config.position = this._position;
       }
-      this._cameraObj
-        .takePicture(this._config, this.takePictureSuccess.bind(this),
-                     this.takePictureError);
+
+      this._cameraObj.takePicture(
+        this._config,
+        this.takePictureSuccess.bind(this),
+        this.takePictureError);
     },
 
-    showOverlay: function camera_showOverlay(id) {
+    showOverlay: function(id) {
       this._currentOverlay = id;
 
       if (id === null) {
@@ -1030,47 +1036,72 @@ define(function(require){
       var pictureSizes = camera.capabilities.pictureSizes;
 
       if (this._pendingPick && this._pendingPick.source.data.maxFileSizeBytes) {
-        // we use worse case of all compression method: gif, jpg, png
+
+        // We use worse case of all
+        // compression method: gif, jpg, png
         targetFileSize = this._pendingPick.source.data.maxFileSizeBytes;
       }
       if (this._pendingPick && this._pendingPick.source.data.width &&
           this._pendingPick.source.data.height) {
-        // if we have pendingPick with width and height, set it as target size.
-        targetSize = {'width': this._pendingPick.source.data.width,
-                      'height': this._pendingPick.source.data.height};
+
+        // if we have pendingPick
+        // with width and height,
+        // set it as target size.
+        targetSize = {
+          width: this._pendingPick.source.data.width,
+          height: this._pendingPick.source.data.height
+        };
       }
 
-      // CONFIG_MAX_IMAGE_PIXEL_SIZE is maximum image resolution for still photos
-      // taken with camera. It's from config.js which is generated in build time,
-      // 5 megapixels by default (see build/application-data.js). It should be
-      // synced with Gallery app and update carefully.
+      // CONFIG_MAX_IMAGE_PIXEL_SIZE is
+      // maximum image resolution for still
+      // photos taken with camera.
+      //
+      // It's from config.js which is
+      // generatedin build time, 5 megapixels
+      // by default (see build/application-data.js).
+      // It should be synced with Gallery app
+      // and update carefully.
       var maxRes = CONFIG_MAX_IMAGE_PIXEL_SIZE;
       var size = pictureSizes.reduce(function(acc, size) {
         var mp = size.width * size.height;
-        // we don't need the resolution larger than maxRes
+
+        // we don't need the
+        // resolution larger
+        // than maxRes
         if (mp > maxRes) {
           return acc;
         }
-        // We assume the relationship between MP to file size is linear.
-        // This may be inaccurate on all cases.
+
+        // We assume the relationship
+        // between MP to file size is
+        // linear. This may be
+        // inaccurate on all cases.
         var estimatedFileSize = mp * ESTIMATED_JPEG_FILE_SIZE / maxRes;
         if (targetFileSize > 0 && estimatedFileSize > targetFileSize) {
           return acc;
         }
 
         if (targetSize) {
-          // find a resolution both width and height are large than pick size
+
+          // find a resolution both width
+          // and height are large than pick size
           if (size.width < targetSize.width || size.height < targetSize.height) {
             return acc;
           }
+
           // it's first pictureSize.
           if (!acc.width || acc.height) {
             return size;
           }
-          // find large enough but as small as possible.
+
+          // find large enough but
+          // as small as possible.
           return (mp < acc.width * acc.height) ? size : acc;
         } else {
-          // no target size, find as large as possible.
+
+          // no target size, find
+          // as large as possible.
           return (mp > acc.width * acc.height && mp <= maxRes) ? size : acc;
         }
       }, {width: 0, height: 0});
@@ -1082,8 +1113,9 @@ define(function(require){
       }
     },
 
-    pickVideoProfile: function camera_pickVideoProfile(profiles) {
-      var profileName, matchedProfileName;
+    pickVideoProfile: function(profiles) {
+      var matchedProfileName;
+      var profileName;
 
       if (this.preferredRecordingSizes) {
         for (var i = 0; i < this.preferredRecordingSizes.length; i++) {
@@ -1139,8 +1171,9 @@ define(function(require){
     },
 
     release: function(callback) {
-      if (!this._cameraObj)
+      if (!this._cameraObj) {
         return;
+      }
 
       this._cameraObj.release(function cameraReleased() {
         Camera._cameraObj = null;
@@ -1168,7 +1201,7 @@ define(function(require){
         }
       }.bind(this));
     }
-  };
+  });
 
   return Camera;
 
