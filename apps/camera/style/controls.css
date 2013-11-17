@@ -48,9 +48,6 @@
   height: 3rem;
 }
 
-.switch-button {
-  left: 66%;
-}
 
 .misc-button {
   text-align: center;
@@ -95,14 +92,7 @@
   background-image: url(images/actionicon_cancel.png);
 }
 
-.capture-button {
-  background-color: #03a2b4;
-  border-radius: 10rem;
-  left: 33%;
-  height: 10rem;
-  width: 33%;
-  top: -2.8rem;
-}
+
 
 .video-timer {
   display: none;
@@ -119,27 +109,67 @@
   display: none;
 }
 
+/** Capture Button
+ ---------------------------------------------------------*/
+
+.capture-button {
+  background-color: #03a2b4;
+  border-radius: 10rem;
+  left: 33%;
+  height: 10rem;
+  width: 33%;
+  top: -2.8rem;
+}
+
+/**
+ * @camera
+ */
+
+.controls[data-mode=camera] .capture-button span {
+  background-image: url(images/camera.png);
+}
+
+/**
+ * @video
+ */
+
+.controls[data-mode=video] .capture-button span {
+  background-image: url(images/video.png);
+}
+
+/**
+ * @capturing
+ */
+
 .capturing .capture-button {
   background-color: #d3361c;
 }
 
-.video.capturing .capture-button span {
+.capturing .capture-button span {
   background-image: url(images/stop.png);
 }
 
-/* Swap the camera and video icons depending on mode */
-.video .switch-button span {
+/** Switch Button
+ ---------------------------------------------------------*/
+
+.switch-button {
+  left: 66%;
+}
+
+/**
+ * @video
+ *
+ * Swap the camera and video
+ * icons depending on mode
+ */
+.controls[data-mode=video] .switch-button span {
   background-image: url(images/camera.png);
 }
 
-.camera .switch-button span {
-  background-image: url(images/video.png);
-}
+/**
+ * @camera
+ */
 
-.camera .capture-button span {
-  background-image: url(images/camera.png);
-}
-
-.video .capture-button span {
+.controls[data-mode=camera] .switch-button span {
   background-image: url(images/video.png);
 }
