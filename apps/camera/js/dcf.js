@@ -6,6 +6,8 @@
 define(function(require) {
   'use strict';
 
+  var padLeft = require('utils/padleft');
+
   var api = {};
   var dcfConfigLoaded = false;
   var deferredArgs = null;
