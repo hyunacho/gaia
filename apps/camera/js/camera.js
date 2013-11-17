@@ -525,8 +525,9 @@ define(function(require){
     },
 
     loadCameraPreview: function(cameraNumber, callback) {
-      this._cameras = navigator.mozCameras.getListOfCameras();
-      var options = { camera: this._cameras[cameraNumber] };
+      var mozCameras = navigator.mozCameras;
+      var cameras = this._cameras = mozCameras.getListOfCameras();
+
       this._timeoutId = 0;
 
       function gotPreviewScreen(stream) {
@@ -535,24 +536,6 @@ define(function(require){
         if (callback) {
           callback(stream);
         }
-
-        // This is commented out because
-        // `onPreviewStateChange` was not firing.
-        // Need more info on this...
-
-        //if (callback) {
-          // Even though we have the stream now, the camera hardware hasn't
-          // started displaying it yet. We need to wait until the preview
-          // has actually started displaying before calling the callback.
-          // Ssee Bug 890427.
-          // Camera._cameraObj.onPreviewStateChange = function(state) {
-          //   console.log('onPreviewStateChange', callback);
-          //   if (state === 'started') {
-          //     Camera._cameraObj.onPreviewStateChange = null;
-          //     //callback(stream);
-          //   }
-          // };
-        //}
       }
 
       function gotCamera(camera) {
@@ -566,7 +549,6 @@ define(function(require){
         Camera._cameraObj = camera;
 
         cameraState.set('autoFocusSupported', autoFocusSupported);
-
         Camera.pickPictureSize(camera);
 
         thumbnailSize = Camera.selectThumbnailSize(
@@ -581,6 +563,7 @@ define(function(require){
           var recorderProfiles = camera.capabilities.recorderProfiles;
           Camera._videoProfile = Camera.pickVideoProfile(recorderProfiles);
 
+          // 'Video' Mode
           if (Camera._captureMode === CAMERA_MODE_TYPE.VIDEO) {
             Camera._videoProfile.rotation = window.orientation.get();
 
