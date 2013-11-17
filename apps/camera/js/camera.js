@@ -19,14 +19,20 @@ define(function(require){
     _cameras: null,
     _captureMode: null,
 
-    // In secure mode the user cannot browse to the gallery
+    // In secure mode the user
+    // cannot browse to the gallery
     _secureMode: window.parent !== window,
     _currentOverlay: null,
 
     _videoTimer: null,
     _videoStart: null,
-    _videoPath: null, // file path relative to video root directory
-    _videoRootDir: null, // video root directory string
+
+    // file path relative
+    // to video root directory
+    _videoPath: null,
+
+    // video root directory string
+    _videoRootDir: null,
 
     _autoFocusSupport: {},
     _callAutoFocus: false,
@@ -45,23 +51,44 @@ define(function(require){
     _pictureSize: null,
     _previewConfig: null,
 
-    // We can recieve multiple FileSizeLimitReached events
-    // when recording, since we stop recording on this event
-    // only show one alert per recording
+    // We can recieve multiple
+    // 'FileSizeLimitReached' events
+    // when recording, since we stop
+    // recording on this event only
+    // show one alert per recording
     _sizeLimitAlertActive: false,
 
     _flashState: {
       camera: {
-        defaultMode: 1, // default flash mode is 'auto'
-        supported: [], // delay the array initialization to enableCameraFeatures.
+
+        // default flash
+        // mode is 'auto'
+        defaultMode: 1,
+
+        // Delay the array initialization
+        // to enableCameraFeatures.
+        supported: [],
+
         modes: ['off', 'auto', 'on'],
-        currentMode: [] // delay the array initialization when needed
+
+        // Delay the array
+        // initialization when needed
+        currentMode: []
       },
       video: {
-        defaultMode: 0, // default flash mode is 'off'
-        supported: [], // delay the array initialization to enableCameraFeatures.
+
+        // Default flash
+        // mode is 'off'
+        defaultMode: 0,
+
+        // Delay the array initialization
+        // to enableCameraFeatures.
+        supported: [],
         modes: ['off', 'torch'],
-        currentMode: [] // delay the array initialization when needed.
+
+        // Delay the array
+        // initialization when needed.
+        currentMode: []
       }
     },
 
