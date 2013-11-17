@@ -100,10 +100,19 @@ define(function(require) {
     }
   }
 
+  function toggle() {
+    if (isShown()) {
+      hide();
+    } else {
+      show();
+    }
+  }
+
   filmstrip.onclick = function(event) {
     var target = event.target;
-    if (!target || !target.classList.contains('thumbnail'))
+    if (!target || !target.classList.contains('thumbnail')) {
       return;
+    }
 
     var index = parseInt(target.dataset.index);
     previewItem(index);
@@ -581,6 +590,7 @@ define(function(require) {
     isShown: isShown,
     hide: hide,
     show: show,
+    toggle: toggle,
     addImage: addImage,
     addVideo: addVideo,
     deleteItem: deleteItem,

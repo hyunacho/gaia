@@ -32,9 +32,9 @@ define(function(require) {
     // Wire Up Views
     controllers.hud(hud, viewfinder);
     controllers.controls(controls, viewfinder);
-    controllers.viewfinder(viewfinder);
+    controllers.viewfinder(viewfinder, filmstrip);
 
-    // Inject into Dom
+    // Inject stuff into Dom
     document.body.appendChild(hud.el);
 
     /**
