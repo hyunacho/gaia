@@ -1,26 +1,28 @@
 /*jshint laxbreak:true*/
-/*global CAMERA_MODE_TYPE*/
 
 define(function(require) {
   'use strict';
 
+  // Dependencies
   var CameraState = require('models/state');
   var camera = require('camera');
 
   return function(controls, viewfinder) {
 
+    // Bind events
+    camera.on('captureModeChange', onCameraModeChange);
     controls.on('modeButtonToggle', onModeButtonToggle);
 
-    function onModeButtonToggle() {
-      var currentMode = camera._captureMode;
-      var isCameraMode = currentMode === CAMERA_MODE_TYPE.CAMERA;
-      var newMode = isCameraMode
-        ? CAMERA_MODE_TYPE.VIDEO
-        : CAMERA_MODE_TYPE.CAMERA;
+    function onCameraModeChange(mode) {
+      controls.setCaptureMode(mode);
+    }
 
-      camera.changeMode(newMode, function(stream) {
-        console.log('modeChanged');
-        viewfinder.setStream(stream);
+    function onModeButtonToggle() {
+      camera.toggleMode();
+      viewfinder.fadeOut(function() {
+        camera.loadStreamInto(viewfinder.el, function() {
+            viewfinder.fadeIn();
+        });
       });
     }
 
