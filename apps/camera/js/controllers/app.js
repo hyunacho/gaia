@@ -42,7 +42,6 @@ define(function(require) {
      */
 
     // Temporary Globals
-    //window.CameraState = CameraState;
     window.CameraSettings = CameraSettings;
     window.ViewfinderView = viewfinder;
     window.DCFApi = DCF;
