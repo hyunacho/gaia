@@ -41,12 +41,13 @@ define(function(require) {
   deleteButton.onclick = deleteCurrentItem;
   shareButton.onclick = shareCurrentItem;
   mediaFrame.addEventListener('swipe', handleSwipe);
-  broadcast.on('newVideo', onNewVideo);
-  broadcast.on('newImage', onNewImage);
+  camera.on('newVideo', onNewVideo);
+  camera.on('newImage', onNewImage);
   broadcast.on('itemDeleted', onItemDeleted);
   broadcast.on('storageUnavailable', hidePreview);
   broadcast.on('storageShared', hidePreview);
   orientation.on('orientation', setOrientation);
+  cameraState.on('change:recording', onRecordingChange);
 
   // Create the MediaFrame for previews
   var frame = new MediaFrame(mediaFrame);
