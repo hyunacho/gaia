@@ -4,7 +4,6 @@ define(function(require) {
 
   var View = require('view');
   var bind = require('utils/bind');
-  var Filmstrip = require('views/filmstrip');
   var CameraState = require('models/state');
   var Camera = require('camera');
 
@@ -44,25 +43,14 @@ define(function(require) {
     initialize: function() {
 
       // Bind events
-      bind(this.el, 'click', this.toggleFilmstrip);
-
+      bind(this.el, 'click', this.onClick.bind(this));
       bind(this.el, 'touchstart', this.onTouchStart.bind(this));
       bind(this.el, 'touchmove', this.onTouchMove.bind(this));
       bind(this.el, 'touchend', this.onTouchEnd.bind(this));
     },
 
-    toggleFilmstrip: function(evt) {
-      // We will just ignore
-      // because the filmstrip shouldn't be shown
-      // while Camera is recording
-      var recording = CameraState.get('recording');
-      if (recording || Camera._pendingPick) // TODO: Move _pendingPick into CameraState
-        return;
-
-      if (Filmstrip.isShown())
-        Filmstrip.hide();
-      else
-        Filmstrip.show();
+    onClick: function() {
+      this.emit('click');
     },
 
     onTouchStart: function(evt) {
