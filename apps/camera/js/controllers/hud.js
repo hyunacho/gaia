@@ -2,7 +2,6 @@
 define(function(require) {
   'use strict';
 
-  var broadcast = require('broadcast');
   var camera = require('camera');
 
   return function(hud, viewfinder) {
@@ -10,9 +9,7 @@ define(function(require) {
     // Event wiring
     hud.on('flashToggle', onFlashToggle);
     hud.on('cameraToggle', onCameraToggle);
-    broadcast.on('cameraConfigured', onCameraConfigured);
-    broadcast.on('cameraToggleStart', hud.disableButtons.bind(hud));
-    broadcast.on('cameraToggleEnd', hud.enableButtons.bind(hud));
+    camera.on('configured', onCameraConfigured);
 
     function onCameraConfigured() {
       var hasFrontCamera = camera.hasFrontCamera();
