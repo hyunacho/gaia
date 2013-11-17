@@ -40,6 +40,7 @@ define(function(require) {
   };
 
   return View.extend({
+    fadeTime: 400,
     initialize: function() {
 
       // Bind events
@@ -121,20 +122,18 @@ define(function(require) {
     },
 
     fadeOut: function(done) {
-      var fadeTime = 800;
       this.el.classList.add('fade-out');
 
       if (done) {
-        setTimeout(done, fadeTime);
+        setTimeout(done, this.fadeTime);
       }
     },
 
     fadeIn: function(done) {
-      var fadeTime = 800;
       this.el.classList.remove('fade-out');
 
       if (done) {
-        setTimeout(done, fadeTime);
+        setTimeout(done, this.fadeTime);
       }
     },
 
