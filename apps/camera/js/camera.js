@@ -390,7 +390,7 @@ define(function(require){
                   self.retakePressed.bind(self));
               } else {
 
-                broadcast.emit('newVideo', {
+                Camera.emit('newVideo', {
                   file: videofile,
                   video: video,
                   poster: poster,
