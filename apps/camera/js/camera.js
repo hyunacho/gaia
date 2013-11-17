@@ -714,7 +714,7 @@ define(function(require){
 
       // In either case, save the photo to device storage
       this._addPictureToStorage(blob, function(name, absolutePath) {
-        broadcast.emit('newImage', {
+        Camera.emit('newImage', {
           path: absolutePath,
           blob: blob
         });
