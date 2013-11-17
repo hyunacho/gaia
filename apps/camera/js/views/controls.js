@@ -48,6 +48,10 @@ define(function(require) {
       setBooleanClass(document.body, 'recording', recording);
     },
 
+    setCaptureMode: function(mode) {
+      this.el.setAttribute('data-mode', mode);
+    },
+
     setModeButtonEnabled: function(enabled) {
       setBooleanAttribute(this.els.modeButton, 'disabled', !enabled);
     },
