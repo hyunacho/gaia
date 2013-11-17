@@ -12,8 +12,10 @@ function padLeft(num, length) {
 
 define(function(require){
   var cameraState = require('models/state');
+  var broadcast = require('broadcast');
+  var evt = require('libs/evt');
 
-  var Camera = {
+  var Camera = evt.mix({
     _cameras: null,
     _captureMode: null,
 
