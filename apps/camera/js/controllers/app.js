@@ -98,8 +98,6 @@ define(function(require) {
       camera._pictureStorage
         .addEventListener('change', camera.deviceStorageChangeHandler.bind(camera));
 
-      camera.previewEnabled();
-
       cameraState.set('initialized', true);
 
       dcf.init();

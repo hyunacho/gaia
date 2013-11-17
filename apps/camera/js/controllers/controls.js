@@ -11,10 +11,15 @@ define(function(require) {
 
     // Bind events
     camera.on('captureModeChange', onCameraModeChange);
+    camera.on('videoTimeUpdate', onVideoTimeUpdate);
     controls.on('modeButtonToggle', onModeButtonToggle);
 
     function onCameraModeChange(mode) {
       controls.setCaptureMode(mode);
+    }
+
+    function onVideoTimeUpdate(value) {
+      controls.setVideoTimer(value);
     }
 
     function onModeButtonToggle() {

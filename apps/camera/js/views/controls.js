@@ -36,6 +36,7 @@ define(function(require) {
       this.els.captureButton = find('#capture-button', this.el);
       this.els.galleryButton = find('#gallery-button', this.el);
       this.els.cancelPickButton = find('#cancel-pick', this.el);
+      this.els.timer = find('.js-video-timer', this.el);
 
       // Bind events
       bind(this.els.modeButton, 'click', this.modeButtonHandler, this);
@@ -45,11 +46,15 @@ define(function(require) {
     },
 
     setRecording: function(recording) {
-      setBooleanClass(document.body, 'recording', recording);
+      this.el.setAttribute('data-recording', recording);
     },
 
     setCaptureMode: function(mode) {
       this.el.setAttribute('data-mode', mode);
+    },
+
+    setVideoTimer: function(time) {
+      this.els.timer.textContent = time;
     },
 
     setModeButtonEnabled: function(enabled) {
@@ -92,7 +97,7 @@ define(function(require) {
       this.emit('modeButtonToggle');
     },
 
-    captureButtonHandler: function controls_captureButtonHandler(event) {
+    captureButtonHandler: function(event) {
       if (event.target.getAttribute('disabled')) {
         return;
       }
@@ -100,7 +105,7 @@ define(function(require) {
       camera.capture();
     },
 
-    galleryButtonHandler: function controls_galleryButtonHandler(event) {
+    galleryButtonHandler: function(event) {
       // Can't launch the gallery if the lockscreen is locked.
       // The button shouldn't even be visible in this case, but
       // let's be really sure here.
@@ -117,7 +122,7 @@ define(function(require) {
       });
     },
 
-    cancelPickButtonHandler: function controls_cancelPickButtonHandler(event) {
+    cancelPickButtonHandler: function(event) {
       camera.cancelPick();
     }
   });
