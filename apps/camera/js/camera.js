@@ -146,110 +146,41 @@ define(function(require){
       return document.getElementById('overlay-menu-storage');
     },
 
-    delayedInit: function() {
-
-      if (!this._pendingPick) {
-        cameraState.set({
-          modeButtonHidden: false,
-          galleryButtonHidden: false
-        });
-      }
-
-      this.enableButtons();
-      this.checkStorageSpace();
-
-      this.overlayCloseButton
-        .addEventListener('click', this.cancelPick.bind(this));
-      this.storageSettingButton
-        .addEventListener('click', this.storageSettingPressed.bind(this));
-
-      if (!navigator.mozCameras) {
-        cameraState.set('captureButtonEnabled', false);
-        return;
-      }
-
-      if (this._secureMode) {
-        cameraState.set('galleryButtonEnabled', false);
-      }
-
-      SoundEffect.init();
-
-      if ('mozSettings' in navigator) {
-        this.getPreferredSizes();
-      }
-
-      this._storageState = STORAGE_STATE_TYPE.INIT;
-      this._pictureStorage = navigator.getDeviceStorage('pictures');
-      this._videoStorage = navigator.getDeviceStorage('videos'),
-
-      this._pictureStorage
-        .addEventListener('change', this.deviceStorageChangeHandler.bind(this));
-
-      this.previewEnabled();
-
-      cameraState.set('initialized', true);
-
-      DCFApi.init();
-      PerformanceTestingHelper.dispatch('startup-path-done');
-    },
-
-    enableButtons: function camera_enableButtons() {
+    // @deprecated
+    enableButtons: function() {
       cameraState.enableButtons();
     },
 
-    disableButtons: function camera_disableButtons() {
+    // @deprecated
+    disableButtons: function() {
       cameraState.disableButtons();
     },
 
-    cancelPick: function camera_cancelPick() {
+    cancelPick: function() {
       if (this._pendingPick) {
         this._pendingPick.postError('pick cancelled');
       }
+
       this._pendingPick = null;
     },
 
-    changeMode: function(mode, done) {
-      done = done || function(){};
-
-      this.disableButtons();
-      this.setCaptureMode(mode);
-      this.setFlashMode();
-      this.enableCameraFeatures(this._cameraObj.capabilities);
-      this.setFocusMode();
-
-      Camera._cameraObj.onPreviewStateChange = function(state) {
-        // We disabled the buttons above. Now we wait for the preview
-        // stream to actually start up before we enable them again. If we
-        // do this in the getPreviewStream() callback it might be too early
-        // and we can still cause deadlock in the camera hardware.
-        // See Bug 890427.
-        if (state === 'started') {
-          Camera.enableButtons();
-          // Only do this once
-          Camera._cameraObj.onPreviewStateChange = null;
-        }
-      };
-      if (this._captureMode === CAMERA_MODE_TYPE.CAMERA) {
-        this._cameraObj.getPreviewStream(
-          this._previewConfig, done);
-      } else {
-        this._videoProfile.rotation = window.orientation.get();
-        this._cameraObj.getPreviewStreamVideoMode(
-          this._videoProfile, done);
-      }
+    getMode: function() {
+      return this._captureMode;
     },
 
-    toggleCamera: function(done) {
+    toggleMode: function() {
+      var currentMode = this._captureMode;
+      var isCameraMode = currentMode === CAMERA_MODE_TYPE.CAMERA;
+      var newMode = isCameraMode
+        ? CAMERA_MODE_TYPE.VIDEO
+        : CAMERA_MODE_TYPE.CAMERA;
+
+      return this.setCaptureMode(newMode);
+    },
+
+    toggleCamera: function() {
       var cameraNumber = 1 - cameraState.get('cameraNumber');
-      this.loadCameraPreview(cameraNumber, done);
       cameraState.set('cameraNumber', cameraNumber);
-    },
-
-    turnOffFlash: function() {
-      var flash = this._flashState[this._captureMode];
-      var cameraNumber = cameraState.get('cameraNumber');
-      flash.currentMode[cameraNumber] = 0;
-      this.setFlashMode();
     },
 
     toggleFlash: function() {
