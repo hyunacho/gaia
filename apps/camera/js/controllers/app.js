@@ -57,49 +57,84 @@ define(function(require) {
     lockscreen.disableTimeout();
     setupCamera();
 
+    // This must be tidied, but the
+    // important thing is it's out
+    // of camera.js
     window.LazyL10n.get(function() {
-      camera.delayedInit();
-    });
 
-    CameraState.on('change:recording', function(evt) {
-      var recording = evt.value;
-
-      // Hide the filmstrip to prevent the users from entering the
-      // preview mode after Camera starts recording button pressed
-      if (recording && filmstrip.isShown()) {
-        filmstrip.hide();
+      if (!camera._pendingPick) {
+        cameraState.set({
+          modeButtonHidden: false,
+          galleryButtonHidden: false
+        });
       }
+
+      camera.enableButtons();
+      camera.checkStorageSpace();
+
+      camera.overlayCloseButton
+        .addEventListener('click', camera.cancelPick.bind(camera));
+      camera.storageSettingButton
+        .addEventListener('click', camera.storageSettingPressed.bind(camera));
+
+      if (!navigator.mozCameras) {
+        cameraState.set('captureButtonEnabled', false);
+        return;
+      }
+
+      if (camera._secureMode) {
+        cameraState.set('galleryButtonEnabled', false);
+      }
+
+      SoundEffect.init();
+
+      if ('mozSettings' in navigator) {
+        camera.getPreferredSizes();
+      }
+
+      camera._storageState = STORAGE_STATE_TYPE.INIT;
+      camera._pictureStorage = navigator.getDeviceStorage('pictures');
+      camera._videoStorage = navigator.getDeviceStorage('videos'),
+
+      camera._pictureStorage
+        .addEventListener('change', camera.deviceStorageChangeHandler.bind(camera));
+
+      camera.previewEnabled();
+
+      cameraState.set('initialized', true);
+
+      DCFApi.init();
+      PerformanceTestingHelper.dispatch('startup-path-done');
     });
 
-    // When the app is hidden after
-    // switching to another app, or
-    // show after switching back.
-    document.addEventListener('visibilitychange', function() {
-      console.log('visibilitychange');
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('beforeunload', onBeforeUnload);
+
+    /**
+     * Manages switching to
+     * and from the Camera app.
+     */
+    function onVisibilityChange() {
       if (document.hidden) {
         teardownCamera();
       } else {
         setupCamera();
       }
-    });
+    }
 
-    window.addEventListener('beforeunload', function() {
+    function onBeforeUnload() {
       window.clearTimeout(camera._timeoutId);
       delete camera._timeoutId;
       viewfinder.setPreviewStream(null);
       console.log('beforeunload');
-    });
+    }
 
     function setupCamera() {
-      var cameraNumber = CameraState.get('cameraNumber');
-
-      camera.loadCameraPreview(cameraNumber, onStreamLoaded);
+      camera.loadStreamInto(viewfinder.el, onStreamLoaded);
 
       function onStreamLoaded(stream) {
-        viewfinder.setStream(stream);
         camera.enableButtons();
         PerformanceTestingHelper.dispatch('camera-preview-loaded');
-
         if (!camera._pendingPick) {
           setTimeout(camera.initPositionUpdate.bind(camera), PROMPT_DELAY);
         }
