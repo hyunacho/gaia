@@ -656,7 +656,7 @@ define(function(require){
           focusModes.indexOf(FOCUS_MODE_TYPE.CONTINUOUS_VIDEO) !== -1;
       }
 
-      broadcast.emit('cameraConfigured');
+      this.emit('configured');
     },
 
     startPreview: function() {
