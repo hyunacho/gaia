@@ -6,7 +6,6 @@ define(function(require) {
   var evt = require('libs/evt');
   var HudView = require('views/hud');
   var cameraState = require('models/state');
-  var CameraSettings = require('models/settings');
   var ViewfinderView = require('views/viewfinder');
   var ControlsView = require('views/controls');
   var filmstrip = require('views/filmstrip');
@@ -42,8 +41,8 @@ define(function(require) {
      * Misc Crap
      */
 
-    // Temporary Globals
-    window.CameraSettings = CameraSettings;
+    // This needs to be global so that
+    // the filmstrip module can see it.
     window.ViewfinderView = viewfinder;
 
     PerformanceTestingHelper.dispatch('initialising-camera-preview');
