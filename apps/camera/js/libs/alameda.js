@@ -1,5 +1,5 @@
 /**
- * alameda 0.0.6 Copyright (c) 2011-2012, The Dojo Foundation All Rights Reserved.
+ * alameda 0.0.9 Copyright (c) 2011-2012, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
  * see: http://github.com/requirejs/alameda for details
  */
@@ -10,7 +10,7 @@
 
 var requirejs, require, define;
 (function (global, undef) {
-    var prim, topReq, dataMain,
+    var prim, topReq, dataMain, src, subPath,
         bootstrapConfig = requirejs || require,
         hasOwn = Object.prototype.hasOwnProperty,
         contexts = {},
@@ -93,7 +93,7 @@ var requirejs, require, define;
      * - removed UMD registration
      */
     /**
-     * prim 0.0.3 Copyright (c) 2012-2013, The Dojo Foundation All Rights Reserved.
+     * prim 0.0.4 Copyright (c) 2012-2013, The Dojo Foundation All Rights Reserved.
      * Available via the MIT or new BSD license.
      * see: http://github.com/requirejs/prim for details
      */
@@ -261,7 +261,7 @@ var requirejs, require, define;
             return result;
         };
 
-        prim.nextTick = typeof setImmediate === 'function' ? setImmediate :
+        prim.nextTick = typeof setImmediate === 'function' ? setImmediate.bind() :
             (typeof process !== 'undefined' && process.nextTick ?
                 process.nextTick : (typeof setTimeout !== 'undefined' ?
                     asyncTick : syncTick));
@@ -1001,8 +1001,7 @@ var requirejs, require, define;
             traced[id] = true;
             if (!d.finished() && d.deps) {
                 d.deps.forEach(function (depMap) {
-                    var depIndex,
-                        depId = depMap.id,
+                    var depId = depMap.id,
                         dep = !hasProp(handlers, depId) && getDefer(depId);
 
                     //Only force things that have not completed
@@ -1011,13 +1010,11 @@ var requirejs, require, define;
                     //in the module already.
                     if (dep && !dep.finished() && !processed[depId]) {
                         if (hasProp(traced, depId)) {
-                            d.deps.some(function (depMap, i) {
+                            d.deps.forEach(function (depMap, i) {
                                 if (depMap.id === depId) {
-                                    depIndex = i;
-                                    return true;
+                                    d.depFinished(defined[depId], i);
                                 }
                             });
-                            d.depFinished(defined[depId], depIndex);
                         } else {
                             breakCycle(dep, traced, processed);
                         }
@@ -1341,6 +1338,17 @@ var requirejs, require, define;
             //Strip off any trailing .js since dataMain is now
             //like a module name.
             dataMain = dataMain.replace(jsSuffixRegExp, '');
+
+            if (!bootstrapConfig || !bootstrapConfig.baseUrl) {
+                //Pull off the directory of data-main for use as the
+                //baseUrl.
+                src = dataMain.split('/');
+                dataMain = src.pop();
+                subPath = src.length ? src.join('/')  + '/' : './';
+
+                topReq.config({baseUrl: subPath});
+            }
+
             topReq([dataMain]);
         }
     }
