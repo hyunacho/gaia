@@ -1,3 +1,10 @@
+
+// Make sure this module can be
+// loaded when 'define' isn't present.
+if (typeof define === 'undefined') {
+  define = function(factory){ window.SoundEffect = factory(); };
+}
+
 define(function() {
   'use strict';
 
