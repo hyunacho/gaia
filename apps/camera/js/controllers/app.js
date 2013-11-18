@@ -38,7 +38,8 @@ define(function(require) {
     controllers.viewfinder(viewfinder, filmstrip);
 
     // Inject stuff into Dom
-    document.body.appendChild(hud.el);
+    hud.appendTo(body);
+    focusRing.appendTo(body);
 
     /**
      * Misc Crap
