@@ -18,7 +18,6 @@ require([
   'panzoom',
   'camera',
   'confirm',
-  'soundeffect',
   'orientation',
   'constants'
 ], function(activity, AppController) {

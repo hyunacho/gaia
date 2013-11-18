@@ -208,17 +208,22 @@ define(function(require){
 
     setFocusMode: function() {
       this._callAutoFocus = false;
+
+      // Camera
       if (this._captureMode === CAMERA_MODE_TYPE.CAMERA) {
         if (this._autoFocusSupport[FOCUS_MODE_TYPE.CONTINUOUS_CAMERA]) {
           this._cameraObj.focusMode = FOCUS_MODE_TYPE.CONTINUOUS_CAMERA;
           return;
         }
+
+      // Video
       } else {
         if (this._autoFocusSupport[FOCUS_MODE_TYPE.CONTINUOUS_VIDEO]) {
           this._cameraObj.focusMode = FOCUS_MODE_TYPE.CONTINUOUS_VIDEO;
           return;
         }
       }
+
       if (this._autoFocusSupport[FOCUS_MODE_TYPE.MANUALLY_TRIGGERED]) {
         this._cameraObj.focusMode = FOCUS_MODE_TYPE.MANUALLY_TRIGGERED;
         this._callAutoFocus = true;
@@ -227,13 +232,13 @@ define(function(require){
 
     capture: function() {
 
-      // If 'camera' mode
+      // Camera
       if (Camera._captureMode === CAMERA_MODE_TYPE.CAMERA) {
         Camera.prepareTakePicture();
         return;
       }
 
-      // If 'video' mode
+      // Video
       if (cameraState.get('recording')) {
         this.stopRecording();
       } else {
@@ -380,74 +385,93 @@ define(function(require){
     },
 
     stopRecording: function() {
+      var videoStorage = this._videoStorage;
+      var videoFile = this._videoRootDir + this._videoPath;
       var self = this;
 
       this._cameraObj.stopRecording();
       cameraState.set('recording', false);
+      clearInterval(this._videoTimer);
+      this.enableButtons();
 
       // play camcorder shutter
       // sound while stop recording.
       soundEffect.playRecordingEndSound();
 
-      // Register a listener for writing completion of current video file
-      (function(videoStorage, videofile) {
-        videoStorage.addEventListener('change', function changeHandler(e) {
-          // Regard the modification as video file writing completion if e.path
-          // matches current video filename. Note e.path is absolute path.
-          if (e.reason === 'modified' && e.path === videofile) {
-            // Un-register the listener itself
-            videoStorage.removeEventListener('change', changeHandler);
+      // Register a listener for writing
+      // completion of current video file
+      videoStorage.addEventListener('change', onVideoStorageChange);
 
-            // Now that the video file has been saved, save a poster
-            // image to match it. The Gallery app depends on this.
-            self.saveVideoPosterImage(videofile, function(video, poster, data) {
+      function onVideoStorageChange(e) {
 
-              if (self._pendingPick) {
-                self._savedMedia = {
-                  video: video,
-                  poster: poster
-                };
+        // Regard the modification as
+        // video file writing completion
+        // if e.path matches current video
+        // filename. Note e.path is absolute path.
+        if (e.reason === 'modified' && e.path === videoFile) {
 
-                ConfirmDialog.confirmVideo(
-                  video,
-                  poster,
-                  data.width,
-                  data.height,
-                  data.rotation,
-                  self.selectPressed.bind(self),
-                  self.retakePressed.bind(self));
-              } else {
+          // Un-register the listener
+          videoStorage.removeEventListener('change', onVideoStorageChange);
 
-                Camera.emit('newVideo', {
-                  file: videofile,
-                  video: video,
-                  poster: poster,
-                  width: data.width,
-                  height: data.height,
-                  rotation: data.rotation
-                });
-              }
-            });
-          }
-        });
-      })(this._videoStorage, this._videoRootDir + this._videoPath);
+          // Now that the video file
+          // has been saved, save a poster
+          // image for the Gallery app.
+          self.saveVideoPosterImage(videofile, function(video, poster, data) {
 
-      // Kill the timer
-      window.clearInterval(this._videoTimer);
+            // If this came from
+            // a 'pick' activity
+            if (self._pendingPick) {
+              self._savedMedia = {
+                video: video,
+                poster: poster
+              };
 
-      this.enableButtons();
+              ConfirmDialog.confirmVideo(
+                video,
+                poster,
+                data.width,
+                data.height,
+                data.rotation,
+                self.selectPressed.bind(self),
+                self.retakePressed.bind(self));
+            }
+
+            else {
+              self.emit('newVideo', {
+                file: videoFile,
+                video: video,
+                poster: poster,
+                width: data.width,
+                height: data.height,
+                rotation: data.rotation
+              });
+            }
+          });
+        }
+      }
     },
 
-    saveVideoPosterImage: function saveVideoPosterImage(filename, callback) {
-      // Given the filename of a newly recorded video, create a poster
-      // image for it, and save that poster as a jpeg file. When done,
-      // pass the video blob and the poster blob to  the callback function
-      // along with the video dimensions and rotation.
+    /**
+     * Given the filename of a newly
+     * recorded video, create a poster
+     * image for it, and save that
+     * poster as a jpeg file.
+     *
+     * When done, pass the video blob
+     * and the poster blob to the
+     * callback function along with
+     * the video dimensions and rotation.
+     *
+     * @param  {String}   filename
+     * @param  {Function} callback
+     */
+    saveVideoPosterImage: function(filename, callback) {
       var getreq = this._videoStorage.get(filename);
-      getreq.onerror = function() {
-        console.warn('saveVideoPosterImage:', filename, request.error.name);
-      };
-      getreq.onsuccess = function() {
+
+      getreq.onsuccess = onSuccess;
+      getreq.onerror = onError;
+
+      function onSuccess() {
         var videoblob = getreq.result;
         getVideoRotation(videoblob, function(rotation) {
           if (typeof rotation !== 'number') {
@@ -466,8 +490,10 @@ define(function(require){
             offscreenVideo.removeAttribute('src');
             offscreenVideo.load();
             console.warn('not a video file', filename, 'delete it!');
-            // we need to delete all corrupted video files, those of them may be
-            // tracks without samples, see bug 899864.
+
+            // We need to delete all corrupted
+            // video files, those of them may be
+            // tracks without samples (Bug 899864).
             Camera._videoStorage.delete(filename);
           };
 
@@ -489,8 +515,10 @@ define(function(require){
             offscreenVideo.removeAttribute('src');
             offscreenVideo.load();
 
-            // Save the poster image to storage, then call the callback
-            // The Gallery app depends on this poster image being saved here
+            // Save the poster image to
+            // storage, then call the callback.
+            // The Gallery app depends on this
+            // poster image being saved here.
             postercanvas.toBlob(function savePoster(poster) {
               var posterfile = filename.replace('.3gp', '.jpg');
               Camera._pictureStorage.addNamed(poster, posterfile);
@@ -502,7 +530,11 @@ define(function(require){
             }, 'image/jpeg');
           };
         });
-      };
+      }
+
+      function onError() {
+        console.warn('saveVideoPosterImage:', filename);
+      }
     },
 
     formatTimer: function(time) {
@@ -635,7 +667,8 @@ define(function(require){
       }
 
       function getCamera() {
-        navigator.mozCameras.getCamera({ camera: cameras[cameraNumber] }, gotCamera);
+        var config = { camera: cameras[cameraNumber] };
+        navigator.mozCameras.getCamera(config, gotCamera);
       }
     },
 
@@ -658,7 +691,6 @@ define(function(require){
 
       // For checking flash support
       function isSubset(subset, set) {
-
         for (var i = 0; i < subset.length; i++) {
           if (set.indexOf(subset[i]) == -1) {
             return false;
@@ -702,44 +734,43 @@ define(function(require){
 
     resumePreview: function() {
       this._cameraObj.resumePreview();
-
       cameraState.set('previewActive', true);
-
       this.enableButtons();
     },
 
-    takePictureError: function camera_takePictureError() {
-      alert(navigator.mozL10n.get('error-saving-title') + '. ' +
-            navigator.mozL10n.get('error-saving-text'));
+    takePictureError: function() {
+      alert(
+        navigator.mozL10n.get('error-saving-title') + '. ' +
+        navigator.mozL10n.get('error-saving-text'));
     },
 
     takePictureSuccess: function(blob) {
       this._config.position = null;
-
       cameraState.set('manuallyFocused', false);
 
-      this.hideFocusRing();
-
-
       if (this._pendingPick) {
-        // If we're doing a Pick, ask the user to confirm the image
+
+        // If we're doing a Pick,
+        // ask the user to confirm the image
         ConfirmDialog.confirmImage(
           blob,
           this.selectPressed.bind(this),
           this.retakePressed.bind(this));
 
-        // Just save the blob temporarily until the user presses "Retake" or
-        // "Select".
-        this._savedMedia = {
-          blob: blob
-        };
+        // Just save the blob temporarily
+        // until the user presses "Retake"
+        // or "Select".
+        this._savedMedia = { blob: blob };
       }
+
+      // Otherwise (this is the normal
+      // case) start the viewfinder again
       else {
-        // Otherwise (this is the normal case) start the viewfinder again
         this.resumePreview();
       }
 
-      // In either case, save the photo to device storage
+      // In either case, save
+      // the photo to device storage
       this._addPictureToStorage(blob, function(name, absolutePath) {
         Camera.emit('newImage', {
           path: absolutePath,
@@ -761,29 +792,38 @@ define(function(require){
 
     selectPressed: function() {
       var media = this._savedMedia;
+      var self = this;
+
       this._savedMedia = null;
 
+      // Camera
       if (this._captureMode === CAMERA_MODE_TYPE.CAMERA) {
         this._resizeBlobIfNeeded(media.blob, function(resized_blob) {
-          this._pendingPick.postResult({
+          self._pendingPick.postResult({
             type: 'image/jpeg',
             blob: resized_blob
           });
-          this._pendingPick = null;
-        }.bind(this));
+
+          self._pendingPick = null;
+        });
+
+      // Video
       } else {
         this._pendingPick.postResult({
           type: 'video/3gpp',
           blob: media.video,
           poster: media.poster
         });
+
         this._pendingPick = null;
       }
     },
 
     storageSettingPressed: function() {
-      // Click to open the media storage panel when the default storage
-      // is unavailable.
+
+      // Click to open the media
+      // storage panel when the
+      // default storage is unavailable.
       var activity = new MozActivity({
         name: 'configure',
         data: {
@@ -794,20 +834,29 @@ define(function(require){
     },
 
     _addPictureToStorage: function(blob, callback) {
-      dcf.createDCFFilename(this._pictureStorage, 'image',
-                               function(path, name) {
-        var addreq = this._pictureStorage.addNamed(blob, path + name);
+      var self = this;
+
+      dcf.createDCFFilename(
+        this._pictureStorage,
+        'image',
+        onFilenameCreated);
+
+      function onFilenameCreated(path, name) {
+        var addreq = self._pictureStorage.addNamed(blob, path + name);
+
+        addreq.onerror = self.takePictureError;
         addreq.onsuccess = function(e) {
           var absolutePath = e.target.result;
           callback(path + name, absolutePath);
         };
-        addreq.onerror = this.takePictureError;
-      }.bind(this));
+      }
     },
 
     _resizeBlobIfNeeded: function(blob, callback) {
-      var pickWidth = this._pendingPick.source.data.width;
-      var pickHeight = this._pendingPick.source.data.height;
+      var pickData = this._pendingPick.source.data;
+      var pickWidth = pickData.width;
+      var pickHeight = pickData.height;
+
       if (!pickWidth || !pickHeight) {
         callback(blob);
         return;
@@ -827,48 +876,69 @@ define(function(require){
       img.src = window.URL.createObjectURL(blob);
     },
 
-    hideFocusRing: function camera_hideFocusRing() {
-      this.focusRing.removeAttribute('data-state');
-    },
-
     checkStorageSpace: function() {
+      var self = this;
+
       if (this.updateOverlay()) {
         return;
       }
 
-      // The first time we're called, we need to make sure that there
-      // is an sdcard and that it is mounted. (Subsequently the device
-      // storage change handler will track that.)
+      // The first time we're called,
+      // we need to make sure that there
+      // is an sdcard and that it is mounted.
+      //
+      // Subsequently the device storage
+      // change handler will track that.
       if (this._storageState === STORAGE_STATE_TYPE.INIT) {
         this._pictureStorage.available().onsuccess = (function(e) {
-          this.updateStorageState(e.target.result);
-          this.updateOverlay();
-          // Now call the parent method again, so that if the sdcard is
-          // available we will actually verify that there is enough space on it
-          this.checkStorageSpace();
-        }.bind(this));
+          self.updateStorageState(e.target.result);
+          self.updateOverlay();
+
+          // Now call the parent method
+          // again, so that if the
+          // sdcard is available we will
+          // actually verify that there
+          // is enough space on it.
+          self.checkStorageSpace();
+        });
+
         return;
       }
 
-      // Now verify that there is enough space to store a picture
-      // 4 bytes per pixel plus some room for a header should be more
-      // than enough for a JPEG image.
+      // Now verify that there is
+      // enough space to store a
+      // picture.
+      //
+      // 4 bytes per pixel plus
+      // some room for a header
+      // should be more than enough
+      // for a JPEG image.
       var MAX_IMAGE_SIZE =
         (this._pictureSize.width * this._pictureSize.height * 4) + 4096;
 
-      this._pictureStorage.freeSpace().onsuccess = (function(e) {
-        // XXX
-        // If we ever enter this out-of-space condition, it looks like
-        // this code will never be able to exit. The user will have to
-        // quit the app and start it again. Just deleting files will
-        // not be enough to get back to the STORAGE_STATE_TYPE.AVAILABLE state.
-        // To fix this, we need an else clause here, and also a change
+      this._pictureStorage.freeSpace().onsuccess = function(e) {
+
+        // If we ever enter this
+        // out-of-space condition,
+        // it looks like this code
+        // will never be able to exit.
+        //
+        // The user will have to quit
+        // the app and start it again.
+        // Just deleting files will not
+        // be enough to get back to the
+        // STORAGE_STATE_TYPE.AVAILABLE
+        // state.
+        //
+        // To fix this, we need an else
+        // clause here, and also a change
         // in the updateOverlay() method.
         if (e.target.result < MAX_IMAGE_SIZE) {
-          this._storageState = STORAGE_STATE_TYPE.CAPACITY;
+          self._storageState = STORAGE_STATE_TYPE.CAPACITY;
         }
-        this.updateOverlay();
-      }).bind(this);
+
+        self.updateOverlay();
+      };
     },
 
     deviceStorageChangeHandler: function(e) {
@@ -879,7 +949,9 @@ define(function(require){
         this.updateStorageState(e.reason);
         break;
 
-      // Remove filmstrip item if its correspondent file is deleted
+      // Remove filmstrip item
+      // if its correspondent
+      // file is deleted
       case 'deleted':
         broadcast.emit('itemDeleted', { path: e.path });
         break;
@@ -973,6 +1045,8 @@ define(function(require){
         this.takePictureError);
     },
 
+    // TODO: Move this to
+    // a view and controller
     showOverlay: function(id) {
       this._currentOverlay = id;
 
@@ -1057,7 +1131,7 @@ define(function(require){
       return thumbnailSizes[thumbnailSizes.length - 1];
     },
 
-    pickPictureSize: function camera_pickPictureSize(camera) {
+    pickPictureSize: function(camera) {
       var targetSize = null;
       var targetFileSize = 0;
       var pictureSizes = camera.capabilities.pictureSizes;
@@ -1175,7 +1249,7 @@ define(function(require){
       };
     },
 
-    initPositionUpdate: function camera_initPositionUpdate() {
+    initPositionUpdate: function() {
       if (this._watchId || document.hidden) {
         return;
       }
@@ -1215,21 +1289,22 @@ define(function(require){
 
     getPreferredSizes: function(callback) {
       var key = 'camera.recording.preferredSizes';
+      var self = this;
+
       if (this.preferredRecordingSizes && callback) {
         callback();
         return;
       }
 
       var req = navigator.mozSettings.createLock().get(key);
-      req.onsuccess = (function onsuccess() {
-        this.preferredRecordingSizes = req.result[key] || [];
+      req.onsuccess = function() {
+        self.preferredRecordingSizes = req.result[key] || [];
         if (callback) {
           callback();
         }
-      }.bind(this));
+      };
     }
   });
 
   return Camera;
-
 });
