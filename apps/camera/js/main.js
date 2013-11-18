@@ -16,9 +16,7 @@ require([
   '/shared/js/gesture_detector.js',
   '/shared/js/lazy_l10n.js',
   'panzoom',
-  'camera',
   'confirm',
-  'orientation',
   'constants'
 ], function(activity, AppController) {
 
