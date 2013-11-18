@@ -62,13 +62,15 @@ define(function(require) {
 
     PerformanceTestingHelper.dispatch('initialising-camera-preview');
 
-    // The activity may have defined a captureMode, otherwise
-    // be default we use the camera
-    if (camera._captureMode === null) {
-      camera.setCaptureMode(CAMERA_MODE_TYPE.CAMERA);
-    }
+    // Set the initial capture
+    // mode (defaults to 'camera').
+    camera.setCaptureMode(camera._captureMode || CAMERA_MODE_TYPE.CAMERA);
 
+    // Prevent the phone
+    // from going to sleep.
     lockscreen.disableTimeout();
+
+    // Load the stream
     setupCamera();
 
     // This must be tidied, but the
