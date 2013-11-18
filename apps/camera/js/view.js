@@ -31,6 +31,9 @@ define(function(require) {
   View.prototype = evt.mix({
     tag: 'div',
     initialize: function(){},
+    appendTo: function(parent) {
+      parent.appendChild(this.el);
+    }
   });
 
   /**
