@@ -117,10 +117,6 @@ define(function(require){
       return document.getElementById('storage-setting-button');
     },
 
-    get focusRing() {
-      return document.getElementById('focus-ring');
-    },
-
     get cancelPickButton() {
       return document.getElementById('cancel-pick');
     },
@@ -938,7 +934,7 @@ define(function(require){
       this.disableButtons();
 
       if (this._callAutoFocus) {
-        this.focusRing.setAttribute('data-state', 'focusing');
+        cameraState.set('focusState', 'focusing');
         this._cameraObj.autoFocus(this.autoFocusDone.bind(this));
       } else {
         this.takePicture();
@@ -948,11 +944,11 @@ define(function(require){
     autoFocusDone: function(success) {
       if (!success) {
         this.enableButtons();
-        this.focusRing.setAttribute('data-state', 'fail');
-        window.setTimeout(this.hideFocusRing.bind(this), 1000);
+        cameraState.set('focusState', 'fail');
         return;
       }
-      this.focusRing.setAttribute('data-state', 'focused');
+
+      cameraState.set('focusState', 'focused');
       this.takePicture();
     },
 

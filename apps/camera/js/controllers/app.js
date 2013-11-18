@@ -9,6 +9,7 @@ define(function(require) {
   var ViewfinderView = require('views/viewfinder');
   var ControlsView = require('views/controls');
   var filmstrip = require('views/filmstrip');
+  var FocusRing = require('views/focusring');
   var soundEffect = require('soundeffect');
   var lockscreen = require('lockscreen');
   var broadcast = require('broadcast');
@@ -23,11 +24,13 @@ define(function(require) {
   };
 
   var AppController = function() {
+    var body = document.body;
 
     // View Instances
     var hud = new HudView();
     var controls = new ControlsView(find('#controls'));
     var viewfinder = new ViewfinderView(find('#viewfinder'));
+    var focusRing = new FocusRing();
 
     // Wire Up Views
     controllers.hud(hud, viewfinder);
@@ -40,6 +43,18 @@ define(function(require) {
     /**
      * Misc Crap
      */
+
+    var focusTimeout;
+    cameraState.on('change:focusState', function(value) {
+      focusRing.setState(value);
+      clearTimeout(focusTimeout);
+
+      if (value === 'fail') {
+        focusTimeout = setTimeout(function() {
+          focusRing.setState(null);
+        }, 1000);
+      }
+    });
 
     // This needs to be global so that
     // the filmstrip module can see it.
@@ -149,7 +164,6 @@ define(function(require) {
           camera.stopRecording();
         }
 
-        camera.hideFocusRing();
         camera.disableButtons();
         viewfinder.stopPreview();
         cameraState.set('previewActive', false);
