@@ -416,7 +416,7 @@ define(function(require){
           // Now that the video file
           // has been saved, save a poster
           // image for the Gallery app.
-          self.saveVideoPosterImage(videofile, function(video, poster, data) {
+          self.saveVideoPosterImage(videoFile, function(video, poster, data) {
 
             // If this came from
             // a 'pick' activity
