@@ -157,9 +157,8 @@ define(function(require) {
     }
 
     function teardownCamera() {
-      camera.turnOffFlash();
-      camera.cancelPick();
       camera.cancelPositionUpdate();
+      camera.cancelPick();
 
       try {
         var recording = cameraState.get('recording');
