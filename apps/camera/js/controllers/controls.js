@@ -25,47 +25,17 @@ define(function(require) {
 
     function onModeButtonToggle() {
       camera.toggleMode();
+      controls.disableButtons();
       viewfinder.fadeOut(function() {
         camera.loadStreamInto(viewfinder.el, function() {
+            controls.enableButtons();
             viewfinder.fadeIn();
         });
       });
     }
 
     CameraState.on('change:recording', function(e) {
-      controls.setRecording(e.value);
-    });
-
-    CameraState.on('change:modeButtonEnabled', function(e) {
-      controls.setModeButtonEnabled(e.value);
-    });
-
-    CameraState.on('change:captureButtonEnabled', function(e) {
-      controls.setCaptureButtonEnabled(e.value);
-    });
-
-    CameraState.on('change:galleryButtonEnabled', function(e) {
-      controls.setGalleryButtonEnabled(e.value);
-    });
-
-    CameraState.on('change:cancelPickButtonEnabled', function(e) {
-      controls.setCancelPickButtonEnabled(e.value);
-    });
-
-    CameraState.on('change:modeButtonHidden', function(e) {
-      controls.setModeButtonHidden(e.value);
-    });
-
-    CameraState.on('change:captureButtonHidden', function(e) {
-      controls.setCaptureButtonHidden(e.value);
-    });
-
-    CameraState.on('change:galleryButtonHidden', function(e) {
-      controls.setGalleryButtonHidden(e.value);
-    });
-
-    CameraState.on('change:cancelPickButtonHidden', function(evt) {
-      controls.setCancelPickButtonHidden(evt.value);
+      controls.set('recording', e.value);
     });
   };
 });

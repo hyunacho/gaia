@@ -45,63 +45,27 @@ define(function(require) {
       bind(this.els.cancelPickButton, 'click', this.cancelPickButtonHandler);
     },
 
-    setRecording: function(recording) {
-      this.el.setAttribute('data-recording', recording);
+    set: function(key, value) {
+      this.el.setAttribute('data-' + key, value);
     },
 
-    setCaptureMode: function(mode) {
-      this.el.setAttribute('data-mode', mode);
+    enableButtons: function() {
+      this.el.classList.remove(this.buttonsDisabledClass);
+    },
+
+    disableButtons: function() {
+      this.el.classList.add(this.buttonsDisabledClass);
     },
 
     setVideoTimer: function(time) {
       this.els.timer.textContent = time;
     },
 
-    setModeButtonEnabled: function(enabled) {
-      setBooleanAttribute(this.els.modeButton, 'disabled', !enabled);
-    },
-
-    setCaptureButtonEnabled: function(enabled) {
-      setBooleanAttribute(this.els.captureButton, 'disabled', !enabled);
-    },
-
-    setGalleryButtonEnabled: function(enabled) {
-      setBooleanAttribute(this.els.galleryButton, 'disabled', !enabled);
-    },
-
-    setCancelPickButtonEnabled: function(enabled) {
-      setBooleanAttribute(this.els.cancelPickButton, 'disabled', !enabled);
-    },
-
-    setModeButtonHidden: function(hidden) {
-      setBooleanClass(this.els.modeButton, 'hidden', hidden);
-    },
-
-    setCaptureButtonHidden: function(hidden) {
-      setBooleanClass(this.els.captureButton, 'hidden', hidden);
-    },
-
-    setGalleryButtonHidden: function(hidden) {
-      setBooleanClass(this.els.galleryButton, 'hidden', hidden);
-    },
-
-    setCancelPickButtonHidden: function(hidden) {
-      setBooleanClass(this.els.cancelPickButton, 'hidden', hidden);
-    },
-
     modeButtonHandler: function(event) {
-      if (event.target.getAttribute('disabled')) {
-        return;
-      }
-
       this.emit('modeButtonToggle');
     },
 
     captureButtonHandler: function(event) {
-      if (event.target.getAttribute('disabled')) {
-        return;
-      }
-
       camera.capture();
     },
 

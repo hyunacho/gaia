@@ -8,8 +8,14 @@ define(function(require) {
 
   return View.extend({
     className: 'hud',
+    buttonsDisabledClass: 'buttons-disabled',
     initialize: function() {
       this.el.innerHTML = this.render();
+
+      // Bind context
+      this.enableButtons = this.enableButtons.bind(this);
+      this.disableButtons = this.disableButtons.bind(this);
+      this.toggleDisableButtons = this.toggleDisableButtons.bind(this);
 
       // Get elments
       this.els.flash = find('.js-toggle-flash', this.el);

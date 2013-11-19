@@ -132,16 +132,6 @@ define(function(require){
       return document.getElementById('overlay-menu-storage');
     },
 
-    // @deprecated
-    enableButtons: function() {
-      cameraState.enableButtons();
-    },
-
-    // @deprecated
-    disableButtons: function() {
-      cameraState.disableButtons();
-    },
-
     cancelPick: function() {
       if (this._pendingPick) {
         this._pendingPick.postError('pick cancelled');
@@ -249,7 +239,6 @@ define(function(require){
       var self = this;
 
       this._sizeLimitAlertActive = false;
-      this.disableButtons();
 
       dcf.createDCFFilename(
         this._videoStorage,
@@ -291,7 +280,6 @@ define(function(require){
 
       function onError() {
         var id = 'error-recording';
-        self.enableButtons();
         alert(
           navigator.mozL10n.get(id + '-title') + '. ' +
           navigator.mozL10n.get(id + '-text'));
@@ -316,7 +304,10 @@ define(function(require){
         // we wait for 500ms to have few video and
         // audio samples, see bug 899864.
         window.setTimeout(function() {
-          cameraState.set('captureButtonEnabled', true);
+
+          // TODO: Disable then re-enable
+          // capture button after 500ms
+
         }, MIN_RECORDING_TIME);
       }
 
@@ -391,7 +382,6 @@ define(function(require){
       this._cameraObj.stopRecording();
       cameraState.set('recording', false);
       clearInterval(this._videoTimer);
-      this.enableButtons();
 
       // play camcorder shutter
       // sound while stop recording.
@@ -728,13 +718,13 @@ define(function(require){
 
     startPreview: function() {
       var cameraNumber = cameraState.get('cameraNumber');
-      this.loadCameraPreview(cameraNumber, null, this.enableButtons.bind(this));
+      this.loadCameraPreview(cameraNumber, null);
     },
 
     resumePreview: function() {
       this._cameraObj.resumePreview();
       cameraState.set('previewActive', true);
-      this.enableButtons();
+      this.emit('previewResumed');
     },
 
     takePictureError: function() {
@@ -744,6 +734,8 @@ define(function(require){
     },
 
     takePictureSuccess: function(blob) {
+      var self = this;
+
       this._config.position = null;
       cameraState.set('manuallyFocused', false);
 
@@ -771,13 +763,13 @@ define(function(require){
       // In either case, save
       // the photo to device storage
       this._addPictureToStorage(blob, function(name, absolutePath) {
-        Camera.emit('newImage', {
+        self.emit('newImage', {
           path: absolutePath,
           blob: blob
         });
 
-        this.checkStorageSpace();
-      }.bind(this));
+        self.checkStorageSpace();
+      });
     },
 
     retakePressed: function() {

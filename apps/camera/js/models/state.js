@@ -5,7 +5,7 @@ define(function(require) {
 
   var CameraState = new Model({
     initialized: false,
-    
+
     cameraNumber: 0,
     autoFocusSupported: false,
     manuallyFocused: false,
@@ -25,24 +25,6 @@ define(function(require) {
 
     orientation: 0
   });
-
-  CameraState.enableButtons = function() {
-    this.set({
-      modeButtonEnabled: true,
-      captureButtonEnabled: true,
-      galleryButtonEnabled: true,
-      cancelPickButtonEnabled: true
-    });
-  };
-
-  CameraState.disableButtons = function() {
-    this.set({
-      modeButtonEnabled: false,
-      captureButtonEnabled: false,
-      galleryButtonEnabled: false,
-      cancelPickButtonEnabled: false
-    });
-  };
 
   return CameraState;
 });
