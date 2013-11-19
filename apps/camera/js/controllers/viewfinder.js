@@ -3,7 +3,6 @@ define(function(require) {
   'use strict';
 
   var camera = require('camera');
-  var cameraState = require('models/state');
 
   return function(viewfinder, filmstrip) {
 
@@ -16,7 +15,7 @@ define(function(require) {
     }
 
     function onViewfinderClick() {
-      var recording = cameraState.get('recording');
+      var recording = camera.state.get('recording');
 
       // We will just ignore
       // because the filmstrip

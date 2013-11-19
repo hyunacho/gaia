@@ -4,7 +4,6 @@ define(function(require) {
   'use strict';
 
   var HudView = require('views/hud');
-  var cameraState = require('models/state');
   var ViewfinderView = require('views/viewfinder');
   var ControlsView = require('views/controls');
   var filmstrip = require('views/filmstrip');
@@ -45,7 +44,7 @@ define(function(require) {
      */
 
     var focusTimeout;
-    cameraState.on('change:focusState', function(value) {
+    camera.state.on('change:focusState', function(value) {
       focusRing.setState(value);
       clearTimeout(focusTimeout);
 
@@ -77,14 +76,6 @@ define(function(require) {
     // important thing is it's out
     // of camera.js
     window.LazyL10n.get(function() {
-
-      if (!camera._pendingPick) {
-        cameraState.set({
-          modeButtonHidden: false,
-          galleryButtonHidden: false
-        });
-      }
-
       camera.checkStorageSpace();
 
       camera.overlayCloseButton
@@ -92,13 +83,15 @@ define(function(require) {
       camera.storageSettingButton
         .addEventListener('click', camera.storageSettingPressed.bind(camera));
 
+      // TODO: Reimplement this in controls controller
       if (!navigator.mozCameras) {
-        cameraState.set('captureButtonEnabled', false);
+        camera.state.set('captureButtonEnabled', false);
         return;
       }
 
+      // TODO: Reimplement this in controls controller
       if (camera._secureMode) {
-        cameraState.set('galleryButtonEnabled', false);
+        camera.state.set('galleryButtonEnabled', false);
       }
 
       soundEffect.init();
@@ -114,7 +107,7 @@ define(function(require) {
       camera._pictureStorage
         .addEventListener('change', camera.deviceStorageChangeHandler.bind(camera));
 
-      cameraState.set('initialized', true);
+      camera.state.set('initialized', true);
 
       dcf.init();
       PerformanceTestingHelper.dispatch('startup-path-done');
@@ -157,13 +150,13 @@ define(function(require) {
       camera.cancelPick();
 
       try {
-        var recording = cameraState.get('recording');
+        var recording = camera.state.get('recording');
         if (recording) {
           camera.stopRecording();
         }
 
         viewfinder.stopPreview();
-        cameraState.set('previewActive', false);
+        camera.state.set('previewActive', false);
         viewfinder.setPreviewStream(null);
       } catch (ex) {
         console.error('error while stopping preview', ex.message);
