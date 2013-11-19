@@ -5,6 +5,7 @@ define(function(require) {
 
   // Dependencies
   var CameraState = require('models/state');
+  var activity = require('activity');
   var camera = require('camera');
 
   return function(controls, viewfinder) {

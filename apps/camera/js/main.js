@@ -18,15 +18,11 @@ require([
   'panzoom',
   'confirm',
   'constants'
-], function(activity, AppController) {
+], function(activity, boot) {
 
   // The activity module
   // will boot the app
   // after it has made
   // some changes.
-  if (activity) {
-    return;
-  }
-
-  window.appController = new AppController();
+  activity.check(boot);
 });
