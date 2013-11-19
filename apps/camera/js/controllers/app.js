@@ -27,8 +27,8 @@ define(function(require) {
 
     // View Instances
     var hud = new HudView();
-    var controls = new ControlsView(find('#controls'));
-    var viewfinder = new ViewfinderView(find('#viewfinder'));
+    var controls = new ControlsView(find('.js-controls'));
+    var viewfinder = new ViewfinderView(find('.js-viewfinder'));
     var focusRing = new FocusRing();
 
     // Wire Up Views

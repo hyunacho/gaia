@@ -37,10 +37,10 @@ define(function(require) {
       this.disableButtons = this.disableButtons.bind(this);
 
       // Find elements
-      this.els.modeButton = find('#switch-button', this.el);
-      this.els.captureButton = find('#capture-button', this.el);
-      this.els.galleryButton = find('#gallery-button', this.el);
-      this.els.cancelPickButton = find('#cancel-pick', this.el);
+      this.els.modeButton = find('.js-switch', this.el);
+      this.els.captureButton = find('.js-capture', this.el);
+      this.els.galleryButton = find('.js-gallery', this.el);
+      this.els.cancelPickButton = find('.js-cancel-pick', this.el);
       this.els.timer = find('.js-video-timer', this.el);
 
       // Bind events
