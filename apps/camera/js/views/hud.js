@@ -51,16 +51,26 @@ define(function(require) {
       this.emit('cameraToggle');
     },
 
+    toggleDisableButtons: function(value) {
+      this.el.classList.toggle(this.buttonsDisabledClass, value);
+    },
+
     disableButtons: function() {
-      this.el.classList.add('buttons-disabled');
+      this.el.classList.add(this.buttonsDisabledClass);
+      return this;
     },
 
     enableButtons: function() {
-      this.el.classList.remove('buttons-disabled');
+      this.el.classList.remove(this.buttonsDisabledClass);
+      return this;
     },
 
     showCameraToggleButton: function(hasFrontCamera) {
       this.el.classList.toggle('has-front-camera', hasFrontCamera);
+    },
+
+    highlightCameraButton: function(value) {
+      this.el.classList.toggle('is-toggling-camera', value);
     },
 
     render: function() {

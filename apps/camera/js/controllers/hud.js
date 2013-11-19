@@ -3,13 +3,17 @@ define(function(require) {
   'use strict';
 
   var camera = require('camera');
+  var cameraState = require('models/state');
 
-  return function(hud, viewfinder) {
+  return function(hud, viewfinder, controls) {
 
     // Event wiring
     hud.on('flashToggle', onFlashToggle);
     hud.on('cameraToggle', onCameraToggle);
     camera.on('configured', onCameraConfigured);
+    camera.on('previewResumed', hud.enableButtons);
+    camera.on('preparingToTakePicture', hud.disableButtons);
+    cameraState.on('change:recording', onRecordingChange);
 
     function onCameraConfigured() {
       var hasFrontCamera = camera.hasFrontCamera();
@@ -25,12 +29,27 @@ define(function(require) {
     }
 
     function onCameraToggle() {
+      controls.disableButtons();
+
+      hud
+        .disableButtons()
+        .highlightCameraButton(true);
+
       viewfinder.fadeOut(function() {
         camera.toggleCamera();
         camera.loadStreamInto(viewfinder.el, function() {
           viewfinder.fadeIn();
+          controls.enableButtons();
+
+          hud
+            .enableButtons()
+            .highlightCameraButton(false);
         });
       });
+    }
+
+    function onRecordingChange(e) {
+      hud.toggleDisableButtons(e.value);
     }
   };
 });

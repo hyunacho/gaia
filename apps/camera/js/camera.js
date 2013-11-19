@@ -994,7 +994,7 @@ define(function(require){
     },
 
     prepareTakePicture: function() {
-      this.disableButtons();
+      this.emit('preparingToTakePicture');
 
       if (this._callAutoFocus) {
         cameraState.set('focusState', 'focusing');
@@ -1006,8 +1006,8 @@ define(function(require){
 
     autoFocusDone: function(success) {
       if (!success) {
-        this.enableButtons();
         cameraState.set('focusState', 'fail');
+        this.emit('focusFailed');
         return;
       }
 

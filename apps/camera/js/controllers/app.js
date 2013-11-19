@@ -3,7 +3,6 @@
 define(function(require) {
   'use strict';
 
-  var evt = require('libs/evt');
   var HudView = require('views/hud');
   var cameraState = require('models/state');
   var ViewfinderView = require('views/viewfinder');
@@ -33,7 +32,7 @@ define(function(require) {
     var focusRing = new FocusRing();
 
     // Wire Up Views
-    controllers.hud(hud, viewfinder);
+    controllers.hud(hud, viewfinder, controls);
     controllers.controls(controls, viewfinder);
     controllers.viewfinder(viewfinder, filmstrip);
 
@@ -86,7 +85,6 @@ define(function(require) {
         });
       }
 
-      camera.enableButtons();
       camera.checkStorageSpace();
 
       camera.overlayCloseButton
