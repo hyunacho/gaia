@@ -12,6 +12,7 @@ define(function(require) {
   var lockscreen = require('lockscreen');
   var broadcast = require('broadcast');
   var find = require('utils/find');
+  var bind = require('utils/bind');
   var camera = require('camera');
   var dcf = require('dcf');
 
@@ -55,8 +56,13 @@ define(function(require) {
       }
     });
 
+    if (!navigator.mozCameras) {
+      // TODO: Need to clarify what we
+      // should do in this condition.
+    }
+
     // This needs to be global so that
-    // the filmstrip module can see it.
+    // the filmstrip.js can see it.
     window.ViewfinderView = viewfinder;
 
     PerformanceTestingHelper.dispatch('initialising-camera-preview');
@@ -76,25 +82,14 @@ define(function(require) {
     // important thing is it's out
     // of camera.js
     window.LazyL10n.get(function() {
+      var onStorageChange = camera.deviceStorageChangeHandler.bind(camera);
+      var onStorageSettingPress = camera.storageSettingPressed.bind(camera);
+      var onCancelPick = camera.cancelPick.bind(camera);
+
+      bind(camera.overlayCloseButton, 'click', onCancelPick);
+      bind(camera.storageSettingButton, 'click', onStorageSettingPress);
+
       camera.checkStorageSpace();
-
-      camera.overlayCloseButton
-        .addEventListener('click', camera.cancelPick.bind(camera));
-      camera.storageSettingButton
-        .addEventListener('click', camera.storageSettingPressed.bind(camera));
-
-      // TODO: Reimplement this in controls controller
-      if (!navigator.mozCameras) {
-        camera.state.set('captureButtonEnabled', false);
-        return;
-      }
-
-      // TODO: Reimplement this in controls controller
-      if (camera._secureMode) {
-        camera.state.set('galleryButtonEnabled', false);
-      }
-
-      soundEffect.init();
 
       if ('mozSettings' in navigator) {
         camera.getPreferredSizes();
@@ -103,18 +98,16 @@ define(function(require) {
       camera._storageState = STORAGE_STATE_TYPE.INIT;
       camera._pictureStorage = navigator.getDeviceStorage('pictures');
       camera._videoStorage = navigator.getDeviceStorage('videos'),
-
-      camera._pictureStorage
-        .addEventListener('change', camera.deviceStorageChangeHandler.bind(camera));
-
-      camera.state.set('initialized', true);
+      camera._pictureStorage.addEventListener('change', onStorageChange);
 
       dcf.init();
+      soundEffect.init();
+
       PerformanceTestingHelper.dispatch('startup-path-done');
     });
 
-    document.addEventListener('visibilitychange', onVisibilityChange);
-    window.addEventListener('beforeunload', onBeforeUnload);
+    bind(document, 'visibilitychange', onVisibilityChange);
+    bind(window, 'beforeunload', onBeforeUnload);
 
     /**
      * Manages switching to
@@ -146,11 +139,12 @@ define(function(require) {
     }
 
     function teardownCamera() {
+      var recording = camera.state.get('recording');
+
       camera.cancelPositionUpdate();
       camera.cancelPick();
 
       try {
-        var recording = camera.state.get('recording');
         if (recording) {
           camera.stopRecording();
         }
