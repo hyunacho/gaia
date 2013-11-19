@@ -21,7 +21,7 @@ define(function(require) {
     viewfinder: require('controllers/viewfinder')
   };
 
-  var AppController = function() {
+  return function() {
     var body = document.body;
 
     // View Instances
@@ -184,6 +184,4 @@ define(function(require) {
       lockscreen.disableTimeout();
     });
   };
-
-  return AppController;
 });
