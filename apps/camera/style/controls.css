@@ -16,9 +16,10 @@
   position: absolute;
 }
 
-.cancel-pick[disabled=disabled],
-.capture-button[disabled=disabled],
-.switch-button[disabled=disabled] {
+.buttons-disabled .cancel-pick,
+.buttons-disabled .gallery-button,
+.buttons-disabled .capture-button,
+.buttons-disabled .switch-button {
   opacity: 0.5;
   pointer-events: none;
 }

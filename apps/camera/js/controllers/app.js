@@ -141,14 +141,12 @@ define(function(require) {
       window.clearTimeout(camera._timeoutId);
       delete camera._timeoutId;
       viewfinder.setPreviewStream(null);
-      console.log('beforeunload');
     }
 
     function setupCamera() {
       camera.loadStreamInto(viewfinder.el, onStreamLoaded);
 
       function onStreamLoaded(stream) {
-        camera.enableButtons();
         PerformanceTestingHelper.dispatch('camera-preview-loaded');
         if (!camera._pendingPick) {
           setTimeout(camera.initPositionUpdate.bind(camera), PROMPT_DELAY);
@@ -166,7 +164,6 @@ define(function(require) {
           camera.stopRecording();
         }
 
-        camera.disableButtons();
         viewfinder.stopPreview();
         cameraState.set('previewActive', false);
         viewfinder.setPreviewStream(null);
