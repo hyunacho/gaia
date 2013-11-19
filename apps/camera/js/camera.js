@@ -1,15 +1,16 @@
 
-define(function(require){
+define(function(require, exports, module){
   'use strict';
 
-  var cameraState = require('models/state');
+  var state = require('models/state');
   var soundEffect = require('soundeffect');
   var padLeft = require('utils/padleft');
   var broadcast = require('broadcast');
   var evt = require('libs/evt');
   var dcf = require('dcf');
 
-  var Camera = evt.mix({
+  var Camera = module.exports = evt.mix({
+    state: state,
     _cameras: null,
     _captureMode: null,
 
@@ -36,7 +37,6 @@ define(function(require){
 
     _photosTaken: [],
     _cameraProfile: null,
-
 
     _pictureStorage: null,
     _videoStorage: null,
@@ -155,13 +155,13 @@ define(function(require){
     },
 
     toggleCamera: function() {
-      var cameraNumber = 1 - cameraState.get('cameraNumber');
-      cameraState.set('cameraNumber', cameraNumber);
+      var cameraNumber = 1 - this.state.get('cameraNumber');
+      this.state.set('cameraNumber', cameraNumber);
     },
 
     toggleFlash: function() {
       var flash = this._flashState[this._captureMode];
-      var cameraNumber = cameraState.get('cameraNumber');
+      var cameraNumber = this.state.get('cameraNumber');
       var numModes = flash.modes.length;
       var next = (flash.currentMode[cameraNumber] + 1) % numModes;
 
@@ -171,7 +171,7 @@ define(function(require){
 
     getFlashModeName: function() {
       var flash = this._flashState[this._captureMode];
-      var cameraNumber = cameraState.get('cameraNumber');
+      var cameraNumber = this.state.get('cameraNumber');
       var flashMode = flash.currentMode[cameraNumber];
 
       // Front camera has no flash
@@ -184,7 +184,7 @@ define(function(require){
 
     setFlashMode: function() {
       var flash = this._flashState[this._captureMode];
-      var cameraNumber = cameraState.get('cameraNumber');
+      var cameraNumber = this.state.get('cameraNumber');
 
       if ((typeof flash.currentMode[cameraNumber]) === 'undefined') {
         flash.currentMode[cameraNumber] = flash.defaultMode;
@@ -223,12 +223,12 @@ define(function(require){
 
       // Camera
       if (Camera._captureMode === CAMERA_MODE_TYPE.CAMERA) {
-        Camera.prepareTakePicture();
+        this.prepareTakePicture();
         return;
       }
 
       // Video
-      if (cameraState.get('recording')) {
+      if (this.state.get('recording')) {
         this.stopRecording();
       } else {
         this.startRecording();
@@ -286,7 +286,7 @@ define(function(require){
       }
 
       function onSuccess() {
-        cameraState.set('recording', true);
+        self.state.set('recording', true);
         self.startRecordingTimer();
 
         // User closed app while
@@ -380,7 +380,7 @@ define(function(require){
       var self = this;
 
       this._cameraObj.stopRecording();
-      cameraState.set('recording', false);
+      this.state.set('recording', false);
       clearInterval(this._videoTimer);
 
       // play camcorder shutter
@@ -462,6 +462,8 @@ define(function(require){
 
       function onSuccess() {
         var videoblob = getreq.result;
+        var self = this;
+
         getVideoRotation(videoblob, function(rotation) {
           if (typeof rotation !== 'number') {
             console.warn('Unexpected rotation:', rotation);
@@ -483,7 +485,7 @@ define(function(require){
             // We need to delete all corrupted
             // video files, those of them may be
             // tracks without samples (Bug 899864).
-            Camera._videoStorage.delete(filename);
+            self._videoStorage.delete(filename);
           };
 
           offscreenVideo.onloadedmetadata = function() {
@@ -510,7 +512,7 @@ define(function(require){
             // poster image being saved here.
             postercanvas.toBlob(function savePoster(poster) {
               var posterfile = filename.replace('.3gp', '.jpg');
-              Camera._pictureStorage.addNamed(poster, posterfile);
+              self._pictureStorage.addNamed(poster, posterfile);
               callback(videoblob, poster, {
                 width: videowidth,
                 height: videoheight,
@@ -553,7 +555,7 @@ define(function(require){
      * @param  {Function} done
      */
     loadStreamInto: function(videoEl, done) {
-      var cameraNumber = cameraState.get('cameraNumber');
+      var cameraNumber = this.state.get('cameraNumber');
 
       this.loadCameraPreview(cameraNumber, function(stream) {
         videoEl.mozSrcObject = stream;
@@ -579,11 +581,12 @@ define(function(require){
     loadCameraPreview: function(cameraNumber, callback) {
       var mozCameras = navigator.mozCameras;
       var cameras = this._cameras = mozCameras.getListOfCameras();
+      var self = this;
 
       this._timeoutId = 0;
 
       function gotPreviewScreen(stream) {
-        cameraState.set('previewActive', true);
+        self.state.set('previewActive', true);
 
         if (callback) {
           callback(stream);
@@ -600,7 +603,7 @@ define(function(require){
         // camera interface
         Camera._cameraObj = camera;
 
-        cameraState.set('autoFocusSupported', autoFocusSupported);
+        self.state.set('autoFocusSupported', autoFocusSupported);
         Camera.pickPictureSize(camera);
 
         thumbnailSize = Camera.selectThumbnailSize(
@@ -690,7 +693,7 @@ define(function(require){
       }
 
       var flashModes = capabilities.flashModes || [];
-      var cameraNumber = cameraState.get('cameraNumber');
+      var cameraNumber = this.state.get('cameraNumber');
 
       // Check camera flash support
       var flash = this._flashState[CAMERA_MODE_TYPE.CAMERA];
@@ -717,13 +720,13 @@ define(function(require){
     },
 
     startPreview: function() {
-      var cameraNumber = cameraState.get('cameraNumber');
+      var cameraNumber = this.state.get('cameraNumber');
       this.loadCameraPreview(cameraNumber, null);
     },
 
     resumePreview: function() {
       this._cameraObj.resumePreview();
-      cameraState.set('previewActive', true);
+      this.state.set('previewActive', true);
       this.emit('previewResumed');
     },
 
@@ -737,7 +740,7 @@ define(function(require){
       var self = this;
 
       this._config.position = null;
-      cameraState.set('manuallyFocused', false);
+      this.state.set('manuallyFocused', false);
 
       if (this._pendingPick) {
 
@@ -997,7 +1000,7 @@ define(function(require){
       this.emit('preparingToTakePicture');
 
       if (this._callAutoFocus) {
-        cameraState.set('focusState', 'focusing');
+        this.state.set('focusState', 'focusing');
         this._cameraObj.autoFocus(this.autoFocusDone.bind(this));
       } else {
         this.takePicture();
@@ -1006,12 +1009,12 @@ define(function(require){
 
     autoFocusDone: function(success) {
       if (!success) {
-        cameraState.set('focusState', 'fail');
+        this.state.set('focusState', 'fail');
         this.emit('focusFailed');
         return;
       }
 
-      cameraState.set('focusState', 'focused');
+      this.state.set('focusState', 'focused');
       this.takePicture();
     },
 
@@ -1296,6 +1299,4 @@ define(function(require){
       };
     }
   });
-
-  return Camera;
 });

@@ -8,7 +8,6 @@ define(function(require) {
 
   var broadcast = require('broadcast');
   var orientation = require('orientation');
-  var cameraState = require('models/state');
   var camera = require('camera');
 
   // This array holds all the data we need for image and video previews
@@ -47,7 +46,7 @@ define(function(require) {
   broadcast.on('storageUnavailable', hidePreview);
   broadcast.on('storageShared', hidePreview);
   orientation.on('orientation', setOrientation);
-  cameraState.on('change:recording', onRecordingChange);
+  camera.state.on('change:recording', onRecordingChange);
 
   // Create the MediaFrame for previews
   var frame = new MediaFrame(mediaFrame);

@@ -3,7 +3,6 @@ define(function(require, exports) {
   'use strict';
 
   var camera = require('camera');
-  var cameraState = require('models/state');
 
   exports.name = null;
   exports.active = false;
@@ -22,7 +21,6 @@ define(function(require, exports) {
     }
 
     navigator.mozSetMessageHandler('activity', function(activity) {
-      console.log('onActivity', activity);
       exports.active = true;
       configureApp(activity);
       done();

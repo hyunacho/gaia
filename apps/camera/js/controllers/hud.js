@@ -3,7 +3,6 @@ define(function(require) {
   'use strict';
 
   var camera = require('camera');
-  var cameraState = require('models/state');
 
   return function(hud, viewfinder, controls) {
 
@@ -13,7 +12,7 @@ define(function(require) {
     camera.on('configured', onCameraConfigured);
     camera.on('previewResumed', hud.enableButtons);
     camera.on('preparingToTakePicture', hud.disableButtons);
-    cameraState.on('change:recording', onRecordingChange);
+    camera.state.on('change:recording', onRecordingChange);
 
     function onCameraConfigured() {
       var hasFrontCamera = camera.hasFrontCamera();
