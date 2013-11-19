@@ -16,7 +16,17 @@ define(function(require) {
     camera.on('preparingToTakePicture', controls.disableButtons);
     camera.on('previewResumed', controls.enableButtons);
     camera.on('focusFailed', controls.enableButtons);
-    controls.on('modeButtonToggle', onModeButtonToggle);
+
+    // Respond to events that
+    // happen in the controls UI.
+    controls.on('click:switch', onSwitchButtonClick);
+    controls.on('click:capture', onCaptureButtonClick);
+    controls.on('click:cancel', onCancelButtonClick);
+    controls.on('click:gallery', onGalleryButtonClick);
+
+    CameraState.on('change:recording', function(e) {
+      controls.set('recording', e.value);
+    });
 
     // Set initial state
     var mode = camera.getMode();
@@ -40,7 +50,7 @@ define(function(require) {
       controls.setVideoTimer(value);
     }
 
-    function onModeButtonToggle() {
+    function onSwitchButtonClick() {
       camera.toggleMode();
       controls.disableButtons();
       viewfinder.fadeOut(function() {
@@ -51,8 +61,27 @@ define(function(require) {
       });
     }
 
-    CameraState.on('change:recording', function(e) {
-      controls.set('recording', e.value);
-    });
+    function onCancelButtonClick() {
+      camera.cancelPick();
+    }
+
+    function onGalleryButtonClick() {
+      // Can't launch the gallery if the lockscreen is locked.
+      // The button shouldn't even be visible in this case, but
+      // let's be really sure here.
+      if (camera._secureMode) {
+        return;
+      }
+
+      // Launch the gallery with an activity
+      var a = new MozActivity({
+        name: 'browse',
+        data: { type: 'photos' }
+      });
+    }
+
+    function onCaptureButtonClick() {
+      camera.capture();
+    }
   };
 });
