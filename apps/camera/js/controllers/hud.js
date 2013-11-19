@@ -17,7 +17,6 @@ define(function(require) {
 
       hud.showCameraToggleButton(hasFrontCamera);
       hud.setFlashMode(flashMode);
-      console.log('onCameraConfigured', flashMode);
     }
 
     function onFlashToggle() {
