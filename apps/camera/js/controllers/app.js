@@ -197,9 +197,5 @@ define(function(require) {
     });
   };
 
-  AppController.prototype = evt.mix({
-    views: null
-  });
-
   return AppController;
 });
