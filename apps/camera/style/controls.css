@@ -67,32 +67,24 @@
  ---------------------------------------------------------*/
 
 .gallery-button {
-  display: block;
+  display: none;
   width: 100%;
   height: 100%;
 }
 
 /**
- * @hidden
+ * @gallery=true
  */
 
-.gallery-button.hidden {
-  display:none;
+.controls[data-gallery=true] .gallery-button {
+  display: block;
 }
 
 /**
- * @disabled
+ * @recording=true
  */
 
-.gallery-button[disabled=disabled] {
-  display: none;
-}
-
-/**
- * @capturing
- */
-
-.capturing .gallery-button {
+.controls[data-recording=true] .gallery-button {
   display: none;
 }
 
@@ -107,17 +99,17 @@
  ---------------------------------------------------------*/
 
 .cancel-pick {
-  display:block;
+  display: none;
   width: 100%;
   height: 100%;
 }
 
 /**
- * @hidden
+ * @cancel
  */
 
-.cancel-pick.hidden {
-  display:none
+.controls[data-cancel=true] .cancel-pick {
+  display: block;
 }
 
 /** Cancel Pick Button Icon
@@ -195,8 +187,25 @@
  ---------------------------------------------------------*/
 
 .switch-button {
+  display: none;
   left: 66%;
 }
+
+.controls[data-switchable] .switch-button {
+  display: block;
+}
+
+/**
+ * @recording
+ */
+
+.controls[data-recording=true] .switch-button {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/** Switch Button Icon
+ ---------------------------------------------------------*/
 
 /**
  * @video
@@ -215,3 +224,5 @@
 .controls[data-mode=camera] .switch-button span {
   background-image: url(images/video.png);
 }
+
+

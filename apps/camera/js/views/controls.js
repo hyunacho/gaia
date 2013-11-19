@@ -29,7 +29,12 @@ define(function(require) {
   };
 
   return View.extend({
+    buttonsDisabledClass: 'buttons-disabled',
     initialize: function() {
+
+      // Bind Context
+      this.enableButtons = this.enableButtons.bind(this);
+      this.disableButtons = this.disableButtons.bind(this);
 
       // Find elements
       this.els.modeButton = find('#switch-button', this.el);

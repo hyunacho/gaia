@@ -39,7 +39,7 @@ define(function(require) {
   };
 
   return View.extend({
-    fadeTime: 400,
+    fadeTime: 200,
     initialize: function() {
 
       // Bind events
