@@ -1,7 +1,6 @@
 
-'use strict';
-
 define(function(require){
+  'use strict';
 
   var cameraState = require('models/state');
   var soundEffect = require('soundeffect');
