@@ -34,7 +34,12 @@ define(function(require) {
     var showCamera = !activity.active || activity.allowedTypes.image;
     var showVideo = !activity.active || activity.allowedTypes.video;
     var isSwitchable = showVideo && showCamera;
-    var showGallery = !activity.active;
+
+    // The gallery button should not
+    // be shown if an activity is pending
+    // or the application is in 'secure mode'.
+    var showGallery = !activity.active
+      && !camera._secureMode;
 
     controls.set('mode', mode);
     controls.set('gallery', showGallery);
