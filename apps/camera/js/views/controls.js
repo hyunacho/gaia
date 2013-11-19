@@ -6,7 +6,6 @@ define(function(require) {
   var View = require('view');
   var bind = require('utils/bind');
   var find = require('utils/find');
-  var camera = require('camera');
 
   return View.extend({
     buttonsDisabledClass: 'buttons-disabled',
