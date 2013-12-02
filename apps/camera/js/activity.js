@@ -1,8 +1,20 @@
-
+/*global CAMERA_MODE_TYPE*/
 define(function(require, exports) {
   'use strict';
 
-  var camera = require('camera');
+  // Dependencies
+  require('/js/constants.js');
+
+  /**
+   * Locals
+   */
+
+  var VIDEO = CAMERA_MODE_TYPE.VIDEO;
+  var CAMERA = CAMERA_MODE_TYPE.CAMERA;
+
+  /**
+   * Exports
+   */
 
   exports.name = null;
   exports.active = false;
@@ -12,6 +24,14 @@ define(function(require, exports) {
     both: false
   };
 
+  /**
+   * Checks for a pending activity,
+   * calling the given callback
+   * when done.
+   *
+   * @param  {Function} done
+   * @api public
+   */
   exports.check = function(done) {
     var hasMessage = navigator.mozHasPendingMessage('activity');
 
@@ -21,56 +41,77 @@ define(function(require, exports) {
     }
 
     navigator.mozSetMessageHandler('activity', function(activity) {
+      var parsed = exports.parse(activity);
+
       exports.active = true;
-      configureApp(activity);
+      exports.name = parsed.name;
+      exports.allowedTypes = parsed.types;
+      exports.mode = parsed.mode;
+      exports.raw = activity;
+
       done();
     });
   };
 
-  function configureApp(activity) {
-    var allowedTypes = exports.allowedTypes;
+  /**
+   * Parses a raw activity object
+   * and returns relevant information.
+   *
+   * NOTE: This is a public method
+   * for testing purposes only.
+   *
+   * @param  {Activity} activity
+   * @return {Object}
+   */
+  exports.parse = function(activity) {
+    var data = {
+      name: activity.source.name,
+      types: getTypes(activity)
+    };
 
-    // default to allow both photos and videos
-    var types = activity.source.data.type || ['image/*', 'video/*'];
-    var mode = CAMERA_MODE_TYPE.CAMERA;
+    data.mode = modeFromTypes(data.types);
 
-    // Expose the name
-    var name = exports.name = activity.source.name;
+    return data;
+  };
 
-    if (name === 'pick') {
+  /**
+   * Returns an object that
+   * states which types (image,
+   * video) the incoming acitvity
+   * accepts.
+   *
+   * @param  {Activity} activity
+   * @return {Object}
+   */
+  function getTypes(activity) {
+    var raw = activity.source.data.type || ['image/*', 'video/*'];
+    var types = {};
 
-      // When inside an activity
-      // the user cannot switch between
-      // the gallery or video recording.
-      camera._pendingPick = activity;
-
-      // Make sure types is an array
-      if (typeof types === 'string') {
-        types = [types];
-      }
-
-      types.forEach(function(type) {
-        var typePrefix = type.split('/')[0];
-        allowedTypes[typePrefix] = true;
-      });
-
-      // Set a useful flag if both types are supported
-      allowedTypes.both = allowedTypes.image && allowedTypes.video;
-
-      var justVideo = allowedTypes.video && !allowedTypes.image;
-
-      if (justVideo) {
-        mode = CAMERA_MODE_TYPE.VIDEO;
-      }
-
-    } else { // record
-      if (types === 'videos') {
-        mode = CAMERA_MODE_TYPE.VIDEO;
-        allowedTypes.video = true;
-      }
+    if (raw === 'videos') {
+      types.video = true;
+      return types;
     }
 
-    camera.setCaptureMode(mode);
+    // Make sure it's an array
+    raw = [].concat(raw);
+
+    raw.forEach(function(type) {
+      var prefix = type.split('/')[0];
+      types[prefix] = true;
+    });
+
+    return types;
   }
 
+  /**
+   * Returns an appropriate capture
+   * mode when given a types object.
+   *
+   * @param  {Object} types
+   * @return {String}
+   */
+  function modeFromTypes(types) {
+    if (!types.image && types.video) { return VIDEO; }
+    else { return CAMERA; }
+  }
 });

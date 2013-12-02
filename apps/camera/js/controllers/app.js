@@ -1,8 +1,10 @@
 /*global PerformanceTestingHelper, CAMERA_MODE_TYPE*/
+/*jshint laxbreak:true*/
 
 define(function(require) {
   'use strict';
 
+  var activity = require('activity');
   var HudView = require('views/hud');
   var ViewfinderView = require('views/viewfinder');
   var ControlsView = require('views/controls');
@@ -56,6 +58,14 @@ define(function(require) {
       }
     });
 
+    // This is old code and should
+    // eventually be removed. The
+    // activity.js module should be the
+    // only place we query about activity.
+    if (activity.name === 'pick') {
+      camera._pendingPick = activity.raw;
+    }
+
     if (!navigator.mozCameras) {
       // TODO: Need to clarify what we
       // should do in this condition.
@@ -67,9 +77,13 @@ define(function(require) {
 
     PerformanceTestingHelper.dispatch('initialising-camera-preview');
 
+    var initialMode = activity.mode
+      || camera._captureMode
+      || CAMERA_MODE_TYPE.CAMERA;
+
     // Set the initial capture
     // mode (defaults to 'camera').
-    camera.setCaptureMode(camera._captureMode || CAMERA_MODE_TYPE.CAMERA);
+    camera.setCaptureMode(initialMode);
 
     // Prevent the phone
     // from going to sleep.
