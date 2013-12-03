@@ -1,14 +1,20 @@
-/*
- * filmstrip.js: filmstrip, thumbnails and previews for the camera.
- */
-
-'use strict';
-
 define(function(require) {
+  'use strict';
+
+  /**
+   * Dependencies
+   */
 
   var broadcast = require('broadcast');
   var orientation = require('orientation');
+  var constants = require('constants');
   var camera = require('camera');
+
+  /**
+   * Locals
+   */
+
+  var FILMSTRIP_DURATION = constants.FILMSTRIP_DURATION;
 
   // This array holds all the data we need for image and video previews
   var items = [];
@@ -191,8 +197,8 @@ define(function(require) {
       return;
     }
 
-    ViewfinderView.el.play();        // Restart the viewfinder
-    show(camera.FILMSTRIP_DURATION); // Fade the filmstrip after a delay
+    ViewfinderView.el.play(); // Restart the viewfinder
+    show(FILMSTRIP_DURATION); // Fade the filmstrip after a delay
     preview.classList.add('offscreen');
     frame.clear();
 

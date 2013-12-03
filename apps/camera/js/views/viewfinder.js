@@ -2,11 +2,21 @@
 define(function(require) {
   'use strict';
 
+  /**
+   * Dependencies
+   */
+
   var View = require('view');
   var bind = require('utils/bind');
-  var CameraState = require('models/state');
+  var constants = require('constants');
   var Camera = require('camera');
 
+  /**
+   * Locals
+   */
+
+  var MIN_VIEWFINDER_SCALE = constants.MIN_VIEWFINDER_SCALE;
+  var MAX_VIEWFINDER_SCALE = constants.MAX_VIEWFINDER_SCALE;
   var lastTouchA = null;
   var lastTouchB = null;
   var isScaling = false;

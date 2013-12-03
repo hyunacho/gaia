@@ -1,13 +1,31 @@
-
+/*jshint laxbreak:true*/
 define(function(require, exports, module){
   'use strict';
 
   var state = require('models/state');
+  var constants = require('constants');
   var soundEffect = require('soundeffect');
   var padLeft = require('utils/padleft');
   var broadcast = require('broadcast');
   var evt = require('libs/evt');
   var dcf = require('dcf');
+
+  /**
+   * Locals
+   */
+
+  var CAMERA = constants.CAMERA_MODE_TYPE.CAMERA;
+  var VIDEO = constants.CAMERA_MODE_TYPE.VIDEO;
+  var STORAGE_STATE_TYPE = constants.STORAGE_STATE_TYPE;
+  var FOCUS_MODE_TYPE = constants.FOCUS_MODE_TYPE;
+  var RECORD_SPACE_MIN = constants.RECORD_SPACE_MIN;
+  var RECORD_SPACE_PADDING = constants.RECORD_SPACE_PADDING;
+  var ESTIMATED_JPEG_FILE_SIZE = constants.ESTIMATED_JPEG_FILE_SIZE;
+  var MIN_RECORDING_TIME = constants.MIN_RECORDING_TIME;
+
+  /**
+   * Exports
+   */
 
   var Camera = module.exports = evt.mix({
     state: state,
@@ -146,10 +164,10 @@ define(function(require, exports, module){
 
     toggleMode: function() {
       var currentMode = this._captureMode;
-      var isCameraMode = currentMode === CAMERA_MODE_TYPE.CAMERA;
+      var isCameraMode = currentMode === CAMERA;
       var newMode = isCameraMode
-        ? CAMERA_MODE_TYPE.VIDEO
-        : CAMERA_MODE_TYPE.CAMERA;
+        ? VIDEO
+        : CAMERA;
 
       return this.setCaptureMode(newMode);
     },
@@ -199,7 +217,7 @@ define(function(require, exports, module){
       this._callAutoFocus = false;
 
       // Camera
-      if (this._captureMode === CAMERA_MODE_TYPE.CAMERA) {
+      if (this._captureMode === CAMERA) {
         if (this._autoFocusSupport[FOCUS_MODE_TYPE.CONTINUOUS_CAMERA]) {
           this._cameraObj.focusMode = FOCUS_MODE_TYPE.CONTINUOUS_CAMERA;
           return;
@@ -222,7 +240,7 @@ define(function(require, exports, module){
     capture: function() {
 
       // Camera
-      if (Camera._captureMode === CAMERA_MODE_TYPE.CAMERA) {
+      if (Camera._captureMode === CAMERA) {
         this.prepareTakePicture();
         return;
       }
@@ -619,7 +637,7 @@ define(function(require, exports, module){
           Camera._videoProfile = Camera.pickVideoProfile(recorderProfiles);
 
           // 'Video' Mode
-          if (Camera._captureMode === CAMERA_MODE_TYPE.VIDEO) {
+          if (Camera._captureMode === VIDEO) {
             Camera._videoProfile.rotation = window.orientation.get();
 
             Camera._cameraObj.getPreviewStreamVideoMode(
@@ -638,7 +656,7 @@ define(function(require, exports, module){
         camera.onRecorderStateChange = Camera.recordingStateChanged.bind(Camera);
 
         // 'Camera' Mode
-        if (Camera._captureMode === CAMERA_MODE_TYPE.CAMERA) {
+        if (Camera._captureMode === CAMERA) {
           camera.getPreviewStream(
             Camera._previewConfig,
             gotPreviewScreen.bind(Camera));
@@ -696,11 +714,11 @@ define(function(require, exports, module){
       var cameraNumber = this.state.get('cameraNumber');
 
       // Check camera flash support
-      var flash = this._flashState[CAMERA_MODE_TYPE.CAMERA];
+      var flash = this._flashState[CAMERA];
       flash.supported[cameraNumber] = isSubset(flash.modes, flashModes);
 
       // Check video flash support
-      flash = this._flashState[CAMERA_MODE_TYPE.VIDEO];
+      flash = this._flashState[VIDEO];
       flash.supported[cameraNumber] = isSubset(flash.modes, flashModes);
 
       this.setFlashMode();
@@ -777,7 +795,7 @@ define(function(require, exports, module){
 
     retakePressed: function() {
       this._savedMedia = null;
-      if (this._captureMode === CAMERA_MODE_TYPE.CAMERA) {
+      if (this._captureMode === CAMERA) {
         this.resumePreview();
       } else {
         this.startPreview();
@@ -791,7 +809,7 @@ define(function(require, exports, module){
       this._savedMedia = null;
 
       // Camera
-      if (this._captureMode === CAMERA_MODE_TYPE.CAMERA) {
+      if (this._captureMode === CAMERA) {
         this._resizeBlobIfNeeded(media.blob, function(resized_blob) {
           self._pendingPick.postResult({
             type: 'image/jpeg',
