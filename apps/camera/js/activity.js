@@ -1,16 +1,18 @@
-/*global CAMERA_MODE_TYPE*/
 define(function(require, exports) {
   'use strict';
 
-  // Dependencies
-  require('/js/constants.js');
+  /**
+   * Dependencies
+   */
+
+  var constants = require('/js/constants.js');
 
   /**
    * Locals
    */
 
-  var VIDEO = CAMERA_MODE_TYPE.VIDEO;
-  var CAMERA = CAMERA_MODE_TYPE.CAMERA;
+  var VIDEO = constants.CAMERA_MODE_TYPE.VIDEO;
+  var CAMERA = constants.CAMERA_MODE_TYPE.CAMERA;
 
   /**
    * Exports

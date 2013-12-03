@@ -1,11 +1,16 @@
-/*global PerformanceTestingHelper, CAMERA_MODE_TYPE*/
+/*global PerformanceTestingHelper*/
 /*jshint laxbreak:true*/
 
 define(function(require) {
   'use strict';
 
+  /**
+   * Dependencies
+   */
+
   var activity = require('activity');
   var HudView = require('views/hud');
+  var constants = require('constants');
   var ViewfinderView = require('views/viewfinder');
   var ControlsView = require('views/controls');
   var filmstrip = require('views/filmstrip');
@@ -17,12 +22,23 @@ define(function(require) {
   var bind = require('utils/bind');
   var camera = require('camera');
   var dcf = require('dcf');
-
   var controllers = {
     hud: require('controllers/hud'),
     controls: require('controllers/controls'),
     viewfinder: require('controllers/viewfinder')
   };
+
+  /**
+   * Locals
+   */
+
+  var CAMERA = constants.CAMERA_MODE_TYPE.CAMERA;
+  var STORAGE_STATE_TYPE = constants.STORAGE_STATE_TYPE;
+  var PROMPT_DELAY = constants.PROMPT_DELAY;
+
+  /**
+   * Exports
+   */
 
   return function() {
     var body = document.body;
@@ -79,7 +95,7 @@ define(function(require) {
 
     var initialMode = activity.mode
       || camera._captureMode
-      || CAMERA_MODE_TYPE.CAMERA;
+      || CAMERA;
 
     // Set the initial capture
     // mode (defaults to 'camera').
