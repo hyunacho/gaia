@@ -178,7 +178,7 @@ define(function(require) {
         height = screenHeight;
       }
 
-      var cameraNumber = CameraState.get('cameraNumber');
+      var cameraNumber = Camera.state.get('cameraNumber');
       if (cameraNumber == 1) {
         /* backwards-facing camera */
         transform += ' scale(-1, 1)';
