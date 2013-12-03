@@ -1,0 +1,11 @@
+{
+  appDir: '..',
+  baseUrl: 'js',
+  name: 'main',
+  dir: '../../../build_stage/camera',
+
+  // Keeping build dir since Makefile cleans it up and
+  // preps build dir with the shared directory
+  keepBuildDir: true,
+  removeCombined: true
+}
