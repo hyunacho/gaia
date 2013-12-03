@@ -7,8 +7,10 @@ requirejs.config({ baseUrl: 'js' });
 require([
   'activity',
   'controllers/app',
+  'js/config.js',
   '/shared/js/async_storage.js',
   '/shared/js/blobview.js',
+  '/shared/js/performance_testing_helper.js',
   '/shared/js/media/jpeg_metadata_parser.js',
   '/shared/js/media/get_video_rotation.js',
   '/shared/js/media/video_player.js',
