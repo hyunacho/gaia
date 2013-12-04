@@ -3,14 +3,16 @@
 
 suite('activity', function() {
   var activity;
-  var camera;
 
+  // Sometimes setup via the
+  // test agent can take a while,
+  // so we need to bump timeout
+  // to prevent test failure.
   this.timeout(3000);
 
-  before(function(done) {
-    req(['activity', 'camera'], function(_activity, _camera) {
+  suiteSetup(function(done) {
+    req(['activity'], function(_activity) {
       activity = _activity;
-      camera = _camera;
       done();
     });
   });
