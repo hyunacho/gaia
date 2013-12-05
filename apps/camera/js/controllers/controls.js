@@ -44,7 +44,6 @@ define(function(require) {
     controls.set('mode', mode);
     controls.set('gallery', showGallery);
     controls.set('cancel', isCancellable);
-    controls.set('camera', showCamera);
     controls.set('switchable', isSwitchable);
 
     function onCameraModeChange(mode) {
