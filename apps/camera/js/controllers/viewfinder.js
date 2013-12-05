@@ -1,8 +1,8 @@
-
 define(function(require) {
   'use strict';
 
   var camera = require('camera');
+  var activity = require('activity');
 
   return function(viewfinder, filmstrip) {
 
@@ -21,12 +21,11 @@ define(function(require) {
       // because the filmstrip
       // shouldn't be shown while
       // Camera is recording.
-      if (recording || camera._pendingPick) {
+      if (recording || activity.active) {
         return;
       }
 
       filmstrip.toggle();
     }
   };
-
 });
