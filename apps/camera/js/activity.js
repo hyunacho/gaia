@@ -5,7 +5,7 @@ define(function(require, exports) {
    * Dependencies
    */
 
-  var constants = require('/js/constants.js');
+  var constants = require('constants');
 
   /**
    * Locals
