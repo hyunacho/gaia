@@ -7,6 +7,7 @@ define(function(require) {
   var find = require('utils/find');
 
   return View.extend({
+    className: 'controls js-controls',
     buttonsDisabledClass: 'buttons-disabled',
     initialize: function() {
 
@@ -14,6 +15,12 @@ define(function(require) {
       this.enableButtons = this.enableButtons.bind(this);
       this.disableButtons = this.disableButtons.bind(this);
       this.onButtonClick = this.onButtonClick.bind(this);
+
+      this.render();
+    },
+
+    render: function() {
+      this.el.innerHTML = this.template();
 
       // Find elements
       this.els.switchButton = find('.js-switch', this.el);
@@ -27,6 +34,24 @@ define(function(require) {
       bind(this.els.captureButton, 'click', this.onButtonClick);
       bind(this.els.galleryButton, 'click', this.onButtonClick);
       bind(this.els.cancelPickButton, 'click', this.onButtonClick);
+    },
+
+    template: function() {
+      return '<a class="switch-button js-switch" name="switch">' +
+        '<span class="rotates"></span>' +
+      '</a>' +
+      '<a class="capture-button js-capture" name="capture">' +
+        '<span class="rotates"></span>' +
+      '</a>' +
+      '<div class="misc-button">' +
+        '<a class="gallery-button js-gallery" name="gallery">' +
+          '<span class="rotates"></span>' +
+        '</a>' +
+        '<a class="cancel-pick js-cancel-pick" name="cancel">' +
+          '<span></span>' +
+        '</a>' +
+        '<span class="video-timer js-video-timer">00:00</span>' +
+      '</div>';
     },
 
     set: function(key, value) {
