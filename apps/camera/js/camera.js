@@ -70,38 +70,36 @@ define(function(require, exports, module){
     // show one alert per recording
     _sizeLimitAlertActive: false,
 
-    _flashState: {
-      camera: {
+    // Holds the configuration
+    // and current flash state.
+    flash: {
 
-        // default flash
-        // mode is 'auto'
-        defaultMode: 1,
-
-        // Delay the array initialization
-        // to enableCameraFeatures.
-        supported: [],
-
-        modes: ['off', 'auto', 'on'],
-
-        // Delay the array
-        // initialization when needed
-        currentMode: []
+      // Our predetermined configuration
+      // for camera and video flash
+      config: {
+        camera: {
+          defaultMode: 'auto',
+          supports: ['off', 'auto', 'on'],
+        },
+        video: {
+          defaultMode: 'off',
+          supports: ['off', 'torch'],
+        }
       },
-      video: {
 
-        // Default flash
-        // mode is 'off'
-        defaultMode: 0,
+      // All flash hardware modes
+      // on this current camera.
+      all: [],
 
-        // Delay the array initialization
-        // to enableCameraFeatures.
-        supported: [],
-        modes: ['off', 'torch'],
+      // Flash modes currently
+      // available with the current
+      // combination of hardware
+      // and capture mode.
+      available: [],
 
-        // Delay the array
-        // initialization when needed.
-        currentMode: []
-      }
+      // The index of the current
+      // flash in the avaiable list.
+      current: null
     },
 
     _config: {
@@ -169,7 +167,8 @@ define(function(require, exports, module){
         ? VIDEO
         : CAMERA;
 
-      return this.setCaptureMode(newMode);
+      this.setCaptureMode(newMode);
+      this.configureFlashModes(this.flash.all);
     },
 
     toggleCamera: function() {
@@ -178,39 +177,25 @@ define(function(require, exports, module){
     },
 
     toggleFlash: function() {
-      var flash = this._flashState[this._captureMode];
-      var cameraNumber = this.state.get('cameraNumber');
-      var numModes = flash.modes.length;
-      var next = (flash.currentMode[cameraNumber] + 1) % numModes;
+      var available = this.flash.available;
+      var current = this.flash.current;
+      var l = available.length;
+      var next = (current + 1) % l;
+      var name = available[next];
 
-      flash.currentMode[cameraNumber] = next;
-      return this.setFlashMode();
+      this.setFlashMode(next);
+      return name;
     },
 
-    getFlashModeName: function() {
-      var flash = this._flashState[this._captureMode];
-      var cameraNumber = this.state.get('cameraNumber');
-      var flashMode = flash.currentMode[cameraNumber];
-
-      // Front camera has no flash
-      if (cameraNumber === 1) {
-        flashMode = null;
-      }
-
-      return flash.modes[flashMode];
+    getFlashMode: function() {
+      var index = this.flash.current;
+      return this.flash.available[index];
     },
 
-    setFlashMode: function() {
-      var flash = this._flashState[this._captureMode];
-      var cameraNumber = this.state.get('cameraNumber');
-
-      if ((typeof flash.currentMode[cameraNumber]) === 'undefined') {
-        flash.currentMode[cameraNumber] = flash.defaultMode;
-      }
-
-      var flashModeName = flash.modes[flash.currentMode[cameraNumber]];
-      this._cameraObj.flashMode = flashModeName;
-      return flashModeName;
+    setFlashMode: function(index) {
+      var name = this.flash.available[index];
+      this._cameraObj.flashMode = name;
+      this.flash.current = index;
     },
 
     setFocusMode: function() {
@@ -697,43 +682,43 @@ define(function(require, exports, module){
       return this._cameras.length > 1;
     },
 
+    configureFlashModes: function(allModes) {
+      this.flash.all = allModes || [];
+
+      var cameraMode = this.getMode();
+      var config = this.flash.config[cameraMode];
+      var supported = config.supports;
+      var index;
+
+      this.flash.available = this.flash.all.filter(function(mode) {
+        return !!~supported.indexOf(mode);
+      });
+
+      // Decide on the initial mode
+      index = this.flash.available.indexOf(config.defaultMode);
+      if (!~index) { index = 0; }
+
+      this.setFlashMode(index);
+    },
+
+    configureFocusModes: function(focusModes) {
+      if (!focusModes) {
+        return;
+      }
+
+      var MANUALLY_TRIGGERED = FOCUS_MODE_TYPE.MANUALLY_TRIGGERED;
+      var CONTINUOUS_CAMERA = FOCUS_MODE_TYPE.CONTINUOUS_CAMERA;
+      var CONTINUOUS_VIDEO = FOCUS_MODE_TYPE.CONTINUOUS_VIDEO;
+      var support = this._autoFocusSupport;
+
+      support[MANUALLY_TRIGGERED] = !!~focusModes.indexOf(MANUALLY_TRIGGERED);
+      support[CONTINUOUS_CAMERA] = !!~focusModes.indexOf(CONTINUOUS_CAMERA);
+      support[CONTINUOUS_VIDEO] = !!~focusModes.indexOf(CONTINUOUS_VIDEO);
+    },
+
     enableCameraFeatures: function(capabilities) {
-
-      // For checking flash support
-      function isSubset(subset, set) {
-        for (var i = 0; i < subset.length; i++) {
-          if (set.indexOf(subset[i]) == -1) {
-            return false;
-          }
-        }
-
-        return true;
-      }
-
-      var flashModes = capabilities.flashModes || [];
-      var cameraNumber = this.state.get('cameraNumber');
-
-      // Check camera flash support
-      var flash = this._flashState[CAMERA];
-      flash.supported[cameraNumber] = isSubset(flash.modes, flashModes);
-
-      // Check video flash support
-      flash = this._flashState[VIDEO];
-      flash.supported[cameraNumber] = isSubset(flash.modes, flashModes);
-
-      this.setFlashMode();
-
-      var focusModes = capabilities.focusModes;
-      if (focusModes) {
-        var support = this._autoFocusSupport;
-        support[FOCUS_MODE_TYPE.MANUALLY_TRIGGERED] =
-          focusModes.indexOf(FOCUS_MODE_TYPE.MANUALLY_TRIGGERED) !== -1;
-        support[FOCUS_MODE_TYPE.CONTINUOUS_CAMERA] =
-          focusModes.indexOf(FOCUS_MODE_TYPE.CONTINUOUS_CAMERA) !== -1;
-        support[FOCUS_MODE_TYPE.CONTINUOUS_VIDEO] =
-          focusModes.indexOf(FOCUS_MODE_TYPE.CONTINUOUS_VIDEO) !== -1;
-      }
-
+      this.configureFlashModes(capabilities.flashModes);
+      this.configureFocusModes(capabilities.focusModes);
       this.emit('configured');
     },
 
