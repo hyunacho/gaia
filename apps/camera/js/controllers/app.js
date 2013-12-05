@@ -18,7 +18,6 @@ define(function(require) {
   var soundEffect = require('soundeffect');
   var lockscreen = require('lockscreen');
   var broadcast = require('broadcast');
-  var find = require('utils/find');
   var bind = require('utils/bind');
   var camera = require('camera');
   var dcf = require('dcf');
