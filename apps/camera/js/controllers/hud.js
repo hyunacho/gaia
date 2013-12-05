@@ -16,7 +16,7 @@ define(function(require) {
 
     function onCameraConfigured() {
       var hasFrontCamera = camera.hasFrontCamera();
-      var flashMode = camera.getFlashModeName();
+      var flashMode = camera.getFlashMode();
 
       hud.showCameraToggleButton(hasFrontCamera);
       hud.setFlashMode(flashMode);
