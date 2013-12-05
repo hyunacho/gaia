@@ -459,14 +459,16 @@ define(function(require, exports, module){
      */
     saveVideoPosterImage: function(filename, callback) {
       var getreq = this._videoStorage.get(filename);
+      var URL = window.URL;
+      var self = this;
 
       getreq.onsuccess = onSuccess;
       getreq.onerror = onError;
 
       function onSuccess() {
         var videoblob = getreq.result;
-        var self = this;
 
+        // Not sure where this function is defined?
         getVideoRotation(videoblob, function(rotation) {
           if (typeof rotation !== 'number') {
             console.warn('Unexpected rotation:', rotation);
