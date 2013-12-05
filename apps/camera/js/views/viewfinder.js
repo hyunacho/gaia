@@ -49,6 +49,8 @@ define(function(require) {
   };
 
   return View.extend({
+    tag: 'video',
+    className: 'viewfinder js-viewfinder',
     fadeTime: 200,
     initialize: function() {
 
@@ -57,6 +59,8 @@ define(function(require) {
       bind(this.el, 'touchstart', this.onTouchStart.bind(this));
       bind(this.el, 'touchmove', this.onTouchMove.bind(this));
       bind(this.el, 'touchend', this.onTouchEnd.bind(this));
+
+      this.el.autoplay = true;
     },
 
     onClick: function() {
