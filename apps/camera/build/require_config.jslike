@@ -1,8 +1,11 @@
 {
   appDir: '..',
   baseUrl: 'js',
-  name: 'main',
+  mainConfigFile: '../js/require_config.js',
   dir: '../../../build_stage/camera',
+  name: 'main',
+
+  findNestedDependencies: true,
 
   // Set to 'uglify2' to get uglify to run using the
   // uglify2 settings below.
