@@ -1,4 +1,15 @@
 
+/**
+ * Shared
+ */
+
+@import url("../shared/style/confirm.css");
+@import url("../shared/style/buttons.css");
+
+/**
+ * App
+ */
+
 @import url("app.css");
 @import url("viewfinder.css");
 @import url("focusring.css");
@@ -8,10 +19,3 @@
 @import url("filmstrip.css");
 @import url("confirm.css");
 @import url("VideoPlayer.css");
-
-/**
- * Shared
- */
-
-@import url("../shared/style/confirm.css");
-@import url("../shared/style/buttons.css");
