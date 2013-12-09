@@ -1149,23 +1149,26 @@ proto.cancelPositionUpdate = function() {
 };
 
 proto.release = function(callback) {
-  var self = this;
-
   if (!this._cameraObj) {
     return;
   }
 
-  this._cameraObj.release(function cameraReleased() {
+  var self = this;
+  this._cameraObj.release(onSuccess, onError);
+
+  function onSuccess() {
     self._cameraObj = null;
     if (callback) {
-      callback.call(self);
+      callback();
     }
-  }, function releaseError() {
+  }
+
+  function onError() {
     console.warn('Camera: failed to release hardware?');
     if (callback) {
-      callback.call(self);
+      callback();
     }
-  });
+  }
 };
 
 proto.getPreferredSizes = function(callback) {
