@@ -53,7 +53,6 @@ function CameraController(app) {
 }
 
 proto.bindEvents = function() {
-  console.log('bindEvents');
   this.app.on('boot', this.setupCamera);
   this.app.on('blur', this.teardownCamera);
   this.app.on('focus', this.setupCamera);
