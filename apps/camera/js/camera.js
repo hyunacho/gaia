@@ -7,7 +7,7 @@ define(function(require, exports, module){
  * Dependencies
  */
 
-var State = require('models/state');
+var Model = require('model');
 var constants = require('constants');
 var soundEffect = require('soundeffect');
 var padLeft = require('utils/padleft');
@@ -47,9 +47,14 @@ module.exports = Camera;
  * @constructor
  */
 function Camera() {
-  this.state = new State();
-  this._cameras = null;
-  this._captureMode = null;
+  this.state = new Model({
+    mode: null,
+    cameraNumber: 0,
+    autoFocusSupported: false,
+    manuallyFocused: false,
+    recording: false,
+    previewActive: false
+  });
 
   // In secure mode the user
   // cannot browse to the gallery
