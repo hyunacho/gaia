@@ -42,7 +42,7 @@ function CameraController(app) {
   // eventually be removed. The
   // activity.js module should be the
   // only place we query about activity.
-  if (this.activity.name === 'pick') {
+  if (this.activity.raw) {
     this.camera._pendingPick = this.activity.raw;
   }
 
@@ -53,10 +53,10 @@ function CameraController(app) {
 }
 
 proto.bindEvents = function() {
+  console.log('bindEvents');
   this.app.on('boot', this.setupCamera);
   this.app.on('blur', this.teardownCamera);
   this.app.on('focus', this.setupCamera);
-  this.app.on('beforeunload', this.onBeforeUnload);
 };
 
 /**
@@ -77,7 +77,6 @@ proto.setCaptureMode = function() {
 proto.setupCamera = function() {
   var activity = this.activity;
   var camera = this.camera;
-
   camera.loadStreamInto(this.viewfinder.el, onStreamLoaded);
 
   function onStreamLoaded(stream) {
