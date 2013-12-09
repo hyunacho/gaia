@@ -2,6 +2,7 @@
 'use strict';
 
 suite('activity', function() {
+  var Camera;
 
   // Sometimes setup via the
   // test agent can take a while,
@@ -10,15 +11,14 @@ suite('activity', function() {
   this.timeout(3000);
 
   suiteSetup(function(done) {
-    var self = this;
-
-    this.modules = {};
-
     req(['camera'], function(_camera) {
-      self.modules.camera = _camera;
-      self.camera = _camera;
+      Camera = _camera;
       done();
     });
+  });
+
+  setup(function() {
+    this.camera = new Camera();
   });
 
   suite('camera.toggleCamera', function() {
@@ -126,6 +126,137 @@ suite('activity', function() {
         this.camera.flash.available = [];
         this.camera.flash.current = null;
         assert.equal(this.camera.getFlashMode(), undefined);
+      });
+    });
+  });
+
+  suite('storage', function() {
+
+    suite('camera.storageCheck', function() {
+      setup(function() {
+        sinon.stub(this.camera, 'getDeviceStorageState');
+        sinon.stub(this.camera, 'isSpaceOnStorage');
+      });
+
+      teardown(function() {
+        this.camera.getDeviceStorageState.restore();
+        this.camera.isSpaceOnStorage.restore();
+        this.camera.state.set('storage', undefined);
+      });
+
+      test('Should check storage state, then storage space', function(done) {
+        var getState = this.camera.getDeviceStorageState;
+        var isSpace = this.camera.isSpaceOnStorage;
+
+        getState.callsArgWith(0, 'somevalue');
+        isSpace.callsArgWith(0, true);
+
+        this.camera.storageCheck(function() {
+          assert.ok(getState.calledBefore(isSpace));
+          done();
+        });
+      });
+
+      test('Should set the returned value at the camera storage state value', function(done) {
+        var camera = this.camera;
+        var getState = camera.getDeviceStorageState;
+        var isSpace = camera.isSpaceOnStorage;
+
+        getState.callsArgWith(0, 'somevalue');
+        isSpace.callsArgWith(0, true);
+
+        camera.storageCheck(function() {
+          assert.equal(camera.state.get('storage'), 'somevalue');
+          done();
+        });
+      });
+
+      test('Should set the storage state to \'nospace\' if there is no space left on the device', function(done) {
+        var camera = this.camera;
+        var getState = camera.getDeviceStorageState;
+        var isSpace = camera.isSpaceOnStorage;
+
+        getState.callsArgWith(0, 'available');
+        isSpace.callsArgWith(0, false);
+
+        camera.storageCheck(function() {
+          assert.equal(camera.state.get('storage'), 'nospace');
+          done();
+        });
+      });
+    });
+
+    suite('camera.isSpaceOnStorage', function() {
+      setup(function() {
+        var req = this.req = {};
+
+        // Mock picture size
+        this.camera._pictureSize = {
+          width: 600,
+          height: 400
+        };
+
+        // Mock async picture storage DB
+        this.camera._pictureStorage = {
+          freeSpace: function() {
+            setTimeout(function() {
+              req.onsuccess({ target: req });
+            }, 0);
+            return req;
+          }
+        };
+      });
+
+      teardown(function() {
+        delete this.camera._pictureSize;
+        delete this.camera._pictureStorage;
+        delete this.req;
+      });
+
+      test('Should return true if there is enough space for at least one image', function(done) {
+        this.req.result = 9999999999;
+        this.camera.isSpaceOnStorage(function(result) {
+          assert.isTrue(result);
+          done();
+        });
+      });
+
+      test('Should return true if there is enough space for at least one image', function(done) {
+        this.req.result = 99;
+        this.camera.isSpaceOnStorage(function(result) {
+          assert.isFalse(result);
+          done();
+        });
+      });
+    });
+
+    suite('camera.getDeviceStorageState', function() {
+      setup(function() {
+        var request = this.request = {};
+
+        // Mock async picture storage DB
+        this.camera._pictureStorage = {
+          available: function() {
+            setTimeout(function() {
+              request.onsuccess({ target: request });
+            }, 0);
+            return request;
+          }
+        };
+      });
+
+      teardown(function() {
+        delete this.camera._pictureStorage;
+        delete this.request;
+      });
+
+      test('Should make request to pictureStorage if no storage state is set', function(done) {
+        this.request.result = 'some-state';
+
+        this.camera.getDeviceStorageState(function(result) {
+          assert.equal(result, 'some-state');
+          done();
+        });
       });
     });
   });
