@@ -1,119 +1,136 @@
-define(function(require, exports) {
-  'use strict';
+define(function(require, exports, module) {
+'use strict';
 
-  /**
-   * Dependencies
-   */
+/**
+ * Dependencies
+ */
 
-  var constants = require('constants');
+var constants = require('constants');
 
-  /**
-   * Locals
-   */
+/**
+ * Locals
+ */
 
-  var VIDEO = constants.CAMERA_MODE_TYPE.VIDEO;
-  var CAMERA = constants.CAMERA_MODE_TYPE.CAMERA;
+var VIDEO = constants.CAMERA_MODE_TYPE.VIDEO;
+var CAMERA = constants.CAMERA_MODE_TYPE.CAMERA;
+var proto = Activity.prototype;
 
-  /**
-   * Exports
-   */
+/**
+ * Exports
+ */
 
-  exports.name = null;
-  exports.active = false;
-  exports.allowedTypes = {
+module.exports = Activity;
+
+function Activity() {
+  this.name = null;
+  this.active = false;
+  this.allowedTypes = {
     image: false,
     video: false,
     both: false
   };
+}
 
-  /**
-   * Checks for a pending activity,
-   * calling the given callback
-   * when done.
-   *
-   * @param  {Function} done
-   * @api public
-   */
-  exports.check = function(done) {
-    var hasMessage = navigator.mozHasPendingMessage('activity');
+/**
+ * Checks for a pending activity,
+ * calling the given callback
+ * when done.
+ *
+ * @param  {Function} done
+ * @api public
+ */
+proto.check = function(done) {
+  var hasMessage = navigator.mozHasPendingMessage('activity');
+  var self = this;
 
-    if (!hasMessage) {
-      done();
-      return;
-    }
+  if (!hasMessage) {
+    done();
+    return;
+  }
 
-    navigator.mozSetMessageHandler('activity', function(activity) {
-      var parsed = exports.parse(activity);
+  navigator.mozSetMessageHandler('activity', function(activity) {
+    var parsed = self.parse(activity);
 
-      exports.active = true;
-      exports.name = parsed.name;
-      exports.allowedTypes = parsed.types;
-      exports.mode = parsed.mode;
-      exports.raw = activity;
+    self.active = true;
+    self.name = parsed.name;
+    self.allowedTypes = parsed.types;
+    self.mode = parsed.mode;
+    self.raw = activity;
 
-      done();
-    });
+    done();
+  });
+};
+
+/**
+ * Parses a raw activity object
+ * and returns relevant information.
+ *
+ * NOTE: This is a public method
+ * for testing purposes only.
+ *
+ * @param  {Activity} activity
+ * @return {Object}
+ */
+proto.parse = function(activity) {
+  var data = {
+    name: activity.source.name,
+    types: this.getTypes(activity)
   };
 
-  /**
-   * Parses a raw activity object
-   * and returns relevant information.
-   *
-   * NOTE: This is a public method
-   * for testing purposes only.
-   *
-   * @param  {Activity} activity
-   * @return {Object}
-   */
-  exports.parse = function(activity) {
-    var data = {
-      name: activity.source.name,
-      types: getTypes(activity)
-    };
+  data.mode = this.modeFromTypes(data.types);
 
-    data.mode = modeFromTypes(data.types);
+  return data;
+};
 
-    return data;
-  };
+proto.cancel = function() {
+  if (this.raw) {
+    this.raw.postError('pick cancelled');
+  }
 
-  /**
-   * Returns an object that
-   * states which types (image,
-   * video) the incoming acitvity
-   * accepts.
-   *
-   * @param  {Activity} activity
-   * @return {Object}
-   */
-  function getTypes(activity) {
-    var raw = activity.source.data.type || ['image/*', 'video/*'];
-    var types = {};
+  this.raw = null;
+  this.name = null;
+  this.active = false;
+};
 
-    if (raw === 'videos') {
-      types.video = true;
-      return types;
-    }
+/**
+ * Returns an object that
+ * states which types (image,
+ * video) the incoming acitvity
+ * accepts.
+ *
+ * @param  {Activity} activity
+ * @return {Object}
+ */
+proto.getTypes = function(activity) {
+  var raw = activity.source.data.type || ['image/*', 'video/*'];
+  var types = {};
 
-    // Make sure it's an array
-    raw = [].concat(raw);
-
-    raw.forEach(function(type) {
-      var prefix = type.split('/')[0];
-      types[prefix] = true;
-    });
-
+  if (raw === 'videos') {
+    types.video = true;
     return types;
   }
 
-  /**
-   * Returns an appropriate capture
-   * mode when given a types object.
-   *
-   * @param  {Object} types
-   * @return {String}
-   */
-  function modeFromTypes(types) {
-    if (!types.image && types.video) { return VIDEO; }
-    else { return CAMERA; }
-  }
+  // Make sure it's an array
+  raw = [].concat(raw);
+
+  raw.forEach(function(type) {
+    var prefix = type.split('/')[0];
+    types[prefix] = true;
+  });
+
+  return types;
+};
+
+/**
+ * Returns an appropriate capture
+ * mode when given a types object.
+ *
+ * @param  {Object} types
+ * @return {String}
+ */
+proto.modeFromTypes = function(types) {
+  if (!types.image && types.video) { return VIDEO; }
+  else { return CAMERA; }
+};
+
 });
