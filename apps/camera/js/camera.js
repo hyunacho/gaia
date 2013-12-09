@@ -79,9 +79,6 @@ function Camera() {
   this._photosTaken = [];
   this._cameraProfile = null;
 
-  this._pictureStorage = null;
-  this._videoStorage = null;
-
   this._pictureSize = null;
   this._previewConfig = null;
 
