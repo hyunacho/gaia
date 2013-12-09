@@ -1,91 +1,167 @@
+define(function(require, exports, module) {
 /*jshint laxbreak:true*/
 
-define(function(require) {
-  'use strict';
+'use strict';
 
-  // Dependencies
-  var CameraState = require('models/state');
-  var activity = require('activity');
-  var camera = require('camera');
+/**
+ * Locals
+ */
 
-  return function(controls, viewfinder) {
+var proto = ControlsController.prototype;
 
-    // Bind events
-    camera.on('captureModeChange', onCameraModeChange);
-    camera.on('videoTimeUpdate', onVideoTimeUpdate);
-    camera.on('preparingToTakePicture', controls.disableButtons);
-    camera.on('previewResumed', controls.enableButtons);
-    camera.on('focusFailed', controls.enableButtons);
+/**
+ * Exports
+ */
 
-    // Respond to events that
-    // happen in the controls UI.
-    controls.on('click:switch', onSwitchButtonClick);
-    controls.on('click:capture', onCaptureButtonClick);
-    controls.on('click:cancel', onCancelButtonClick);
-    controls.on('click:gallery', onGalleryButtonClick);
+exports = module.exports = function(app) {
+  return new ControlsController(app);
+};
 
-    CameraState.on('change:recording', function(e) {
-      controls.set('recording', e.value);
-    });
+function ControlsController(app) {
+  this.viewfinder = app.views.viewfinder;
+  this.controls = app.views.controls;
+  this.activity = app.activity;
+  this.camera = app.camera;
+  this.app = app;
 
-    // Set initial state
-    var mode = camera.getMode();
-    var isCancellable = activity.name === 'pick';
-    var showCamera = !activity.active || activity.allowedTypes.image;
-    var showVideo = !activity.active || activity.allowedTypes.video;
-    var isSwitchable = showVideo && showCamera;
+  // Bind context
+  this.onCameraModeChange = this.onCameraModeChange.bind(this);
+  this.onVideoTimeUpdate = this.onVideoTimeUpdate.bind(this);
+  this.onSwitchButtonClick = this.onSwitchButtonClick.bind(this);
+  this.onCaptureButtonClick = this.onCaptureButtonClick.bind(this);
+  this.onCancelButtonClick = this.onCancelButtonClick.bind(this);
+  this.onGalleryButtonClick = this.onGalleryButtonClick.bind(this);
 
-    // The gallery button should not
-    // be shown if an activity is pending
-    // or the application is in 'secure mode'.
-    var showGallery = !activity.active
-      && !camera._secureMode;
+  this.bindEvents();
+  this.setup();
+}
 
-    controls.set('mode', mode);
-    controls.set('gallery', showGallery);
-    controls.set('cancel', isCancellable);
-    controls.set('switchable', isSwitchable);
+proto.bindEvents = function() {
+  var controls = this.controls;
+  var camera = this.camera;
 
-    function onCameraModeChange(mode) {
-      controls.set('mode', mode);
-    }
+  // Bind events
+  camera.on('captureModeChange', this.onCameraModeChange);
+  camera.on('videoTimeUpdate', this.onVideoTimeUpdate);
+  camera.on('preparingToTakePicture', controls.disableButtons);
+  camera.on('previewResumed', controls.enableButtons);
+  camera.on('focusFailed', controls.enableButtons);
 
-    function onVideoTimeUpdate(value) {
-      controls.setVideoTimer(value);
-    }
+  // Respond to events that
+  // happen in the controls UI.
+  controls.on('click:switch', this.onSwitchButtonClick);
+  controls.on('click:capture', this.onCaptureButtonClick);
+  controls.on('click:cancel', this.onCancelButtonClick);
+  controls.on('click:gallery', this.onGalleryButtonClick);
 
-    function onSwitchButtonClick() {
-      camera.toggleMode();
-      controls.disableButtons();
-      viewfinder.fadeOut(function() {
-        camera.loadStreamInto(viewfinder.el, function() {
-            controls.enableButtons();
-            viewfinder.fadeIn();
-        });
-      });
-    }
+  camera.state.on('change:recording', function(e) {
+    controls.set('recording', e.value);
+  });
+};
 
-    function onCancelButtonClick() {
-      camera.cancelPick();
-    }
+proto.setup = function() {
+  var activity = this.activity;
+  var controls = this.controls;
+  var mode = this.camera.getMode();
+  var isCancellable = activity.active;
+  var showCamera = !activity.active || activity.allowedTypes.image;
+  var showVideo = !activity.active || activity.allowedTypes.video;
+  var isSwitchable = showVideo && showCamera;
 
-    function onGalleryButtonClick() {
-      // Can't launch the gallery if the lockscreen is locked.
-      // The button shouldn't even be visible in this case, but
-      // let's be really sure here.
-      if (camera._secureMode) {
-        return;
-      }
+  // The gallery button should not
+  // be shown if an activity is pending
+  // or the application is in 'secure mode'.
+  var showGallery = !activity.active
+    && !this.app.inSecureMode;
 
-      // Launch the gallery with an activity
-      var a = new MozActivity({
-        name: 'browse',
-        data: { type: 'photos' }
-      });
-    }
+  controls.set('mode', mode);
+  controls.set('gallery', showGallery);
+  controls.set('cancel', isCancellable);
+  controls.set('switchable', isSwitchable);
+};
 
-    function onCaptureButtonClick() {
-      camera.capture();
-    }
-  };
+proto.onCameraModeChange = function(mode) {
+  this.controls.set('mode', mode);
+};
+
+proto.onVideoTimeUpdate = function(value) {
+  this.controls.setVideoTimer(value);
+};
+
+/**
+ * Fades the viewfinder out,
+ * changes the camera capture
+ * mode. Then fades the viewfinder
+ * back in.
+ *
+ * @api private
+ */
+proto.onSwitchButtonClick = function() {
+  var controls = this.controls;
+  var viewfinder = this.viewfinder;
+  var camera = this.camera;
+
+  camera.toggleMode();
+  controls.disableButtons();
+  viewfinder.fadeOut(onFadeOut);
+
+  function onFadeOut() {
+    camera.loadStreamInto(viewfinder.el, onStreamLoaded);
+  }
+
+  function onStreamLoaded() {
+    controls.enableButtons();
+    viewfinder.fadeIn();
+  }
+};
+
+/**
+ * Cancel the current activity
+ * when the cancel button is
+ * pressed.
+ *
+ * This means the device will
+ * navigate back to the app
+ * that initiated the activity.
+ *
+ * @api private
+ */
+proto.onCancelButtonClick = function() {
+  this.activity.cancel();
+};
+
+/**
+ * Open the gallery app
+ * when the gallery button
+ * is pressed.
+ *
+ * @api private
+ */
+proto.onGalleryButtonClick = function() {
+  var MozActivity = window.MozActivity;
+
+  // Can't launch the gallery if the lockscreen is locked.
+  // The button shouldn't even be visible in this case, but
+  // let's be really sure here.
+  if (this.camera._secureMode) {
+    return;
+  }
+
+  // Launch the gallery with an activity
+  this.mozActivity = new MozActivity({
+    name: 'browse',
+    data: { type: 'photos' }
+  });
+};
+
+/**
+ * Capture when the capture
+ * button is pressed.
+ *
+ * @api private
+ */
+proto.onCaptureButtonClick = function() {
+  this.camera.capture();
+};
+
 });

@@ -1,54 +1,83 @@
-
-define(function(require) {
+define(function(require, exports, module) {
   'use strict';
 
-  var camera = require('camera');
+  /**
+   * Locals
+   */
 
-  return function(hud, viewfinder, controls) {
+  var proto = HudController.prototype;
 
-    // Event wiring
-    hud.on('flashToggle', onFlashToggle);
-    hud.on('cameraToggle', onCameraToggle);
-    camera.on('configured', onCameraConfigured);
-    camera.on('previewResumed', hud.enableButtons);
-    camera.on('preparingToTakePicture', hud.disableButtons);
-    camera.state.on('change:recording', onRecordingChange);
+  /**
+   * Exports
+   */
 
-    function onCameraConfigured() {
-      var hasFrontCamera = camera.hasFrontCamera();
-      var flashMode = camera.getFlashMode();
+  module.exports = HudController;
 
-      hud.showCameraToggleButton(hasFrontCamera);
-      hud.setFlashMode(flashMode);
+  function HudController(app) {
+    if (!(this instanceof HudController)) {
+      return new HudController(app);
     }
 
-    function onFlashToggle() {
-      var mode = camera.toggleFlash();
-      hud.setFlashMode(mode);
+    this.viewfinder = app.views.viewfinder;
+    this.controls = app.views.controls;
+    this.hud = app.views.hud;
+    this.camera = app.camera;
+
+    // Bind context
+    this.onFlashToggle = this.onFlashToggle.bind(this);
+    this.onCameraToggle = this.onCameraToggle.bind(this);
+    this.onCameraConfigured = this.onCameraConfigured.bind(this);
+    this.onRecordingChange = this.onRecordingChange.bind(this);
+
+    this.bindEvents();
+  }
+
+  proto.bindEvents = function() {
+    this.hud.on('flashToggle', this.onFlashToggle);
+    this.hud.on('cameraToggle', this.onCameraToggle);
+    this.camera.on('configured', this.onCameraConfigured);
+    this.camera.on('previewResumed', this.hud.enableButtons);
+    this.camera.on('preparingToTakePicture', this.hud.disableButtons);
+    this.camera.state.on('change:recording', this.onRecordingChange);
+  };
+
+  proto.onCameraConfigured = function() {
+    var hasFrontCamera = this.camera.hasFrontCamera();
+    var flashMode = this.camera.getFlashMode();
+    this.hud.showCameraToggleButton(hasFrontCamera);
+    this.hud.setFlashMode(flashMode);
+  };
+
+  proto.onFlashToggle = function() {
+    var mode = this.camera.toggleFlash();
+    this.hud.setFlashMode(mode);
+  };
+
+  proto.onCameraToggle = function() {
+    var controls = this.controls;
+    var viewfinder = this.viewfinder;
+    var camera = this.camera;
+    var hud = this.hud;
+
+    controls.disableButtons();
+    hud.disableButtons();
+    hud.highlightCameraButton(true);
+    viewfinder.fadeOut(onFadeOut);
+
+    function onFadeOut() {
+      camera.toggleCamera();
+      camera.loadStreamInto(viewfinder.el, onStreamLoaded);
     }
 
-    function onCameraToggle() {
-      controls.disableButtons();
-
-      hud
-        .disableButtons()
-        .highlightCameraButton(true);
-
-      viewfinder.fadeOut(function() {
-        camera.toggleCamera();
-        camera.loadStreamInto(viewfinder.el, function() {
-          viewfinder.fadeIn();
-          controls.enableButtons();
-
-          hud
-            .enableButtons()
-            .highlightCameraButton(false);
-        });
-      });
+    function onStreamLoaded() {
+      viewfinder.fadeIn();
+      controls.enableButtons();
+      hud.enableButtons();
+      hud.highlightCameraButton(false);
     }
+  };
 
-    function onRecordingChange(e) {
-      hud.toggleDisableButtons(e.value);
-    }
+  proto.onRecordingChange = function(e) {
+    this.hud.toggleDisableButtons(e.value);
   };
 });

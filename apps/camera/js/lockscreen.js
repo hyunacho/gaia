@@ -1,28 +1,37 @@
+define(function(require, exports, module) {
+'use strict';
 
-define(function(require) {
-  'use strict';
+/**
+ * Locals
+ */
 
-  var screenLock;
+var screenLock;
 
-  function disableTimeout() {
-    if (screenLock) {
-      return;
-    }
-
+/**
+ * Stops the device
+ * from going to sleep.
+ *
+ * @api public
+ */
+exports.disableTimeout = function() {
+  if (!screenLock) {
     screenLock = navigator.requestWakeLock('screen');
   }
+};
 
-  function enableTimeout() {
-    if (!screenLock) {
-      return;
-    }
-
+/**
+ * Removes the wake lock
+ * meaning the device will
+ * once again sleep after
+ * usual timeout.
+ *
+ * @api public
+ */
+exports.enableTimeout = function() {
+  if (screenLock) {
     screenLock.unlock();
     screenLock = null;
   }
+};
 
-  return {
-    disableTimeout: disableTimeout,
-    enableTimeout: enableTimeout
-  };
 });

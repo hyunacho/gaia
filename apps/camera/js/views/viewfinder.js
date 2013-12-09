@@ -9,7 +9,6 @@ define(function(require) {
   var View = require('view');
   var bind = require('utils/bind');
   var constants = require('constants');
-  var Camera = require('camera');
 
   /**
    * Locals
@@ -139,7 +138,7 @@ define(function(require) {
       }
     },
 
-    setPreviewSize: function(camera) {
+    setPreviewSize: function(camera, Camera) {
       var pictureSize = Camera._pictureSize;
 
       // Switch screen dimensions to landscape
