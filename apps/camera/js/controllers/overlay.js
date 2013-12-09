@@ -17,18 +17,13 @@ define(function(require, exports, module) {
    * Exports
    */
 
-  // When used in our app, we just
-  // call this convenient function.
-  exports = module.exports = function(app) {
-    return new OverlayController(app);
-  };
-
-  // Store constructor on exports so that
-  // we can get access to it when testing.
-  exports.OverlayController = OverlayController;
-
+  module.exports = OverlayController;
 
   function OverlayController(app) {
+    if (!(this instanceof OverlayController)) {
+      return new OverlayController(app);
+    }
+
     this.activity = app.activity;
     this.camera = app.camera;
     this.overlays = [];

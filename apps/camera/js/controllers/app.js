@@ -1,212 +1,235 @@
+define(function(require, exports, module) {
 /*global PerformanceTestingHelper*/
 /*jshint laxbreak:true*/
 
-define(function(require) {
-  'use strict';
+'use strict';
 
-  /**
-   * Dependencies
-   */
+/**
+ * Dependencies
+ */
 
-  var activity = require('activity');
-  var HudView = require('views/hud');
-  var constants = require('constants');
-  var ViewfinderView = require('views/viewfinder');
-  var ControlsView = require('views/controls');
-  var filmstrip = require('views/filmstrip');
-  var FocusRing = require('views/focusring');
-  var soundEffect = require('soundeffect');
-  var lockscreen = require('lockscreen');
-  var broadcast = require('broadcast');
-  var bind = require('utils/bind');
-  var camera = require('camera');
-  var dcf = require('dcf');
-  var controllers = {
-    hud: require('controllers/hud'),
-    controls: require('controllers/controls'),
-    viewfinder: require('controllers/viewfinder')
-  };
+var LazyL10n = require('LazyL10n');
+var Activity = require('activity');
+var HudView = require('views/hud');
+var ViewfinderView = require('views/viewfinder');
+var ControlsView = require('views/controls');
+var Filmstrip = require('views/filmstrip');
+var FocusRing = require('views/focusring');
+var soundEffect = require('soundeffect');
+var lockscreen = require('lockscreen');
+var broadcast = require('broadcast');
+var bind = require('utils/bind');
+var Camera = require('camera');
+var evt = require('libs/evt');
+var dcf = require('dcf');
+var controllers = {
+  hud: require('controllers/hud'),
+  controls: require('controllers/controls'),
+  viewfinder: require('controllers/viewfinder'),
+  overlay: require('controllers/overlay'),
+  camera: require('controllers/camera')
+};
 
-  /**
-   * Locals
-   */
+// Mix event emitter into prototype
+var proto = evt.mix(App.prototype);
 
-  var CAMERA = constants.CAMERA_MODE_TYPE.CAMERA;
-  var STORAGE_STATE_TYPE = constants.STORAGE_STATE_TYPE;
-  var PROMPT_DELAY = constants.PROMPT_DELAY;
+/**
+ * Exports
+ */
 
-  /**
-   * Exports
-   */
+module.exports = App;
 
-  return function() {
-    var body = document.body;
+/**
+ * The App
+ *
+ * Options:
+ *
+ *   - `root` The node to inject content into
+ *
+ * @param {Object} options
+ * @constructor
+ */
+function App(options) {
+  options = options || {};
+  this.root = options.root || document.body;
+  this.inSecureMode = window.parent !== window;
+  this.activity = new Activity();
+  this.controllers = {};
+  this.views = {};
 
-    // View Instances
-    var hud = new HudView();
-    var controls = new ControlsView();
-    var viewfinder = new ViewfinderView();
-    var focusRing = new FocusRing();
+  // Bind context
+  this.boot = this.boot.bind(this);
+  this.onBeforeUnload = this.onBeforeUnload.bind(this);
+  this.onVisibilityChange = this.onVisibilityChange.bind(this);
 
-    // Wire Up Views
-    controllers.hud(hud, viewfinder, controls);
-    controllers.controls(controls, viewfinder);
-    controllers.viewfinder(viewfinder, filmstrip);
+  // Check for activity, then boot
+  this.activity.check(this.boot);
+}
 
-    // Inject stuff into Dom
-    hud.appendTo(body);
-    controls.appendTo(body);
-    focusRing.appendTo(body);
-    viewfinder.appendTo(body);
+/**
+ * Runs all the methods
+ * to boot the app.
+ *
+ * @api private
+ */
+proto.boot = function() {
+  this.camera = new Camera();
+  this.setupViews();
+  this.runControllers();
+  this.injectContent();
+  this.bindEvents();
+  this.miscStuff();
+  this.emit('boot');
+};
 
-    /**
-     * Misc Crap
-     */
+/**
+ * Creates instances of all
+ * the views the app requires.
+ *
+ * @api private
+ */
+proto.setupViews = function() {
+  this.views.hud = new HudView();
+  this.views.controls = new ControlsView();
+  this.views.viewfinder = new ViewfinderView();
+  this.views.focusRing = new FocusRing();
+  this.views.filmstrip = new Filmstrip(this);
+};
 
-    var focusTimeout;
-    camera.state.on('change:focusState', function(value) {
-      focusRing.setState(value);
-      clearTimeout(focusTimeout);
+/**
+ * Runs controllers to glue all
+ * the parts of the app together.
+ *
+ * @api private
+ */
+proto.runControllers = function() {
+  controllers.hud(this);
+  controllers.controls(this);
+  controllers.viewfinder(this);
+  controllers.overlay(this);
+  controllers.camera(this);
+};
 
-      if (value === 'fail') {
-        focusTimeout = setTimeout(function() {
-          focusRing.setState(null);
-        }, 1000);
-      }
-    });
+/**
+ * Injects view DOM into
+ * designated root node.
+ *
+ * @return {[type]} [description]
+ */
+proto.injectContent = function() {
+  this.views.hud.appendTo(this.root);
+  this.views.controls.appendTo(this.root);
+  this.views.viewfinder.appendTo(this.root);
+  this.views.focusRing.appendTo(this.root);
+};
 
-    // This is old code and should
-    // eventually be removed. The
-    // activity.js module should be the
-    // only place we query about activity.
-    if (activity.name === 'pick') {
-      camera._pendingPick = activity.raw;
+/**
+ * Attaches callbacks to
+ * some important events.
+ *
+ * @api private
+ */
+proto.bindEvents = function() {
+  bind(document, 'visibilitychange', this.onVisibilityChange);
+  bind(window, 'beforeunload', this.onBeforeUnload);
+};
+
+/**
+ * Responds to the `visibilitychange`
+ * event, emitting useful app events
+ * that allow us to perform relate
+ * work elsewhere,
+ *
+ * @api private
+ */
+proto.onVisibilityChange = function() {
+  if (document.hidden) {
+    this.emit('blur');
+  } else {
+    this.emit('focus');
+  }
+};
+
+/**
+ * Runs just before the
+ * app is destroyed.
+ *
+ * @api private
+ */
+proto.onBeforeUnload = function() {
+  window.clearTimeout(this.camera._timeoutId);
+  delete this.camera._timeoutId;
+  this.views.viewfinder.setPreviewStream(null);
+  this.emit('beforeunload');
+};
+
+// TODO: Break this down
+
+/**
+ * Miscalaneous tasks to be
+ * run when the app first
+ * starts.
+ *
+ * TODO: Eventually this function
+ * will be removed, and all this
+ * logic will sit in specific places.
+ *
+ * @api private
+ */
+proto.miscStuff = function() {
+  var camera = this.camera;
+  var focusTimeout;
+  var self = this;
+
+  // TODO: Should probably be
+  // moved to a focusRing controller
+  camera.state.on('change:focusState', function(value) {
+    self.views.focusRing.setState(value);
+    clearTimeout(focusTimeout);
+
+    if (value === 'fail') {
+      focusTimeout = setTimeout(function() {
+        self.views.focusRing.setState(null);
+      }, 1000);
     }
+  });
 
-    if (!navigator.mozCameras) {
-      // TODO: Need to clarify what we
-      // should do in this condition.
-    }
 
-    // This needs to be global so that
-    // the filmstrip.js can see it.
-    window.ViewfinderView = viewfinder;
+  if (!navigator.mozCameras) {
+    // TODO: Need to clarify what we
+    // should do in this condition.
+  }
 
-    PerformanceTestingHelper.dispatch('initialising-camera-preview');
+  // This needs to be global so that
+  // the filmstrip.js can see it.
+  window.ViewfinderView = this.views.viewfinder;
 
-    var initialMode = activity.mode
-      || camera._captureMode
-      || CAMERA;
+  PerformanceTestingHelper.dispatch('initialising-camera-preview');
 
-    // Set the initial capture
-    // mode (defaults to 'camera').
-    camera.setCaptureMode(initialMode);
+  // Prevent the phone
+  // from going to sleep.
+  lockscreen.disableTimeout();
 
-    // Prevent the phone
-    // from going to sleep.
+  // This must be tidied, but the
+  // important thing is it's out
+  // of camera.js
+  LazyL10n.get(function() {
+    soundEffect.init();
+    dcf.init();
+    PerformanceTestingHelper.dispatch('startup-path-done');
+  });
+
+  // The screen wakelock should be on
+  // at all times except when the
+  // filmstrip preview is shown.
+  broadcast.on('filmstripItemPreview', function() {
+    lockscreen.enableTimeout();
+  });
+
+  // When the filmstrip preview is hidden
+  // we can enable the  again.
+  broadcast.on('filmstripPreviewHide', function() {
     lockscreen.disableTimeout();
-
-    // Load the stream
-    setupCamera();
-
-    // This must be tidied, but the
-    // important thing is it's out
-    // of camera.js
-    window.LazyL10n.get(function() {
-      var onStorageChange = camera.deviceStorageChangeHandler.bind(camera);
-      var onStorageSettingPress = camera.storageSettingPressed.bind(camera);
-      var onCancelPick = camera.cancelPick.bind(camera);
-
-      bind(camera.overlayCloseButton, 'click', onCancelPick);
-      bind(camera.storageSettingButton, 'click', onStorageSettingPress);
-
-      camera.checkStorageSpace();
-
-      if ('mozSettings' in navigator) {
-        camera.getPreferredSizes();
-      }
-
-      camera._storageState = STORAGE_STATE_TYPE.INIT;
-      camera._pictureStorage = navigator.getDeviceStorage('pictures');
-      camera._videoStorage = navigator.getDeviceStorage('videos'),
-      camera._pictureStorage.addEventListener('change', onStorageChange);
-
-      dcf.init();
-      soundEffect.init();
-
-      PerformanceTestingHelper.dispatch('startup-path-done');
-    });
-
-    bind(document, 'visibilitychange', onVisibilityChange);
-    bind(window, 'beforeunload', onBeforeUnload);
-
-    /**
-     * Manages switching to
-     * and from the Camera app.
-     */
-    function onVisibilityChange() {
-      if (document.hidden) {
-        teardownCamera();
-      } else {
-        setupCamera();
-      }
-    }
-
-    function onBeforeUnload() {
-      window.clearTimeout(camera._timeoutId);
-      delete camera._timeoutId;
-      viewfinder.setPreviewStream(null);
-    }
-
-    function setupCamera() {
-      camera.loadStreamInto(viewfinder.el, onStreamLoaded);
-
-      function onStreamLoaded(stream) {
-        PerformanceTestingHelper.dispatch('camera-preview-loaded');
-        if (!camera._pendingPick) {
-          setTimeout(camera.initPositionUpdate.bind(camera), PROMPT_DELAY);
-        }
-      }
-    }
-
-    function teardownCamera() {
-      var recording = camera.state.get('recording');
-
-      camera.cancelPositionUpdate();
-      camera.cancelPick();
-
-      try {
-        if (recording) {
-          camera.stopRecording();
-        }
-
-        viewfinder.stopPreview();
-        camera.state.set('previewActive', false);
-        viewfinder.setPreviewStream(null);
-      } catch (ex) {
-        console.error('error while stopping preview', ex.message);
-      } finally {
-        camera.release();
-      }
-
-      // If the lockscreen is locked
-      // then forget everything when closing camera
-      if (camera._secureMode) {
-        filmstrip.clear();
-      }
-    }
-
-    // The screen wakelock should be on
-    // at all times except when the
-    // filmstrip preview is shown.
-    broadcast.on('filmstripItemPreview', function() {
-      lockscreen.enableTimeout();
-    });
-
-    // When the filmstrip preview is hidden
-    // we can enable the  again.
-    broadcast.on('filmstripPreviewHide', function() {
-      lockscreen.disableTimeout();
-    });
-  };
+  });
+};
 });
