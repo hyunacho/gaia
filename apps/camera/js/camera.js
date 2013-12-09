@@ -125,10 +125,10 @@ function Camera() {
   this.onStorageChange = this.onStorageChange.bind(this);
 
   // Whenever the camera is
-  // configured, we must run
-  // a storage check to determine
-  // whether we have enough space
-  // to accomodate a photograph.
+  // configured, we run a storage
+  // check to determine whether
+  // we have enough space to
+  // accomodate a photograph.
   this.on('configured', this.storageCheck);
 
   this.configureStorage();
