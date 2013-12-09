@@ -19,29 +19,41 @@ class TestCameraMultipleShots(GaiaTestCase):
         self.camera = Camera(self.marionette)
         self.camera.launch()
 
+        # Take a photo
         self.camera.take_photo()
 
-        self.camera.tap_to_display_filmstrip()
+        # Check that Filmstrip is visible
+        self.assertTrue(self.camera.is_filmstrip_visible)
 
-        image_preview = self.camera.filmstrip_images[0].tap()
-        self.assertTrue(image_preview.is_image_preview_visible)
+        # Check that picture saved to SD card
+        pictures_after_test = self.data_layer.picture_files
+        self.assertEqual(len(pictures_after_test), 1)
 
-        self.camera = image_preview.tap_camera()
+        # Wait for Filmstrip to auto hide
+        self.camera.wait_for_filmstrip_not_visible()
 
+        # Take a photo
         self.camera.take_photo()
 
-        self.camera.tap_to_display_filmstrip()
+        # Check that Filmstrip is visible
+        self.assertTrue(self.camera.is_filmstrip_visible)
 
-        image_preview = self.camera.filmstrip_images[1].tap()
-        self.assertTrue(image_preview.is_image_preview_visible)
+        # Check that picture saved to SD card
+        pictures_after_test = self.data_layer.picture_files
+        self.assertEqual(len(pictures_after_test), 2)
 
-        self.camera = image_preview.tap_camera()
+        # Wait for Filmstrip to auto hide
+        self.camera.wait_for_filmstrip_not_visible()
 
+        # Take a photo
         self.camera.take_photo()
 
-        self.camera.tap_to_display_filmstrip()
+        # Check that Filmstrip is visible
+        self.assertTrue(self.camera.is_filmstrip_visible)
 
-        image_preview = self.camera.filmstrip_images[2].tap()
-        self.assertTrue(image_preview.is_image_preview_visible)
+        # Check that picture saved to SD card
+        pictures_after_test = self.data_layer.picture_files
+        self.assertEqual(len(pictures_after_test), 3)
 
-        self.camera = image_preview.tap_camera()
+        # Wait for Filmstrip to auto hide
+        self.camera.wait_for_filmstrip_not_visible()
