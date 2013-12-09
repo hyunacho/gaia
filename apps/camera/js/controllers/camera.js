@@ -26,11 +26,11 @@ function CameraController(app) {
     return new CameraController(app);
   }
 
-  this.app = app;
   this.activity = app.activity;
   this.filmstrip = app.views.filmstrip;
   this.viewfinder = app.views.viewfinder;
   this.camera = app.camera;
+  this.app = app;
 
   this.setupCamera = this.setupCamera.bind(this);
   this.teardownCamera = this.teardownCamera.bind(this);
@@ -56,16 +56,21 @@ proto.bindEvents = function() {
   this.app.on('boot', this.setupCamera);
   this.app.on('blur', this.teardownCamera);
   this.app.on('focus', this.setupCamera);
+  this.app.on('beforeunload', this.onBeforeUnload);
 };
 
+/**
+ * Sets the initial
+ * capture mode.
+ *
+ * The mode chosen by an
+ * activity is chosen, else
+ * we just default to 'camera'
+ *
+ * @api private
+ */
 proto.setCaptureMode = function() {
-  /*jshint laxbreak:true*/
-  var initialMode = this.activity.mode
-    || this.camera._captureMode
-    || CAMERA;
-
-  // Set the initial capture
-  // mode (defaults to 'camera').
+  var initialMode = this.activity.mode || CAMERA;
   this.camera.setCaptureMode(initialMode);
 };
 
@@ -95,18 +100,18 @@ proto.teardownCamera = function() {
       camera.stopRecording();
     }
 
-    self.views.viewfinder.stopPreview();
+    this.viewfinder.stopPreview();
     camera.state.set('previewActive', false);
-    self.views.viewfinder.setPreviewStream(null);
-  } catch (ex) {
-    console.error('error while stopping preview', ex.message);
+    this.viewfinder.setPreviewStream(null);
+  } catch (e) {
+    console.error('error while stopping preview', e.message);
   } finally {
     camera.release();
   }
 
   // If the lockscreen is locked
   // then forget everything when closing camera
-  if (camera._secureMode) {
+  if (this.app.inSecureMode) {
     this.filmstrip.clear();
   }
 };
