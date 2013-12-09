@@ -143,7 +143,7 @@ proto.onGalleryButtonClick = function() {
   // Can't launch the gallery if the lockscreen is locked.
   // The button shouldn't even be visible in this case, but
   // let's be really sure here.
-  if (this.camera._secureMode) {
+  if (this.app.inSecureMode) {
     return;
   }
 

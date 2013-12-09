@@ -68,7 +68,7 @@ define(function(require, exports, module) {
     // In secure mode, we never want the user to see the share button.
     // We also remove the delete button because we currently can't
     // display confirmation dialogs in the system app.
-    if (camera._secureMode) {
+    if (app.inSecureMode) {
       shareButton.parentNode.removeChild(shareButton);
       deleteButton.parentNode.removeChild(deleteButton);
     }
@@ -215,8 +215,9 @@ define(function(require, exports, module) {
     function deleteCurrentItem() {
       // The button should be gone, but hard exit from this function
       // just in case.
-      if (camera._secureMode)
+      if (app.inSecureMode) {
         return;
+      }
 
       var item = items[currentItemIndex];
       var msg, storage, filename;
@@ -256,7 +257,7 @@ define(function(require, exports, module) {
     }
 
     function shareCurrentItem() {
-      if (camera._secureMode) {
+      if (app.inSecureMode) {
         return;
       }
 

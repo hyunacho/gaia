@@ -56,11 +56,6 @@ function Camera() {
     previewActive: false
   });
 
-  // In secure mode the user
-  // cannot browse to the gallery
-  this._secureMode = window.parent !== window;
-  this._currentOverlay = null;
-
   this._videoTimer = null;
   this._videoStart = null;
 
@@ -72,13 +67,7 @@ function Camera() {
   this._videoRootDir = null;
   this._autoFocusSupport = {};
   this._callAutoFocus = false;
-
-  this._timeoutId = 0;
   this._cameraObj = null;
-
-  this._photosTaken = [];
-  this._cameraProfile = null;
-
   this._pictureSize = null;
   this._previewConfig = null;
 
@@ -121,12 +110,8 @@ function Camera() {
     current: null
   };
 
-  this._config = {
-    fileFormat: 'jpeg'
-  };
 
-  this._videoProfile = {};
-
+  this.fileFormat = 'jpeg';
   this.preferredRecordingSizes = null;
 
   this._watchId = null;
@@ -585,10 +570,11 @@ proto.loadStreamInto = function(videoEl, done) {
 
 proto.loadCameraPreview = function(cameraNumber, callback) {
   var mozCameras = navigator.mozCameras;
-  var cameras = this._cameras = mozCameras.getListOfCameras();
+  var cameras = mozCameras.getListOfCameras();
   var self = this;
 
-  this._timeoutId = 0;
+  // Store camera count
+  this.numCameras = cameras.length;
 
   function gotPreviewScreen(stream) {
     self.state.set('previewActive', true);
@@ -621,15 +607,12 @@ proto.loadCameraPreview = function(cameraNumber, callback) {
 
     self.getPreferredSizes(function() {
       var recorderProfiles = camera.capabilities.recorderProfiles;
-      self._videoProfile = self.pickVideoProfile(recorderProfiles);
+      var videoProfile = self.pickVideoProfile(recorderProfiles);
 
       // 'Video' Mode
-      if (self._captureMode === VIDEO) {
-        self._videoProfile.rotation = window.orientation.get();
-
-        self._cameraObj.getPreviewStreamVideoMode(
-          self._videoProfile,
-          gotPreviewScreen.bind(this));
+      if (self.isVideoMode()) {
+        videoProfile.rotation = window.orientation.get();
+        camera.getPreviewStreamVideoMode(videoProfile, gotPreviewScreen);
       }
     });
 
@@ -681,7 +664,7 @@ proto.recordingStateChanged = function(msg) {
 };
 
 proto.hasFrontCamera = function() {
-  return this._cameras.length > 1;
+  return this.numCameras > 1;
 };
 
 proto.configureFlashModes = function(allModes) {
@@ -744,7 +727,6 @@ proto.takePictureError = function() {
 proto.takePictureSuccess = function(blob) {
   var self = this;
 
-  this._config.position = null;
   this.state.set('manuallyFocused', false);
 
   if (this._pendingPick) {
@@ -946,9 +928,13 @@ proto.autoFocusDone = function(success) {
 };
 
 proto.takePicture = function() {
-  this._config.rotation = window.orientation.get();
+  var config = {
+    rotation: window.orientation.get(),
+    dateTime: Date.now() / 1000,
+    fileFormat: this.fileFormat
+  };
+
   this._cameraObj.pictureSize = this._pictureSize;
-  this._config.dateTime = Date.now() / 1000;
 
   // We do not attach our current
   // position to the exif of photos
@@ -957,11 +943,11 @@ proto.takePicture = function() {
   // As it leaks position information
   // to other apps without permission
   if (this._position && !this._pendingPick) {
-    this._config.position = this._position;
+    config.position = this._position;
   }
 
   this._cameraObj.takePicture(
-    this._config,
+    config,
     this.takePictureSuccess.bind(this),
     this.takePictureError);
 };
@@ -974,12 +960,11 @@ proto.selectThumbnailSize = function(thumbnailSizes, pictureSize) {
   var i;
 
   // Coping the array to not modify the original
-  var thumbnailSizes = thumbnailSizes.slice(0);
+  thumbnailSizes = thumbnailSizes.slice(0);
   if (!thumbnailSizes || !pictureSize) {
     return;
   }
 
-  var thumbnailSizes = thumbnailSizes.slice(0);
   function imageSizeFillsScreen(pixelsWidth, pixelsHeight) {
     return ((pixelsWidth >= screenWidth || // portrait
              pixelsHeight >= screenHeight) &&

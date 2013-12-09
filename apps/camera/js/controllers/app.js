@@ -157,8 +157,6 @@ proto.onVisibilityChange = function() {
  * @api private
  */
 proto.onBeforeUnload = function() {
-  window.clearTimeout(this.camera._timeoutId);
-  delete this.camera._timeoutId;
   this.views.viewfinder.setPreviewStream(null);
   this.emit('beforeunload');
 };
