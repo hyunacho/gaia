@@ -141,19 +141,31 @@ proto.configureStorage = function() {
 };
 
 proto.getMode = function() {
-  return this._captureMode;
+  return this.state.get('mode');
 },
 
+proto.isCameraMode = function() {
+  return this.getMode() === CAMERA;
+};
+
+proto.isVideoMode = function() {
+  return this.getMode() === VIDEO;
+};
+
 proto.toggleMode = function() {
-  var currentMode = this._captureMode;
-  var isCameraMode = currentMode === CAMERA;
-  var newMode = isCameraMode
+  var newMode = this.isCameraMode()
     ? VIDEO
     : CAMERA;
 
   this.setCaptureMode(newMode);
   this.configureFlashModes(this.flash.all);
 },
+
+proto.setCaptureMode = function(mode) {
+  this.state.set('mode', mode);
+  this.emit('captureModeChange', mode);
+  return mode;
+};
 
 proto.toggleCamera = function() {
   var cameraNumber = 1 - this.state.get('cameraNumber');
@@ -186,7 +198,7 @@ proto.setFocusMode = function() {
   this._callAutoFocus = false;
 
   // Camera
-  if (this._captureMode === CAMERA) {
+  if (this.isCameraMode()) {
     if (this._autoFocusSupport[FOCUS_MODE_TYPE.CONTINUOUS_CAMERA]) {
       this._cameraObj.focusMode = FOCUS_MODE_TYPE.CONTINUOUS_CAMERA;
       return;
@@ -209,7 +221,7 @@ proto.setFocusMode = function() {
 proto.capture = function() {
 
   // Camera
-  if (this._captureMode === CAMERA) {
+  if (this.isCameraMode()) {
     this.prepareTakePicture();
     return;
   }
@@ -530,12 +542,6 @@ proto.formatTimer = function(time) {
   return '';
 };
 
-proto.setCaptureMode = function(mode) {
-  this._captureMode = mode;
-  this.emit('captureModeChange', mode);
-  return mode;
-};
-
 /**
  * Loads a camera stream
  * into a given video element.
@@ -626,7 +632,7 @@ proto.loadCameraPreview = function(cameraNumber, callback) {
     camera.onRecorderStateChange = self.recordingStateChanged.bind(self);
 
     // 'Camera' Mode
-    if (self._captureMode === CAMERA) {
+    if (self.isCameraMode()) {
       camera.getPreviewStream(
         self._previewConfig,
         gotPreviewScreen.bind(self));
@@ -764,7 +770,7 @@ proto.takePictureSuccess = function(blob) {
 
 proto.retakePressed = function() {
   this._savedMedia = null;
-  if (this._captureMode === CAMERA) {
+  if (this.isCameraMode()) {
     this.resumePreview();
   } else {
     this.startPreview();
@@ -778,7 +784,7 @@ proto.selectPressed = function() {
   this._savedMedia = null;
 
   // Camera
-  if (this._captureMode === CAMERA) {
+  if (this.isCameraMode()) {
     this._resizeBlobIfNeeded(media.blob, function(resized_blob) {
       self._pendingPick.postResult({
         type: 'image/jpeg',
