@@ -3,6 +3,7 @@
 'use strict';
 
 suite('controllers/controls', function() {
+  var Controller;
 
   // Sometimes setup via the
   // test agent can take a while,
@@ -21,7 +22,7 @@ suite('controllers/controls', function() {
       'view',
       'activity'
     ], function(controlsController, camera, View, activity) {
-      self.modules.controller = controlsController;
+      Controller = self.modules.controller = controlsController;
       self.modules.camera = camera;
       self.modules.View = View;
       self.modules.activity = activity;
@@ -31,99 +32,79 @@ suite('controllers/controls', function() {
 
   setup(function() {
     var View = this.modules.View;
+    var Camera = this.modules.camera;
+    var Activity = this.modules.activity;
 
-    this.viewfinder = new View();
-    this.controls = new View();
-    this.controller = this.modules.controller;
+    this.app = {
+      camera: new Camera(),
+      activity: new Activity(),
+      views: {
+        viewfinder: new View(),
+        controls: new View()
+      }
+    };
 
-    sinon.stub(this.modules.camera, 'on');
-    sinon.stub(this.modules.camera, 'getMode', function() { return 'camera'; });
-    this.controls.set = sinon.spy();
+    sinon.stub(this.app.camera, 'on');
+    sinon.stub(this.app.camera, 'getMode', function() { return 'camera'; });
+    this.app.views.controls.set = sinon.spy();
   });
 
-  teardown(function() {
-    this.modules.camera.on.restore();
-    this.modules.camera.getMode.restore();
-  });
-
-  test('Should set the mode to the current camera mode', function() {
-    this.controller(this.controls, this.viewfinder);
-    assert.isTrue(this.controls.set.calledWith('mode', 'camera'));
-  });
-
-  suite('gallery', function() {
-    setup(function() {
-      this.tmp = {};
-      this.tmp._secureMode = this.modules.camera._secureMode;
-      this.tmp.active = this.modules.activity.active;
+  suite('ControlsController()', function() {
+    test('Should set the mode to the current camera mode', function() {
+      this.controller = new Controller(this.app);
+      assert.isTrue(this.app.views.controls.set.calledWith('mode', 'camera'));
     });
+  });
 
-    teardown(function() {
-      this.modules.activity.active = this.tmp.active;
-      this.modules.camera._secureMode = this.tmp._secureMode;
-    });
-
+  suite('ControlsController#setup()', function() {
     test('Should *not* show the gallery if in \'secureMode\'', function() {
-      this.modules.camera._secureMode = true;
-      this.controller(this.controls, this.viewfinder);
-      assert.isTrue(this.controls.set.calledWith('gallery', false));
+      this.app.inSecureMode = true;
+      this.controller = new Controller(this.app);
+      assert.isTrue(this.app.views.controls.set.calledWith('gallery', false));
     });
 
     test('Should *not* show the gallery if in pending activity', function() {
-      this.modules.activity.active = true;
-      this.controller(this.controls, this.viewfinder);
-      assert.isTrue(this.controls.set.calledWith('gallery', false));
+      this.app.activity.active = true;
+      this.controller = new Controller(this.app);
+      assert.isTrue(this.app.views.controls.set.calledWith('gallery', false));
     });
 
     test('Should show the gallery if no pending activity and not in \'secureMode\'', function() {
-      this.controller(this.controls, this.viewfinder);
-      assert.isTrue(this.controls.set.calledWith('gallery', false));
-    });
-  });
-
-  suite('cancellable', function() {
-    teardown(function() {
-      delete this.modules.activity.name;
+      this.controller = new Controller(this.app);
+      assert.isTrue(this.app.views.controls.set.calledWith('gallery', true));
     });
 
     test('Should *not* show the cancel button when *not* within a \'pick\' activity', function() {
-      this.controller(this.controls, this.viewfinder);
-      assert.isTrue(this.controls.set.calledWith('cancel', false));
+      this.controller = new Controller(this.app);
+      assert.isTrue(this.app.views.controls.set.calledWith('cancel', false));
     });
 
-    test('Should show the cancel button when within \'pick\' activity', function() {
-      this.modules.activity.name = 'pick';
-      this.controller(this.controls, this.viewfinder);
-      assert.isTrue(this.controls.set.calledWith('cancel', true));
+    test('Should show the cancel button when within activity', function() {
+      this.app.activity.active = true;
+      this.controller = new Controller(this.app);
+      assert.isTrue(this.app.views.controls.set.calledWith('cancel', true));
     });
-  });
 
-  suite('switchable', function() {
     test('Should be switchable when no activity is active', function() {
-      this.modules.activity.active = false;
-      this.controller(this.controls, this.viewfinder);
-      assert.isTrue(this.controls.set.calledWith('switchable', true));
+      this.app.activity.active = false;
+      this.controller = new Controller(this.app);
+      assert.isTrue(this.app.views.controls.set.calledWith('switchable', true));
     });
 
     test('Should not be switchable when activity is active and only images are supported', function() {
-      this.modules.activity.active = true;
-      this.modules.activity.allowedTypes.image = true;
-      this.modules.activity.allowedTypes.video = false;
-      this.controller(this.controls, this.viewfinder);
-      assert.isTrue(this.controls.set.calledWith('switchable', false));
+      this.app.activity.active = true;
+      this.app.activity.allowedTypes.image = true;
+      this.app.activity.allowedTypes.video = false;
+      this.controller = new Controller(this.app);
+      assert.isTrue(this.app.views.controls.set.calledWith('switchable', false));
     });
 
     test('Should not be switchable when activity is active and only videos are supported', function() {
-      this.modules.activity.active = true;
-      this.modules.activity.allowedTypes.image = false;
-      this.modules.activity.allowedTypes.video = true;
-      this.controller(this.controls, this.viewfinder);
-      assert.isTrue(this.controls.set.calledWith('switchable', false));
-    });
-
-    teardown(function() {
-      delete this.modules.activity.name;
-      this.modules.activity.active = true;
+      this.app.activity.active = true;
+      this.app.activity.allowedTypes.image = false;
+      this.app.activity.allowedTypes.video = true;
+      this.controller = new Controller(this.app);
+      assert.isTrue(this.app.views.controls.set.calledWith('switchable', false));
     });
   });
 });

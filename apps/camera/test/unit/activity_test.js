@@ -2,7 +2,7 @@
 'use strict';
 
 suite('activity', function() {
-  var activity;
+  var Activity;
 
   // Sometimes setup via the
   // test agent can take a while,
@@ -12,9 +12,13 @@ suite('activity', function() {
 
   suiteSetup(function(done) {
     req(['activity'], function(_activity) {
-      activity = _activity;
+      Activity = _activity;
       done();
     });
+  });
+
+  setup(function() {
+    this.activity = new Activity();
   });
 
   test('Should call the callback synchronously if there is no pending activity', function() {
@@ -25,7 +29,7 @@ suite('activity', function() {
     // when called with 'activity' argument.
     hasPendingMessage.withArgs('activity').returns(false);
 
-    activity.check(callback);
+    this.activity.check(callback);
     assert.ok(callback.called);
 
     // Remove the stub
@@ -51,7 +55,7 @@ suite('activity', function() {
       hasPendingMessage.withArgs('activity').returns(true);
       setMessageHandler.withArgs('activity').callsArgWithAsync(1, activityObject);
 
-      activity.check(function() {
+      this.activity.check(function() {
         callback();
         done();
 
@@ -65,7 +69,7 @@ suite('activity', function() {
   });
 
   test('Should return correct allowed type when just images are accepted', function() {
-    var output = activity.parse({
+    var output = this.activity.parse({
       source: {
         name: 'pick',
         data: {
@@ -79,7 +83,7 @@ suite('activity', function() {
   });
 
   test('Should return correct allowed types when image and video are accepted', function() {
-    var output = activity.parse({
+    var output = this.activity.parse({
       source: {
         name: 'pick',
         data: {
@@ -93,7 +97,7 @@ suite('activity', function() {
   });
 
   test('Should allow both image and video if no types given', function() {
-    var output = activity.parse({
+    var output = this.activity.parse({
       source: {
         name: 'pick',
         data: {}
@@ -105,7 +109,7 @@ suite('activity', function() {
   });
 
   test('Should accept a given type string of \'videos\' (unsure why)', function() {
-    var output = activity.parse({
+    var output = this.activity.parse({
       source: {
         name: 'pick',
         data: {
@@ -119,7 +123,7 @@ suite('activity', function() {
   });
 
   test('Should return \'camera\' mode if both types allowed', function() {
-    var output = activity.parse({
+    var output = this.activity.parse({
       source: {
         name: 'pick',
         data: {
@@ -132,7 +136,7 @@ suite('activity', function() {
   });
 
   test('Should return \'camera\' mode if just image type allowed', function() {
-    var output = activity.parse({
+    var output = this.activity.parse({
       source: {
         name: 'pick',
         data: {
@@ -145,7 +149,7 @@ suite('activity', function() {
   });
 
   test('Should return \'video\' mode if just video type allowed', function() {
-    var output = activity.parse({
+    var output = this.activity.parse({
       source: {
         name: 'pick',
         data: {
