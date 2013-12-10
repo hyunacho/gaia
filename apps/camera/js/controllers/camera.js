@@ -99,7 +99,10 @@ proto.teardownCamera = function() {
     }
 
     this.viewfinder.stopPreview();
-    camera.state.set('previewActive', false);
+    camera.state.set({
+      previewActive: false,
+      focusState: 'none'
+    });
     this.viewfinder.setPreviewStream(null);
   } catch (e) {
     console.error('error while stopping preview', e.message);

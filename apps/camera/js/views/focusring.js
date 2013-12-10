@@ -7,7 +7,7 @@ define(function(require) {
   return View.extend({
     className: 'focus-ring',
     setState: function(state) {
-      this.el.setAttribute('data-state', state);
+      this.el.setAttribute('data-state', state.value);
     }
   });
 });
