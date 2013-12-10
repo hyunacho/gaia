@@ -25,6 +25,13 @@ class Camera(Base):
     _cancel_pick_button_locator = (By.CSS_SELECTOR, '.js-cancel-pick')
     _video_timer_locator = (By.CSS_SELECTOR, '.js-video-timer')
 
+    # HUD View
+    _hud_locator = (By.CSS_SELECTOR, '.hud')
+    _hud_enabled_locator = (By.CSS_SELECTOR, '.hud:not(.buttons-disabled)')
+    _toggle_flash_button_locator = (By.CSS_SELECTOR, '.js-toggle-flash')
+    _toggle_camera_button_locator = (By.CSS_SELECTOR, '.js-toggle-camera')
+    _flash_text_visible_locator = (By.CSS_SELECTOR, '.is-toggling .flash-text')
+
     # FocusRing View
     _focus_ring_locator = (By.CSS_SELECTOR, '.focus-ring')
 
@@ -76,6 +83,10 @@ class Camera(Base):
         self.marionette.find_element(*self._switch_button_locator).tap()
         self.wait_for_capture_ready()
 
+    def tap_toggle_flash_button(self):
+        self.marionette.find_element(*self._toggle_flash_button_locator).tap()
+        self.wait_for_flash_text_visible()
+
     def tap_to_display_filmstrip(self):
         self.marionette.find_element(*self._body_locator).tap()
         self.wait_for_filmstrip_visible()
@@ -100,6 +111,9 @@ class Camera(Base):
 
     def wait_for_video_timer_not_visible(self):
         self.wait_for_element_not_displayed(*self._video_timer_locator)
+
+    def wait_for_flash_text_visible(self):
+        self.wait_for_condition(lambda m: self.is_flash_text_visible)
 
     def switch_to_camera_frame(self):
         self.marionette.switch_to_frame()
@@ -138,6 +152,13 @@ class Camera(Base):
         return [FilmStripImage(self.marionette, image)
                 for image in self.marionette.find_elements(*self._filmstrip_thumbnail_locator)]
 
+    @property
+    def current_flash_mode(self):
+        return self.marionette.find_element(*self._toggle_flash_button_locator).get_attribute('data-mode')
+
+    @property
+    def is_flash_text_visible(self):
+        return self.is_element_present(*self._flash_text_visible_locator)
 
 class FilmStripImage(PageRegion):
 
