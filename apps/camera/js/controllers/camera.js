@@ -74,24 +74,17 @@ proto.setCaptureMode = function() {
 };
 
 proto.setupCamera = function() {
-  var activity = this.activity;
   var camera = this.camera;
   camera.loadStreamInto(this.viewfinder.el, onStreamLoaded);
 
   function onStreamLoaded(stream) {
     PerformanceTestingHelper.dispatch('camera-preview-loaded');
-    if (!activity.active) {
-      setTimeout(camera.initPositionUpdate.bind(camera), PROMPT_DELAY);
-    }
   }
 };
 
 proto.teardownCamera = function() {
   var recording = this.camera.state.get('recording');
   var camera = this.camera;
-
-  camera.cancelPositionUpdate();
-  this.activity.cancel();
 
   try {
     if (recording) {
