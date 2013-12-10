@@ -11,7 +11,6 @@ define(function(require, exports, module){
 var Model = require('model');
 var constants = require('constants');
 var soundEffect = require('soundeffect');
-var padLeft = require('utils/padleft');
 var broadcast = require('broadcast');
 var evt = require('libs/evt');
 var dcf = require('dcf');
