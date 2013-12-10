@@ -3,7 +3,7 @@
 # # the root Makefile.  If you know what you're doing, you can manually define
 # # XULRUNNERSDK and XPCSHELLSDK on the command line.
 ifndef XPCSHELLSDK
-$(error This Makefile needs to be run by the root gaia makefile. Use `make APP=email` from the root gaia directory.)
+$(error This Makefile needs to be run by the root gaia makefile. Use `make APP=camera` from the root gaia directory.)
 endif
 
 rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
