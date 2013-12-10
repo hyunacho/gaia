@@ -31,6 +31,7 @@ function ControlsController(app) {
   this.onCaptureButtonClick = this.onCaptureButtonClick.bind(this);
   this.onCancelButtonClick = this.onCancelButtonClick.bind(this);
   this.onGalleryButtonClick = this.onGalleryButtonClick.bind(this);
+  this.onRecordingChange = this.onRecordingChange.bind(this);
 
   this.bindEvents();
   this.setup();
@@ -41,22 +42,18 @@ proto.bindEvents = function() {
   var camera = this.camera;
 
   // Bind events
-  camera.on('captureModeChange', this.onCameraModeChange);
+  camera.on('focusFailed', controls.enableButtons);
+  camera.on('previewResumed', controls.enableButtons);
   camera.on('videoTimeUpdate', this.onVideoTimeUpdate);
   camera.on('preparingToTakePicture', controls.disableButtons);
-  camera.on('previewResumed', controls.enableButtons);
-  camera.on('focusFailed', controls.enableButtons);
+  camera.state.on('change:recording', this.onRecordingChange);
+  camera.state.on('change:mode', this.onCameraModeChange);
 
-  // Respond to events that
-  // happen in the controls UI.
+  // Respond controls UI events
   controls.on('click:switch', this.onSwitchButtonClick);
   controls.on('click:capture', this.onCaptureButtonClick);
   controls.on('click:cancel', this.onCancelButtonClick);
   controls.on('click:gallery', this.onGalleryButtonClick);
-
-  camera.state.on('change:recording', function(e) {
-    controls.set('recording', e.value);
-  });
 };
 
 proto.setup = function() {
@@ -80,8 +77,12 @@ proto.setup = function() {
   controls.set('switchable', isSwitchable);
 };
 
-proto.onCameraModeChange = function(mode) {
-  this.controls.set('mode', mode);
+proto.onCameraModeChange = function(value) {
+  this.controls.set('mode', value);
+};
+
+proto.onRecordingChange = function(value) {
+  this.controls.set('recording', value);
 };
 
 proto.onVideoTimeUpdate = function(value) {

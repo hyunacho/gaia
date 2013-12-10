@@ -191,7 +191,6 @@ proto.toggleMode = function() {
  */
 proto.setCaptureMode = function(mode) {
   this.state.set('mode', mode);
-  this.emit('captureModeChange', mode);
   return mode;
 };
 
