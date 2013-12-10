@@ -1,127 +1,126 @@
 define(function(require, exports, module) {
-  'use strict';
+'use strict';
 
-  /**
-   * Dependencies
-   */
+/**
+ * Dependencies
+ */
 
-  var Overlay = require('views/overlay');
+var Overlay = require('views/overlay');
 
-  /**
-   * Locals
-   */
+/**
+ * Locals
+ */
 
-  var proto = OverlayController.prototype;
+var proto = OverlayController.prototype;
 
-  /**
-   * Exports
-   */
+/**
+ * Exports
+ */
 
-  module.exports = OverlayController;
+module.exports = OverlayController;
 
-  function OverlayController(app) {
-    if (!(this instanceof OverlayController)) {
-      return new OverlayController(app);
-    }
-
-    this.activity = app.activity;
-    this.camera = app.camera;
-    this.overlays = [];
-
-    // Bind context
-    this.onStorageChange = this.onStorageChange.bind(this);
-    this.onStorageSettingsClick = this.onStorageSettingsClick.bind(this);
-
-    // Events
-    this.camera.state.on('change:storage', this.onStorageChange);
+function OverlayController(app) {
+  if (!(this instanceof OverlayController)) {
+    return new OverlayController(app);
   }
 
-  proto.onStorageChange = function(e) {
-    var value = e.value;
+  this.activity = app.activity;
+  this.camera = app.camera;
+  this.overlays = [];
 
-    if (value === 'available') {
-      this.destroyOverlays();
-      return;
-    }
+  // Bind context
+  this.onStorageChange = this.onStorageChange.bind(this);
+  this.onStorageSettingsClick = this.onStorageSettingsClick.bind(this);
 
-    this.insertOverlay(value);
-  };
+  // Events
+  this.camera.state.on('change:storage', this.onStorageChange);
+}
 
-  proto.insertOverlay = function(value) {
-    var data = this.getOverlayData(value);
-    var activity = this.activity;
+proto.onStorageChange = function(value) {
+  if (value === 'available') {
+    this.destroyOverlays();
+    return;
+  }
 
-    if (!data) {
-      return;
-    }
+  this.insertOverlay(value);
+};
 
-    var isClosable = activity.active;
-    var overlay = new Overlay({
-      type: value,
-      closable: isClosable,
-      data: data
-    });
+proto.insertOverlay = function(value) {
+  var data = this.getOverlayData(value);
+  var activity = this.activity;
 
-    overlay
-      .appendTo(document.body)
-      .on('click:storage-settings-btn', this.onStorageSettingsClick)
-      .on('click:close-btn', function() {
-        overlay.destroy();
-        activity.cancel();
-      });
+  if (!data) {
+    return;
+  }
 
-    this.overlays.push(overlay);
-  };
+  var isClosable = activity.active;
+  var overlay = new Overlay({
+    type: value,
+    closable: isClosable,
+    data: data
+  });
 
-  proto.getOverlayData = function(value) {
-    var l10n = navigator.mozL10n;
-    var data = {};
-
-    switch (value) {
-      case 'unavailable':
-        data.title = l10n.get('nocard2-title');
-        data.body = l10n.get('nocard2-text');
-      break;
-      case 'nospace':
-        data.title = l10n.get('nospace2-title');
-        data.body = l10n.get('nospace2-text');
-      break;
-      case 'shared':
-        data.title = l10n.get('pluggedin-title');
-        data.body = l10n.get('pluggedin-text');
-      break;
-      default:
-        return false;
-    }
-
-    data.closeButtonText = l10n.get('close-button');
-    data.storageButtonText = l10n.get('storage-setting-button');
-
-    return data;
-  };
-
-  /**
-   * Click to open the media
-   * storage panel when the default
-   * storage is unavailable.
-   *
-   * @return void
-   */
-  proto.onStorageSettingsClick = function() {
-    var MozActivity = window.MozActivity;
-    this.mozActivity = new MozActivity({
-      name: 'configure',
-      data: {
-        target: 'device',
-        section: 'mediaStorage'
-      }
-    });
-  };
-
-  proto.destroyOverlays = function() {
-    this.overlays.forEach(function(overlay) {
+  overlay
+    .appendTo(document.body)
+    .on('click:storage-settings-btn', this.onStorageSettingsClick)
+    .on('click:close-btn', function() {
       overlay.destroy();
+      activity.cancel();
     });
-    this.overlays = [];
-  };
+
+  this.overlays.push(overlay);
+};
+
+proto.getOverlayData = function(value) {
+  var l10n = navigator.mozL10n;
+  var data = {};
+
+  switch (value) {
+    case 'unavailable':
+      data.title = l10n.get('nocard2-title');
+      data.body = l10n.get('nocard2-text');
+    break;
+    case 'nospace':
+      data.title = l10n.get('nospace2-title');
+      data.body = l10n.get('nospace2-text');
+    break;
+    case 'shared':
+      data.title = l10n.get('pluggedin-title');
+      data.body = l10n.get('pluggedin-text');
+    break;
+    default:
+      return false;
+  }
+
+  data.closeButtonText = l10n.get('close-button');
+  data.storageButtonText = l10n.get('storage-setting-button');
+
+  return data;
+};
+
+/**
+ * Click to open the media
+ * storage panel when the default
+ * storage is unavailable.
+ *
+ * @return void
+ */
+proto.onStorageSettingsClick = function() {
+  var MozActivity = window.MozActivity;
+  this.mozActivity = new MozActivity({
+    name: 'configure',
+    data: {
+      target: 'device',
+      section: 'mediaStorage'
+    }
+  });
+};
+
+proto.destroyOverlays = function() {
+  this.overlays.forEach(function(overlay) {
+    overlay.destroy();
+  });
+  this.overlays = [];
+};
+
 });

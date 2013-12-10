@@ -69,13 +69,13 @@ suite('controllers/overlay', function() {
     });
 
     test('Should destroy any old storage overlays if storage becomes available, and not insert a new overlay', function() {
-      this.controller.onStorageChange({ value: 'available' });
+      this.controller.onStorageChange('available');
       assert.isTrue(this.controller.destroyOverlays.calledOnce);
       assert.isFalse(this.controller.insertOverlay.called);
     });
 
     test('Should call insertOverlay whenever the value is not \'available\'', function() {
-      this.controller.onStorageChange({ value: 'foo' });
+      this.controller.onStorageChange('foo');
       assert.isFalse(this.controller.destroyOverlays.called);
       assert.isTrue(this.controller.insertOverlay.calledWith('foo'));
     });

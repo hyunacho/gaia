@@ -147,12 +147,11 @@ define(function(require, exports, module) {
       deleteItem(data.path);
     }
 
-    function onRecordingChange(evt) {
-      var recording = evt.value;
+    function onRecordingChange(isRecording) {
 
       // Hide the filmstrip to prevent the users from entering the
       // preview mode after Camera starts recording button pressed
-      if (recording && isShown()) {
+      if (isRecording && isShown()) {
         hide();
       }
     }
