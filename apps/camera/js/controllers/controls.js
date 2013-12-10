@@ -44,8 +44,8 @@ proto.bindEvents = function() {
   // Bind events
   camera.on('focusFailed', controls.enableButtons);
   camera.on('previewResumed', controls.enableButtons);
-  camera.on('videoTimeUpdate', this.onVideoTimeUpdate);
   camera.on('preparingToTakePicture', controls.disableButtons);
+  camera.state.on('change:videoElapsed', this.onVideoTimeUpdate);
   camera.state.on('change:recording', this.onRecordingChange);
   camera.state.on('change:mode', this.onCameraModeChange);
 
