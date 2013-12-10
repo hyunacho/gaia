@@ -35,7 +35,7 @@ define(function(require) {
           }
 
           this._properties[key] = keyOrProperties[key];
-          this.emit('change:' + key, { value: keyOrProperties[key] });
+          this.emit('change:' + key, keyOrProperties[key]);
 
           didChange = true;
         }
@@ -56,7 +56,7 @@ define(function(require) {
       this._properties[keyOrProperties] = value;
 
       this.emit('change');
-      this.emit('change:' + keyOrProperties, { value: value });
+      this.emit('change:' + keyOrProperties, value);
     }
   });
 
