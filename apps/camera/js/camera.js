@@ -65,7 +65,6 @@ function Camera() {
   // video root directory string
   this._videoRootDir = null;
   this._autoFocusSupport = {};
-  this._callAutoFocus = false;
   this._cameraObj = null;
   this._pictureSize = null;
   this._previewConfig = null;
@@ -985,33 +984,27 @@ proto.prepareTakePicture = function(done) {
 
   this.emit('preparingToTakePicture');
 
-  if (!this._callAutoFocus) {
+  if (!this._autoFocusSupport[FOCUS_MODE_TYPE.MANUALLY_TRIGGERED]) {
     done();
     return;
   }
 
   this.state.set('focusState', 'focusing');
-  this._cameraObj.autoFocus(function() {
-    self.autoFocusDone();
+  this._cameraObj.autoFocus(function(success) {
+    if (!success) {
+      self.state.set('focusState', 'fail');
+      self.emit('focusFailed');
+
+      window.setTimeout(function() {
+        self.state.set('focusState', 'none');
+      }, 1000);
+
+      return;
+    }
+
+    self.state.set('focusState', 'focused');
     done();
   });
-};
-
-proto.autoFocusDone = function(success) {
-  var state = this.state;
-
-  if (!success) {
-    state.set('focusState', 'fail');
-    this.emit('focusFailed');
-
-    window.setTimeout(function() {
-      state.set('focusState', 'none');
-    }, 1000);
-
-    return;
-  }
-
-  this.state.set('focusState', 'focused');
 };
 
 proto.takePicture = function(options) {
