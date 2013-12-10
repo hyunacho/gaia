@@ -57,8 +57,7 @@ function Camera() {
     previewActive: false
   });
 
-  this._videoTimer = null;
-  this._videoStart = null;
+  this.videoTimer = null;
 
   // file path relative
   // to video root directory
@@ -119,6 +118,7 @@ function Camera() {
 
   // Bind context
   this.storageCheck = this.storageCheck.bind(this);
+  this.updateVideoElapsed = this.updateVideoElapsed.bind(this);
   this.onStorageChange = this.onStorageChange.bind(this);
 
   // Whenever the camera is
@@ -428,38 +428,35 @@ proto.startRecording = function() {
   }
 },
 
+/**
+ * Sets a start time and begins
+ * updating the elapsed time
+ * every second.
+ *
+ * @api private
+ */
 proto.startRecordingTimer = function() {
-  var updateVideoTimer = this.updateVideoTimer.bind(this);
-
-  // Store a timestamp for when
-  // the video started recording
-  this._videoStart = new Date().getTime();
-
-  // Keep a reference to the timer
-  this._videoTimer = setInterval(updateVideoTimer, 1000);
-
-  // Run it once before the
-  // first setInterval fires.
-  updateVideoTimer();
-},
+  this.state.set('videoStart', new Date().getTime());
+  this.videoTimer = setInterval(this.updateVideoElapsed, 1000);
+  this.updateVideoElapsed();
+};
 
 /**
- * TODO: Use the camera.state object
- * to store elapsed video time. String
- * formatting should be happening
- * in the controls view.
+ * Calculates the elapse time
+ * and updateds the 'videoElapsed'
+ * value.
+ *
+ * We listen for the 'change:'
+ * event emitted elsewhere to
+ * update the UI accordingly.
+ *
+ * @api private
  */
-proto.updateVideoTimer = function() {
-  var timestamp = new Date().getTime();
-  var ms = timestamp - this._videoStart;
-  var secs = Math.round(ms / 1000);
-  var formatted = this.formatTimer(secs);
-
-  // Fire an event so that
-  // our views can listen
-  // and visualise the event.
-  this.emit('videoTimeUpdate', formatted);
-},
+proto.updateVideoElapsed = function() {
+  var now = new Date().getTime();
+  var start = this.state.get('videoStart');
+  this.state.set('videoElapsed', (now - start));
+};
 
 proto.stopRecording = function() {
   var videoStorage = this._videoStorage;
@@ -468,7 +465,7 @@ proto.stopRecording = function() {
 
   this._cameraObj.stopRecording();
   this.state.set('recording', false);
-  clearInterval(this._videoTimer);
+  clearInterval(this.videoTimer);
 
   // play camcorder shutter
   // sound while stop recording.
@@ -525,7 +522,7 @@ proto.stopRecording = function() {
       });
     }
   }
-},
+};
 
 /**
  * Given the filename of a newly
@@ -615,20 +612,6 @@ proto.saveVideoPosterImage = function(filename, callback) {
   function onError() {
     console.warn('saveVideoPosterImage:', filename);
   }
-};
-
-// TODO: Move this out into a util
-proto.formatTimer = function(time) {
-  var minutes = Math.floor(time / 60);
-  var seconds = Math.round(time % 60);
-  if (minutes < 60) {
-    return padLeft(minutes, 2) + ':' + padLeft(seconds, 2);
-  } else {
-    var hours = Math.floor(minutes / 60);
-    minutes = Math.round(minutes % 60);
-    return hours + ':' + padLeft(minutes, 2) + ':' + padLeft(seconds, 2);
-  }
-  return '';
 };
 
 /**
