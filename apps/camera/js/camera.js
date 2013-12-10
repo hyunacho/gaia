@@ -110,12 +110,8 @@ function Camera() {
     current: null
   };
 
-
   this.fileFormat = 'jpeg';
   this.preferredRecordingSizes = null;
-
-  this._watchId = null;
-  this._position = null;
 
   this._pendingPick = null;
   this._savedMedia = null;

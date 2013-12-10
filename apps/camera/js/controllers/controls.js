@@ -161,7 +161,8 @@ proto.onGalleryButtonClick = function() {
  * @api private
  */
 proto.onCaptureButtonClick = function() {
-  this.camera.capture();
+  var position = this.app.geolocation.position;
+  this.camera.capture({ position: position });
 };
 
 });

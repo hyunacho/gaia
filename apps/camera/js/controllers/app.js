@@ -11,13 +11,15 @@ define(function(require, exports, module) {
 var LazyL10n = require('LazyL10n');
 var Activity = require('activity');
 var HudView = require('views/hud');
-var ViewfinderView = require('views/viewfinder');
-var ControlsView = require('views/controls');
-var Filmstrip = require('views/filmstrip');
+var constants = require('constants');
+var broadcast = require('broadcast');
+var GeoLocation = require('geolocation');
 var FocusRing = require('views/focusring');
+var ControlsView = require('views/controls');
+var ViewfinderView = require('views/viewfinder');
+var Filmstrip = require('views/filmstrip');
 var soundEffect = require('soundeffect');
 var lockscreen = require('lockscreen');
-var broadcast = require('broadcast');
 var bind = require('utils/bind');
 var Camera = require('camera');
 var evt = require('libs/evt');
@@ -30,8 +32,12 @@ var controllers = {
   camera: require('controllers/camera')
 };
 
-// Mix event emitter into prototype
+/**
+ * Locals
+ */
+
 var proto = evt.mix(App.prototype);
+var LOCATION_PROMPT_DELAY = constants.PROMPT_DELAY;
 
 /**
  * Exports
@@ -54,6 +60,7 @@ function App(options) {
   this.root = options.root || document.body;
   this.inSecureMode = window.parent !== window;
   this.activity = new Activity();
+  this.geolocation = new GeoLocation();
   this.controllers = {};
   this.views = {};
 
@@ -61,6 +68,7 @@ function App(options) {
   this.boot = this.boot.bind(this);
   this.onBeforeUnload = this.onBeforeUnload.bind(this);
   this.onVisibilityChange = this.onVisibilityChange.bind(this);
+  this.geolocationWatch = this.geolocationWatch.bind(this);
 
   // Check for activity, then boot
   this.activity.check(this.boot);
@@ -79,6 +87,7 @@ proto.boot = function() {
   this.injectContent();
   this.bindEvents();
   this.miscStuff();
+  this.geolocationWatch();
   this.emit('boot');
 };
 
@@ -89,11 +98,11 @@ proto.boot = function() {
  * @api private
  */
 proto.setupViews = function() {
-  this.views.hud = new HudView();
-  this.views.controls = new ControlsView();
   this.views.viewfinder = new ViewfinderView();
-  this.views.focusRing = new FocusRing();
   this.views.filmstrip = new Filmstrip(this);
+  this.views.controls = new ControlsView();
+  this.views.focusRing = new FocusRing();
+  this.views.hud = new HudView();
 };
 
 /**
@@ -103,11 +112,11 @@ proto.setupViews = function() {
  * @api private
  */
 proto.runControllers = function() {
-  controllers.hud(this);
-  controllers.controls(this);
   controllers.viewfinder(this);
+  controllers.controls(this);
   controllers.overlay(this);
   controllers.camera(this);
+  controllers.hud(this);
 };
 
 /**
@@ -132,6 +141,46 @@ proto.injectContent = function() {
 proto.bindEvents = function() {
   bind(document, 'visibilitychange', this.onVisibilityChange);
   bind(window, 'beforeunload', this.onBeforeUnload);
+  this.on('focus', this.onFocus);
+  this.on('blur', this.onFocus);
+};
+
+/**
+ * Tasks to run when the
+ * app becomes visible.
+ *
+ * @api private
+ */
+proto.onFocus = function() {
+  var ms = LOCATION_PROMPT_DELAY;
+  setTimeout(this.geolocationWatch, ms);
+};
+
+/**
+ * Tasks to run when the
+ * app is minimised/hidden.
+ *
+ * @api private
+ */
+proto.onBlur = function() {
+  this.geolocation.stopWatching();
+  this.activity.cancel();
+};
+
+/**
+ * Begins watching location
+ * if not within a pending
+ * activity and the app
+ * isn't currently hidden.
+ *
+ * @api private
+ */
+proto.geolocationWatch = function() {
+  var shouldWatch = !this.activity.active
+    && !document.hidden;
+  if (shouldWatch) {
+    this.geolocation.watch();
+  }
 };
 
 /**
@@ -160,8 +209,6 @@ proto.onBeforeUnload = function() {
   this.views.viewfinder.setPreviewStream(null);
   this.emit('beforeunload');
 };
-
-// TODO: Break this down
 
 /**
  * Miscalaneous tasks to be
