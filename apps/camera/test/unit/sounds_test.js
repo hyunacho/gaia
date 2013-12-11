@@ -34,7 +34,7 @@ suite('Sounds', function() {
 
   suiteSetup(function(done) {
     req(['sounds'], function(sounds) {
-      Sounds = sounds;
+      Sounds = sounds.Sounds;
       done();
     });
   });
@@ -63,9 +63,11 @@ suite('Sounds', function() {
   });
 
   suite('Sounds()', function() {
-    test('Should have an items object', function() {
+    test('Should have an empty items object', function() {
+      var items = this.sounds.items;
       assert.ok(this.sounds.hasOwnProperty('items'));
-      assert.ok(typeof this.sounds.items === 'object');
+      assert.ok(typeof items === 'object');
+      assert.ok(Object.keys(items).length === 0);
     });
   });
 
