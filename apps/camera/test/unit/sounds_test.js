@@ -34,7 +34,7 @@ suite('Sounds', function() {
 
   suiteSetup(function(done) {
     req(['sounds'], function(sounds) {
-      Sounds = sounds.Sounds;
+      Sounds = sounds;
       done();
     });
   });

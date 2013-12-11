@@ -129,7 +129,6 @@ proto.observeSetting = function(sound) {
   var mozSettings = navigator.mozSettings;
   var key = sound.setting;
   var self = this;
-
   if (mozSettings) {
     mozSettings.addObserver(key, function(e) {
       self.setEnabled(sound, e.settingValue);
