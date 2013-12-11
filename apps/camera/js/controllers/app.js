@@ -8,6 +8,8 @@ define(function(require, exports, module) {
  * Dependencies
  */
 
+var Sounds = require('sounds');
+var bind = require('utils/bind');
 var LazyL10n = require('LazyL10n');
 var Activity = require('activity');
 var HudView = require('views/hud');
@@ -18,12 +20,11 @@ var FocusRing = require('views/focusring');
 var ControlsView = require('views/controls');
 var ViewfinderView = require('views/viewfinder');
 var Filmstrip = require('views/filmstrip');
-var soundEffect = require('soundeffect');
 var lockscreen = require('lockscreen');
-var bind = require('utils/bind');
 var Camera = require('camera');
 var evt = require('libs/evt');
 var dcf = require('dcf');
+
 var controllers = {
   hud: require('controllers/hud'),
   controls: require('controllers/controls'),
@@ -82,6 +83,7 @@ function App(options) {
  */
 proto.boot = function() {
   this.camera = new Camera();
+  this.sounds = new Sounds();
   this.setupViews();
   this.runControllers();
   this.injectContent();
@@ -259,7 +261,6 @@ proto.miscStuff = function() {
   // important thing is it's out
   // of camera.js
   LazyL10n.get(function() {
-    soundEffect.init();
     dcf.init();
     PerformanceTestingHelper.dispatch('startup-path-done');
   });
