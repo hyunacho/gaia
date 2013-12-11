@@ -34,7 +34,8 @@ var list = [
  * Exports
  */
 
-module.exports = create;
+exports = module.exports = create;
+exports.Sounds = Sounds;
 
 /**
  * Create new `Sounds` and
