@@ -6,14 +6,13 @@ define(function(require, exports, module) {
  */
 
 var proto = Sounds.prototype;
-var has = {}.hasOwnProperty;
 
 /**
- * Our list of sounds.
+ * Our sounds
  *
  * @type {Array}
  */
-Sounds.list = [
+var list = [
   {
     name: 'shutter',
     setting: 'camera.shutter.enabled',
@@ -35,15 +34,44 @@ Sounds.list = [
  * Exports
  */
 
-module.exports = Sounds;
+module.exports = create;
 
-function Sounds() {
-  this.items = {};
-  this.enabled = {};
-  Sounds.list.forEach(this.add, this);
+/**
+ * Create new `Sounds` and
+ * add each sound in `list`.
+ *
+ * By using this `create` method,
+ * we can remove setup logic
+ * from constructor,s which makes
+ * unit tests a lot simpler.
+ *
+ * @return {Sounds}
+ */
+function create() {
+  var sounds = new Sounds();
+  list.forEach(sounds.add, sounds);
+  return sounds;
 }
 
-proto._add = function(data) {
+/**
+ * Initialize a new `Sounds` interface.
+ *
+ * @constructor
+ */
+function Sounds() {
+  this.items = {};
+}
+
+/**
+ * Add a new sound.
+ *
+ * Checks if this sound
+ * is enabled, and sets
+ * up an observer.
+ *
+ * @param {Object} data
+ */
+proto.add = function(data) {
   var self = this;
   var sound = {
     name: data.name,
@@ -53,7 +81,7 @@ proto._add = function(data) {
   };
 
   // Prefetch audio
-  sound.audio = this.getAudio(sound.url);
+  sound.audio = this.createAudio(sound.url);
 
   this.items[data.name] = sound;
   this.isEnabled(sound, function(value) {
@@ -62,19 +90,20 @@ proto._add = function(data) {
   });
 };
 
+/**
+ * Check if a sound is
+ * enabled inside mozSettings.
+ *
+ * @param  {Object}   sound
+ * @param  {Function} done
+ * @api private
+ */
 proto.isEnabled = function(sound, done) {
   var mozSettings = navigator.mozSettings;
   var key = sound.setting;
-  var self = this;
 
   // Requires navigator.mozSettings
   if (!mozSettings) {
-    return;
-  }
-
-  // Check cache first
-  if (has.call(this.enabled, key)) {
-    done(this.enabled[key]);
     return;
   }
 
@@ -85,12 +114,17 @@ proto.isEnabled = function(sound, done) {
 
   function onSuccess(e) {
     var result = e.target.result[key];
-    self.setEnabled(sound, result);
-    self.enabled[key] = result;
     done(result);
   }
 };
 
+/**
+ * Observe mozSettings for changes
+ * on the given settings key.
+ *
+ * @param  {Object} sound
+ * @api private
+ */
 proto.observeSetting = function(sound) {
   var mozSettings = navigator.mozSettings;
   var key = sound.setting;
@@ -103,18 +137,46 @@ proto.observeSetting = function(sound) {
   }
 };
 
+/**
+ * Set a sounds `enabled` key.
+ * @param {Object} sound
+ * @param {Boolean} value
+ * @api private
+ */
 proto.setEnabled = function(sound, value) {
   sound.enabled = value;
 };
 
+/**
+ * Play a sound by name.
+ *
+ * @param  {String} name
+ * @api public
+ */
 proto.play = function(name) {
-  var sound = this.items[name];
+  this._play(this.items[name]);
+};
+
+/**
+ * Play a sound.
+ *
+ * @param  {Object} sound
+ * @api private
+ */
+proto._play = function(sound) {
   if (sound.enabled) {
     sound.audio.play();
   }
 };
 
-proto.getAudio = function(url) {
+/**
+ * Create an audio element.
+ *
+ * @param  {String} url
+ * @return {HTMLAudioElement}
+ * @api private
+ */
+proto.createAudio = function(url) {
   var audio = new Audio(url);
   audio.mozAudioChannelType = 'notification';
   return audio;
