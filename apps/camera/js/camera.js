@@ -10,7 +10,6 @@ define(function(require, exports, module){
 
 var Model = require('model');
 var constants = require('constants');
-var soundEffect = require('soundeffect');
 var broadcast = require('broadcast');
 var evt = require('libs/evt');
 var dcf = require('dcf');
@@ -413,9 +412,6 @@ proto.startRecording = function() {
         maxFileSizeBytes);
     }
 
-    // Play a sound effect
-    soundEffect.playRecordingStartSound();
-
     // Finally begin recording
     self._cameraObj.startRecording(
       config,
@@ -423,6 +419,8 @@ proto.startRecording = function() {
       self._videoPath,
       onSuccess,
       onError);
+
+    self.emit('recordingstart');
   }
 },
 
@@ -457,17 +455,14 @@ proto.updateVideoElapsed = function() {
 };
 
 proto.stopRecording = function() {
-  var videoStorage = this._videoStorage;
   var videoFile = this._videoRootDir + this._videoPath;
+  var videoStorage = this._videoStorage;
   var self = this;
 
   this._cameraObj.stopRecording();
   this.state.set('recording', false);
   clearInterval(this.videoTimer);
-
-  // play camcorder shutter
-  // sound while stop recording.
-  soundEffect.playRecordingEndSound();
+  this.emit('recordingend');
 
   // Register a listener for writing
   // completion of current video file
@@ -695,7 +690,7 @@ proto.loadCameraPreview = function(cameraNumber, callback) {
     self.enableCameraFeatures(camera.capabilities);
 
     camera.onShutter = function() {
-      soundEffect.playCameraShutterSound();
+      self.emit('shutter');
     };
 
     camera.onRecorderStateChange = self.recordingStateChanged.bind(self);

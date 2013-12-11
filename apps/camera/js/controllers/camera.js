@@ -12,7 +12,6 @@ var constants = require('constants');
  */
 
 var CAMERA = constants.CAMERA_MODE_TYPE.CAMERA;
-var PROMPT_DELAY = constants.PROMPT_DELAY;
 var proto = CameraController.prototype;
 
 /**
@@ -26,12 +25,13 @@ function CameraController(app) {
     return new CameraController(app);
   }
 
+  this.app = app;
+  this.camera = app.camera;
   this.activity = app.activity;
   this.filmstrip = app.views.filmstrip;
   this.viewfinder = app.views.viewfinder;
-  this.camera = app.camera;
-  this.app = app;
 
+  // Bind context
   this.setupCamera = this.setupCamera.bind(this);
   this.teardownCamera = this.teardownCamera.bind(this);
 
@@ -53,9 +53,12 @@ function CameraController(app) {
 }
 
 proto.bindEvents = function() {
-  this.app.on('boot', this.setupCamera);
+  this.camera.on('recordingstart', this.onRecordingStart);
+  this.camera.on('recordingend', this.onRecordingEnd);
+  this.camera.on('shutter', this.onShutter);
   this.app.on('blur', this.teardownCamera);
   this.app.on('focus', this.setupCamera);
+  this.app.on('boot', this.setupCamera);
 };
 
 /**
@@ -108,6 +111,36 @@ proto.teardownCamera = function() {
   if (this.app.inSecureMode) {
     this.filmstrip.clear();
   }
+};
+
+/**
+ * Plays the 'recordingStart'
+ * sound effect.
+ *
+ * @api private
+ */
+proto.onRecordingStart = function() {
+  this.app.sounds.play('recordingStart');
+};
+
+/**
+ * Plays the 'recordingEnd'
+ * sound effect.
+ *
+ * @api private
+ */
+proto.onRecordingEnd = function() {
+  this.app.sounds.play('recordingEnd');
+};
+
+/**
+ * Plays the 'shutter'
+ * sound effect.
+ *
+ * @api private
+ */
+proto.onShutter = function() {
+  this.app.sounds.play('shutter');
 };
 
 });
