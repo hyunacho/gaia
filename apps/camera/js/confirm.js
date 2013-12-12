@@ -1,4 +1,7 @@
-/*
+define(function(require) {
+'use strict';
+
+/**
  * When the Camera app is invoked by a "pick" activity, it uses this module
  * to allow the user to preview the photo they just took or the video they
  * just recorded. The user is given the choice to select (i.e. pick) the
@@ -8,8 +11,6 @@
  * have the ability to zoom and pan the photo and play the video before
  * making their decision.
  */
-define(function(require) {
-'use strict';
 
 /**
  * Dependencies
@@ -18,6 +19,10 @@ define(function(require) {
 var MediaFrame = require('MediaFrame');
 var addPanAndZoomHandlers = require('panzoom');
 
+// TODO: We should be using a 'ConfirmView'
+// instead of just relying on the correct
+// markup being in the DOM.
+//
 // These are the document elements we need
 var confirm = document.getElementById('confirm');
 var mediaFrame = document.getElementById('confirm-media-frame');
