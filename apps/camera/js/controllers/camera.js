@@ -6,6 +6,7 @@ define(function(require, exports, module) {
  */
 
 var constants = require('constants');
+var bindAll = require('utils/bindAll');
 
 /**
  * Locals
@@ -32,8 +33,7 @@ function CameraController(app) {
   this.viewfinder = app.views.viewfinder;
 
   // Bind context
-  this.setupCamera = this.setupCamera.bind(this);
-  this.teardownCamera = this.teardownCamera.bind(this);
+  bindAll(this);
 
   this.setCaptureMode();
   this.bindEvents();
