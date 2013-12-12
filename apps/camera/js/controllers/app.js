@@ -1,7 +1,5 @@
 define(function(require, exports, module) {
-/*global PerformanceTestingHelper*/
 /*jshint laxbreak:true*/
-
 'use strict';
 
 /**
@@ -20,12 +18,12 @@ var GeoLocation = require('geolocation');
 var FocusRing = require('views/focusring');
 var ControlsView = require('views/controls');
 var ViewfinderView = require('views/viewfinder');
+var performanceTesting = require('views/viewfinder');
 var Filmstrip = require('views/filmstrip');
 var lockscreen = require('lockscreen');
 var Camera = require('camera');
 var evt = require('libs/evt');
 var dcf = require('dcf');
-
 var controllers = {
   hud: require('controllers/hud'),
   controls: require('controllers/controls'),
@@ -261,7 +259,7 @@ proto.miscStuff = function() {
   // the filmstrip.js can see it.
   window.ViewfinderView = this.views.viewfinder;
 
-  PerformanceTestingHelper.dispatch('initialising-camera-preview');
+  performanceTesting.dispatch('initialising-camera-preview');
 
   // Prevent the phone
   // from going to sleep.
@@ -272,7 +270,7 @@ proto.miscStuff = function() {
   // of camera.js
   LazyL10n.get(function() {
     dcf.init();
-    PerformanceTestingHelper.dispatch('startup-path-done');
+    performanceTesting.dispatch('startup-path-done');
   });
 
   // The screen wakelock should be on
