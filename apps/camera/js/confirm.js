@@ -18,6 +18,7 @@ define(function(require) {
 
 var MediaFrame = require('MediaFrame');
 var addPanAndZoomHandlers = require('panzoom');
+var parseJPEGMetadata = require('jpegMetaDataParser');
 
 // TODO: We should be using a 'ConfirmView'
 // instead of just relying on the correct

@@ -23,7 +23,7 @@ require.config({
     },
     'MediaFrame': {
       deps: ['VideoPlayer'],
-      exports: 'getVideoRotation'
+      exports: 'MediaFrame'
     },
     'BlobView': {
       exports: 'BlobView'
@@ -35,7 +35,7 @@ require.config({
       exports: 'asyncStorage'
     },
     'performanceTesting': {
-      exports: 'asyncStorage'
+      exports: 'PerformanceTestingHelper'
     },
     'jpegMetaDataParser': {
       exports: 'parseJPEGMetadata'
