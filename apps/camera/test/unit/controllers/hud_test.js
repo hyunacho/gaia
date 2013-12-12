@@ -3,8 +3,6 @@ suite('controllers/hud', function() {
   /*global req*/
   'use strict';
 
-
-
   suiteSetup(function(done) {
     var self = this;
     req([
@@ -180,9 +178,4 @@ suite('controllers/hud', function() {
       assert.ok(toggleDisableButtons.lastCall.args[0] === false);
     });
   });
-
-
-
-
-
 });
