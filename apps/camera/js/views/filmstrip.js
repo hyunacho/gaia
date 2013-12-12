@@ -8,6 +8,7 @@ define(function(require, exports, module) {
   var broadcast = require('broadcast');
   var orientation = require('orientation');
   var parseJPEGMetadata = require('jpegMetaDataParser');
+  var addPanAndZoomHandlers = require('panzoom');
   var constants = require('constants');
 
   /**
