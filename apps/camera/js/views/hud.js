@@ -12,12 +12,7 @@ define(function(require) {
     initialize: function() {
       this.el.innerHTML = this.render();
 
-      // Bind context
-      this.enableButtons = this.enableButtons.bind(this);
-      this.disableButtons = this.disableButtons.bind(this);
-      this.toggleDisableButtons = this.toggleDisableButtons.bind(this);
-
-      // Get elments
+      // Get elements
       this.els.flash = find('.js-toggle-flash', this.el);
       this.els.flashModeName = find('.js-flash-mode-name', this.el);
       this.els.camera = find('.js-toggle-camera', this.el);

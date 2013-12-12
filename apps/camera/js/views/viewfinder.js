@@ -52,13 +52,10 @@ define(function(require) {
     className: 'viewfinder js-viewfinder',
     fadeTime: 200,
     initialize: function() {
-
-      // Bind events
-      bind(this.el, 'click', this.onClick.bind(this));
-      bind(this.el, 'touchstart', this.onTouchStart.bind(this));
-      bind(this.el, 'touchmove', this.onTouchMove.bind(this));
-      bind(this.el, 'touchend', this.onTouchEnd.bind(this));
-
+      bind(this.el, 'click', this.onClick);
+      bind(this.el, 'touchstart', this.onTouchStart);
+      bind(this.el, 'touchmove', this.onTouchMove);
+      bind(this.el, 'touchend', this.onTouchEnd);
       this.el.autoplay = true;
     },
 
