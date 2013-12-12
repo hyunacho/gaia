@@ -6,6 +6,7 @@ define(function(require, exports, module) {
  */
 
 var constants = require('constants');
+var performance = require('performanceTesting');
 var bindAll = require('utils/bindAll');
 
 /**
@@ -81,7 +82,7 @@ proto.setupCamera = function() {
   camera.loadStreamInto(this.viewfinder.el, onStreamLoaded);
 
   function onStreamLoaded(stream) {
-    PerformanceTestingHelper.dispatch('camera-preview-loaded');
+    performance.dispatch('camera-preview-loaded');
   }
 };
 
