@@ -2,6 +2,12 @@ define(function(require, exports, module) {
 'use strict';
 
 /**
+ * Dependencies
+ */
+
+var bindAll = require('utils/bindAll');
+
+/**
  * Locals
  */
 
@@ -23,8 +29,7 @@ exports.HudController = HudController;
  * @api public
  */
 function create(app) {
-  return new HudController(app)
-    .bindEvents();
+  return new HudController(app).bindEvents();
 }
 
 /**
@@ -39,17 +44,13 @@ function HudController(app) {
   this.controls = app.views.controls;
   this.hud = app.views.hud;
   this.camera = app.camera;
-
-  // Bind context
-  this.onFlashToggle = this.onFlashToggle.bind(this);
-  this.onCameraToggle = this.onCameraToggle.bind(this);
-  this.onCameraConfigured = this.onCameraConfigured.bind(this);
-  this.onRecordingChange = this.onRecordingChange.bind(this);
+  bindAll(this);
 }
 
 /**
  * Bind callbacks to events.
  *
+ * @return {HudController} for chaining
  * @api private
  */
 proto.bindEvents = function() {
@@ -59,6 +60,7 @@ proto.bindEvents = function() {
   this.camera.on('previewResumed', this.hud.enableButtons);
   this.camera.on('preparingToTakePicture', this.hud.disableButtons);
   this.camera.state.on('change:recording', this.onRecordingChange);
+  return this;
 };
 
 /**

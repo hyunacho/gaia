@@ -14,12 +14,6 @@ return View.extend({
   className: 'controls js-controls',
   buttonsDisabledClass: 'buttons-disabled',
   initialize: function() {
-
-    // Bind Context
-    this.enableButtons = this.enableButtons.bind(this);
-    this.disableButtons = this.disableButtons.bind(this);
-    this.onButtonClick = this.onButtonClick.bind(this);
-
     this.render();
   },
 

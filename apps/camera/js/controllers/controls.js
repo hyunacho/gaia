@@ -4,6 +4,12 @@ define(function(require, exports, module) {
 'use strict';
 
 /**
+ * Dependencies
+ */
+
+var bindAll = require('utils/bindAll');
+
+/**
  * Locals
  */
 
@@ -25,14 +31,7 @@ function ControlsController(app) {
   this.app = app;
 
   // Bind context
-  this.onCameraModeChange = this.onCameraModeChange.bind(this);
-  this.onVideoTimeUpdate = this.onVideoTimeUpdate.bind(this);
-  this.onSwitchButtonClick = this.onSwitchButtonClick.bind(this);
-  this.onCaptureButtonClick = this.onCaptureButtonClick.bind(this);
-  this.onCancelButtonClick = this.onCancelButtonClick.bind(this);
-  this.onGalleryButtonClick = this.onGalleryButtonClick.bind(this);
-  this.onRecordingChange = this.onRecordingChange.bind(this);
-
+  bindAll(this);
   this.bindEvents();
   this.setup();
 }
