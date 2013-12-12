@@ -1,6 +1,6 @@
-'use strict';
-
 require(['require_config'], function() {
+  'use strict';
+
   require([
     'controllers/app',
     'js/config.js',
