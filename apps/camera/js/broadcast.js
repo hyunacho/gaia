@@ -1,5 +1,6 @@
+define(function(require, exports, module) {
+'use strict';
 
-define(function(require) {
-  'use strict';
-  return require('libs/evt').mix({});
+module.exports = require('libs/evt').mix({});
+
 });
