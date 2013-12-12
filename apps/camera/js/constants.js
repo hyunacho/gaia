@@ -1,45 +1,50 @@
-define(function() {
+define(function(require, exports, module) {
 'use strict';
 
-  return {
-    CAMERA_MODE_TYPE: {
-      CAMERA: 'camera',
-      VIDEO: 'video'
-    },
+/**
+ * Exports
+ */
 
-    STORAGE_STATE_TYPE: {
-      INIT: 0,
-      AVAILABLE: 1,
-      NOCARD: 2,
-      UNMOUNTED: 3,
-      CAPACITY: 4
-    },
+module.exports = {
+  CAMERA_MODE_TYPE: {
+    CAMERA: 'camera',
+    VIDEO: 'video'
+  },
 
-    FOCUS_MODE_TYPE: {
-      MANUALLY_TRIGGERED: 'auto',
-      CONTINUOUS_CAMERA: 'continuous-picture',
-      CONTINUOUS_VIDEO: 'continuous-video'
-    },
+  STORAGE_STATE_TYPE: {
+    INIT: 0,
+    AVAILABLE: 1,
+    NOCARD: 2,
+    UNMOUNTED: 3,
+    CAPACITY: 4
+  },
 
-    FILMSTRIP_DURATION: 5000,
+  FOCUS_MODE_TYPE: {
+    MANUALLY_TRIGGERED: 'auto',
+    CONTINUOUS_CAMERA: 'continuous-picture',
+    CONTINUOUS_VIDEO: 'continuous-video'
+  },
 
-    PROMPT_DELAY: 2000,
+  FILMSTRIP_DURATION: 5000,
 
-    // The minimum available disk space to start recording a video.
-    RECORD_SPACE_MIN: 1024 * 1024 * 2,
+  PROMPT_DELAY: 2000,
 
-    // Number of bytes left on disk to let us stop recording.
-    RECORD_SPACE_PADDING: 1024 * 1024 * 1,
+  // The minimum available disk space to start recording a video.
+  RECORD_SPACE_MIN: 1024 * 1024 * 2,
 
-    // An estimated JPEG file size is caluclated from 90% quality 24bit/pixel
-    ESTIMATED_JPEG_FILE_SIZE: 300 * 1024,
+  // Number of bytes left on disk to let us stop recording.
+  RECORD_SPACE_PADDING: 1024 * 1024 * 1,
 
-    // Minimum video duration length for creating a video that contains at least
-    // few samples, see bug 899864.
-    MIN_RECORDING_TIME: 500,
+  // An estimated JPEG file size is caluclated from 90% quality 24bit/pixel
+  ESTIMATED_JPEG_FILE_SIZE: 300 * 1024,
 
-    MIN_VIEWFINDER_SCALE: 1.0,
+  // Minimum video duration length for creating a video that contains at least
+  // few samples, see bug 899864.
+  MIN_RECORDING_TIME: 500,
 
-    MAX_VIEWFINDER_SCALE: 4.0
-  };
+  MIN_VIEWFINDER_SCALE: 1.0,
+
+  MAX_VIEWFINDER_SCALE: 4.0
+};
+
 });

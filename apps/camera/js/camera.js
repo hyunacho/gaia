@@ -8,7 +8,7 @@ define(function(require, exports, module){
  * Dependencies
  */
 
-var Model = require('model');
+var Model = require('libs/model');
 var constants = require('constants');
 var broadcast = require('broadcast');
 var evt = require('libs/evt');
