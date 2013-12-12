@@ -11,6 +11,9 @@ define(function(require, exports, module){
 var Model = require('libs/model');
 var constants = require('constants');
 var broadcast = require('broadcast');
+var bindAll = require('utils/bindAll');
+var getVideoRotation = require('getVideoRotation');
+var ConfirmDialog = require('confirm');
 var evt = require('libs/evt');
 var dcf = require('dcf');
 
@@ -114,9 +117,7 @@ function Camera() {
   this._savedMedia = null;
 
   // Bind context
-  this.storageCheck = this.storageCheck.bind(this);
-  this.updateVideoElapsed = this.updateVideoElapsed.bind(this);
-  this.onStorageChange = this.onStorageChange.bind(this);
+  bindAll(this);
 
   // Whenever the camera is
   // configured, we run a storage
@@ -542,7 +543,6 @@ proto.saveVideoPosterImage = function(filename, callback) {
   function onSuccess() {
     var videoblob = getreq.result;
 
-    // Not sure where this function is defined?
     getVideoRotation(videoblob, function(rotation) {
       if (typeof rotation !== 'number') {
         console.warn('Unexpected rotation:', rotation);
@@ -692,8 +692,6 @@ proto.loadCameraPreview = function(cameraNumber, callback) {
     camera.onShutter = function() {
       self.emit('shutter');
     };
-
-    camera.onRecorderStateChange = self.recordingStateChanged.bind(self);
 
     // 'Camera' Mode
     if (self.isCameraMode()) {
