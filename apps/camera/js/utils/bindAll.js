@@ -7,23 +7,15 @@ define(function(require, exports, module) {
 
 module.exports = bindAll;
 
-
 function bindAll(object) {
   var key;
   var fn;
-
   for (key in object) {
     fn = object[key];
     if (typeof fn === 'function') {
-      object[key] = bind(fn, object);
+      object[key] = fn.bind(object);
     }
   }
-}
-
-function bind(fn, ctx) {
-  return function() {
-    return fn.apply(ctx, arguments);
-  };
 }
 
 });
