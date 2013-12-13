@@ -6,6 +6,7 @@ define(function(require, exports, module) {
  */
 
 var Overlay = require('views/overlay');
+var bindAll = require('utils/bindAll');
 
 /**
  * Locals
@@ -27,10 +28,7 @@ function OverlayController(app) {
   this.activity = app.activity;
   this.camera = app.camera;
   this.overlays = [];
-
-  // Bind context
-  this.onStorageChange = this.onStorageChange.bind(this);
-  this.onStorageSettingsClick = this.onStorageSettingsClick.bind(this);
+  bindAll(this);
 
   // Events
   this.camera.state.on('change:storage', this.onStorageChange);

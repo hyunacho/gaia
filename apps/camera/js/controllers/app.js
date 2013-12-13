@@ -1,7 +1,5 @@
 define(function(require, exports, module) {
-/*global PerformanceTestingHelper*/
 /*jshint laxbreak:true*/
-
 'use strict';
 
 /**
@@ -15,16 +13,17 @@ var Activity = require('activity');
 var HudView = require('views/hud');
 var constants = require('constants');
 var broadcast = require('broadcast');
+var bindAll = require('utils/bindAll');
 var GeoLocation = require('geolocation');
 var FocusRing = require('views/focusring');
 var ControlsView = require('views/controls');
 var ViewfinderView = require('views/viewfinder');
+var performanceTesting = require('performanceTesting');
 var Filmstrip = require('views/filmstrip');
 var lockscreen = require('lockscreen');
 var Camera = require('camera');
 var evt = require('libs/evt');
 var dcf = require('dcf');
-
 var controllers = {
   hud: require('controllers/hud'),
   controls: require('controllers/controls'),
@@ -44,10 +43,25 @@ var LOCATION_PROMPT_DELAY = constants.PROMPT_DELAY;
  * Exports
  */
 
-module.exports = App;
+exports = module.exports = create;
+exports.App = App;
 
 /**
- * The App
+ * Create new `App` and boot
+ * after activity check complete.
+ *
+ * @param  {Object} options
+ * @return {App}
+ * @api public
+ */
+function create(options) {
+  var app = new App(options);
+  app.activity.check(app.boot);
+  return app;
+}
+
+/**
+ * Initialize a new `App`
  *
  * Options:
  *
@@ -58,21 +72,18 @@ module.exports = App;
  */
 function App(options) {
   options = options || {};
+
   this.root = options.root || document.body;
   this.inSecureMode = window.parent !== window;
-  this.activity = new Activity();
   this.geolocation = new GeoLocation();
+  this.activity = new Activity();
+  this.camera = new Camera();
+  this.sounds = new Sounds();
   this.controllers = {};
   this.views = {};
 
   // Bind context
-  this.boot = this.boot.bind(this);
-  this.onBeforeUnload = this.onBeforeUnload.bind(this);
-  this.onVisibilityChange = this.onVisibilityChange.bind(this);
-  this.geolocationWatch = this.geolocationWatch.bind(this);
-
-  // Check for activity, then boot
-  this.activity.check(this.boot);
+  bindAll(this);
 }
 
 /**
@@ -82,8 +93,6 @@ function App(options) {
  * @api private
  */
 proto.boot = function() {
-  this.camera = new Camera();
-  this.sounds = new Sounds();
   this.setupViews();
   this.runControllers();
   this.injectContent();
@@ -178,8 +187,7 @@ proto.onBlur = function() {
  * @api private
  */
 proto.geolocationWatch = function() {
-  var shouldWatch = !this.activity.active
-    && !document.hidden;
+  var shouldWatch = !this.activity.active && !document.hidden;
   if (shouldWatch) {
     this.geolocation.watch();
   }
@@ -251,7 +259,7 @@ proto.miscStuff = function() {
   // the filmstrip.js can see it.
   window.ViewfinderView = this.views.viewfinder;
 
-  PerformanceTestingHelper.dispatch('initialising-camera-preview');
+  performanceTesting.dispatch('initialising-camera-preview');
 
   // Prevent the phone
   // from going to sleep.
@@ -262,7 +270,7 @@ proto.miscStuff = function() {
   // of camera.js
   LazyL10n.get(function() {
     dcf.init();
-    PerformanceTestingHelper.dispatch('startup-path-done');
+    performanceTesting.dispatch('startup-path-done');
   });
 
   // The screen wakelock should be on

@@ -1,5 +1,11 @@
 define(function(require, exports, module) {
-  'use strict';
+'use strict';
+
+  /**
+   * Dependencies
+   */
+
+  var bindAll = require('utils/bindAll');
 
   /**
    * Locals
@@ -22,11 +28,7 @@ define(function(require, exports, module) {
     this.filmstrip = app.views.filmstrip;
     this.activity = app.activity;
     this.camera = app.camera;
-
-    // Bind context
-    this.onCameraChange = this.onCameraChange.bind(this);
-    this.onViewfinderClick = this.onViewfinderClick.bind(this);
-
+    bindAll(this);
     this.bindEvents();
   }
 

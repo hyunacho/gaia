@@ -43,7 +43,7 @@ exports.Sounds = Sounds;
  *
  * By using this `create` method,
  * we can remove setup logic
- * from constructor,s which makes
+ * from constructor which makes
  * unit tests a lot simpler.
  *
  * @return {Sounds}
