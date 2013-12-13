@@ -7,6 +7,7 @@ define(function(require, exports, module) {
 
   var events = require('libs/evt').mix;
   var mixin = require('utils/mixin');
+  var bindAll = require('utils/bindAll');
 
   /**
    * Locals
@@ -32,7 +33,6 @@ define(function(require, exports, module) {
     options = options || {};
     this.el = options.el || this.el || document.createElement(this.tag);
     this.el.id = this.el.id || ('view' + counter++);
-    this.attachedPlugins = [];
     this.els = {};
 
     if (!this.el.className) {
@@ -40,6 +40,7 @@ define(function(require, exports, module) {
       if (this.className) this.el.className += ' ' + this.className;
     }
 
+    bindAll(this);
     this.initialize.apply(this, arguments);
   }
 

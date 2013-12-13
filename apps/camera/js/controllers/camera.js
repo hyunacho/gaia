@@ -6,6 +6,8 @@ define(function(require, exports, module) {
  */
 
 var constants = require('constants');
+var performance = require('performanceTesting');
+var bindAll = require('utils/bindAll');
 
 /**
  * Locals
@@ -32,8 +34,7 @@ function CameraController(app) {
   this.viewfinder = app.views.viewfinder;
 
   // Bind context
-  this.setupCamera = this.setupCamera.bind(this);
-  this.teardownCamera = this.teardownCamera.bind(this);
+  bindAll(this);
 
   this.setCaptureMode();
   this.bindEvents();
@@ -81,7 +82,7 @@ proto.setupCamera = function() {
   camera.loadStreamInto(this.viewfinder.el, onStreamLoaded);
 
   function onStreamLoaded(stream) {
-    PerformanceTestingHelper.dispatch('camera-preview-loaded');
+    performance.dispatch('camera-preview-loaded');
   }
 };
 

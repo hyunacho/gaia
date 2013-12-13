@@ -1,25 +1,23 @@
-define(function(require) {
+define(function(require, exports, module) {
 'use strict';
 
 /**
  * Dependencies
  */
 
-var View = require('view');
+var View = require('libs/view');
 var bind = require('utils/bind');
 var find = require('utils/find');
 var formatTimer = require('utils/formattimer');
 
-return View.extend({
+/**
+ * Exports
+ */
+
+module.exports = View.extend({
   className: 'controls js-controls',
   buttonsDisabledClass: 'buttons-disabled',
   initialize: function() {
-
-    // Bind Context
-    this.enableButtons = this.enableButtons.bind(this);
-    this.disableButtons = this.disableButtons.bind(this);
-    this.onButtonClick = this.onButtonClick.bind(this);
-
     this.render();
   },
 

@@ -1,3 +1,18 @@
+define(function(require, exports, module) {
+'use strict';
+
+/**
+ * Dependencies
+ */
+
+var GestureDetector = require('GestureDetector');
+
+/**
+ * Exports
+ */
+
+module.exports = addPanAndZoomHandlers;
+
 /*
  * This module adds pan-and-zoom capability to images displayed by
  * shared/js/media/media_frame.js.  It is used by filmstrip.js and confirm.js
@@ -84,3 +99,5 @@ function addPanAndZoomHandlers(frame) {
     frame.pan(dx, dy);
   }
 }
+
+});
