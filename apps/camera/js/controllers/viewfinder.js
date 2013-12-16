@@ -25,7 +25,7 @@ define(function(require, exports, module) {
     }
 
     this.viewfinder = app.views.viewfinder;
-    this.filmstrip = app.views.filmstrip;
+    this.filmstrip = app.filmstrip;
     this.activity = app.activity;
     this.camera = app.camera;
     bindAll(this);

@@ -30,7 +30,7 @@ function CameraController(app) {
   this.app = app;
   this.camera = app.camera;
   this.activity = app.activity;
-  this.filmstrip = app.views.filmstrip;
+  this.filmstrip = app.filmstrip;
   this.viewfinder = app.views.viewfinder;
 
   // Bind context
@@ -56,6 +56,8 @@ function CameraController(app) {
 proto.bindEvents = function() {
   this.camera.on('recordingstart', this.onRecordingStart);
   this.camera.on('recordingend', this.onRecordingEnd);
+  this.camera.on('newimage', this.onNewImage);
+  this.camera.on('newvideo', this.onNewVideo);
   this.camera.on('shutter', this.onShutter);
   this.app.on('blur', this.teardownCamera);
   this.app.on('focus', this.setupCamera);
