@@ -51,7 +51,7 @@ require(['require_config', 'config'], function() {
       sounds: sounds,
       views: views,
       controllers: controllers,
-      Filmstrip: Filmstrip
+      filmstrip: Filmstrip
     });
 
     // Check activity, then boot
