@@ -82,11 +82,20 @@ proto.parse = function(activity) {
   return data;
 };
 
+proto.postResult = function(data) {
+  if (this.raw) {
+    this.raw.postResult(data);
+  }
+};
+
 proto.cancel = function() {
   if (this.raw) {
     this.raw.postError('pick cancelled');
   }
+  this.reset();
+};
 
+proto.reset = function() {
   this.raw = null;
   this.name = null;
   this.active = false;
