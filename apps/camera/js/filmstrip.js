@@ -51,8 +51,6 @@ define(function(require, exports, module) {
     deleteButton.onclick = deleteCurrentItem;
     shareButton.onclick = shareCurrentItem;
     mediaFrame.addEventListener('swipe', handleSwipe);
-    camera.on('newVideo', onNewVideo);
-    camera.on('newImage', onNewImage);
     broadcast.on('itemDeleted', onItemDeleted);
     broadcast.on('storageUnavailable', hidePreview);
     broadcast.on('storageShared', hidePreview);
