@@ -8,59 +8,19 @@ define(function(require, exports, module) {
 var proto = Sounds.prototype;
 
 /**
- * Our sounds
- *
- * @type {Array}
- */
-var list = [
-  {
-    name: 'shutter',
-    setting: 'camera.shutter.enabled',
-    url: './resources/sounds/shutter.ogg'
-  },
-  {
-    name: 'recordingStart',
-    url: './resources/sounds/camcorder_start.opus',
-    setting: 'camera.recordingsound.enabled'
-  },
-  {
-    name: 'recordingEnd',
-    url: './resources/sounds/camcorder_end.opus',
-    setting: 'camera.recordingsound.enabled'
-  }
-];
-
-/**
  * Exports
  */
 
-exports = module.exports = create;
-exports.Sounds = Sounds;
-
-/**
- * Create new `Sounds` and
- * add each sound in `list`.
- *
- * By using this `create` method,
- * we can remove setup logic
- * from constructor which makes
- * unit tests a lot simpler.
- *
- * @return {Sounds}
- */
-function create() {
-  var sounds = new Sounds();
-  list.forEach(sounds.add, sounds);
-  return sounds;
-}
+module.exports = Sounds;
 
 /**
  * Initialize a new `Sounds` interface.
  *
  * @constructor
  */
-function Sounds() {
+function Sounds(list) {
   this.items = {};
+  (list || []).forEach(this.add, this);
 }
 
 /**
