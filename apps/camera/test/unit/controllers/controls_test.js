@@ -19,7 +19,7 @@ suite('controllers/controls', function() {
     req([
       'controllers/controls',
       'camera',
-      'libs/view',
+      'vendor/view',
       'activity'
     ], function(controlsController, camera, View, activity) {
       Controller = self.modules.controller = controlsController;

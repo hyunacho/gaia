@@ -1,28 +1,68 @@
 /*global mocha*/
 'use strict';
 
-// We need to phase out
-// these globals, they
-// currently sit inside
-// constants.js
 mocha.setup({
   globals: [
-    'CAMERA_MODE_TYPE',
-    'STORAGE_STATE_TYPE',
-    'FOCUS_MODE_TYPE',
-    'FILMSTRIP_DURATION',
-    'PROMPT_DELAY',
-    'RECORD_SPACE_MIN',
-    'RECORD_SPACE_PADDING',
-    'ESTIMATED_JPEG_FILE_SIZE',
-    'MIN_RECORDING_TIME',
-    'MIN_VIEWFINDER_SCALE',
-    'MAX_VIEWFINDER_SCALE'
+    'PerformanceTestingHelper',
+    'LazyLoader',
+    'asyncStorage',
+    'LazyL10n',
+    'BlobView',
+    'parseJPEGMetadata',
+    'getVideoRotation',
+    'VideoPlayer',
+    'GestureDetector'
   ]
 });
 
 // Once we have alemeda (requirejs) we can
 // begin loading in our modules to test.
-requireApp('camera/js/libs/alameda.js', function() {
-  window.req = window.requirejs.config({ baseUrl: '/js' });
+requireApp('camera/js/vendor/alameda.js', function() {
+  window.req = window.requirejs.config({
+    baseUrl: '/js',
+    paths: {
+      'LazyL10n': '../shared/js/lazy_l10n',
+      'LazyLoader': '../shared/js/lazy_loader',
+      'asyncStorage': '../shared/js/async_storage',
+      'getVideoRotation': '../shared/js/media/get_video_rotation',
+      'performanceTesting': '../shared/js/performance_testing_helper',
+      'jpegMetaDataParser': '../shared/js/media/jpeg_metadata_parser',
+      'GestureDetector': '../shared/js/gesture_detector',
+      'VideoPlayer': '../shared/js/media/video_player',
+      'MediaFrame': '../shared/js/media/media_frame',
+      'BlobView': '../shared/js/blobview'
+    },
+    shim: {
+      'LazyL10n': {
+        deps: ['LazyLoader'],
+        exports: 'LazyL10n'
+      },
+      'getVideoRotation': {
+        deps: ['BlobView'],
+        exports: 'getVideoRotation'
+      },
+      'MediaFrame': {
+        deps: ['VideoPlayer'],
+        exports: 'MediaFrame'
+      },
+      'BlobView': {
+        exports: 'BlobView'
+      },
+      'LazyLoader': {
+        exports: 'LazyLoader'
+      },
+      'asyncStorage': {
+        exports: 'asyncStorage'
+      },
+      'performanceTesting': {
+        exports: 'PerformanceTestingHelper'
+      },
+      'jpegMetaDataParser': {
+        exports: 'parseJPEGMetadata'
+      },
+      'GestureDetector': {
+        exports: 'GestureDetector'
+      }
+    }
+  });
 });

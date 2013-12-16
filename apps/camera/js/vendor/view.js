@@ -5,7 +5,7 @@ define(function(require, exports, module) {
    * Dependencies
    */
 
-  var events = require('libs/evt').mix;
+  var events = require('vendor/evt').mix;
   var mixin = require('utils/mixin');
   var bindAll = require('utils/bindAll');
 
@@ -33,6 +33,7 @@ define(function(require, exports, module) {
     options = options || {};
     this.el = options.el || this.el || document.createElement(this.tag);
     this.el.id = this.el.id || ('view' + counter++);
+    this.name = options.name || this.name;
     this.els = {};
 
     if (!this.el.className) {

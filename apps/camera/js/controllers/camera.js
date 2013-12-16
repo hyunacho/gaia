@@ -30,7 +30,7 @@ function CameraController(app) {
   this.app = app;
   this.camera = app.camera;
   this.activity = app.activity;
-  this.filmstrip = app.views.filmstrip;
+  this.filmstrip = app.filmstrip;
   this.viewfinder = app.views.viewfinder;
 
   // Bind context
@@ -56,6 +56,8 @@ function CameraController(app) {
 proto.bindEvents = function() {
   this.camera.on('recordingstart', this.onRecordingStart);
   this.camera.on('recordingend', this.onRecordingEnd);
+  this.camera.on('newimage', this.onNewImage);
+  this.camera.on('newvideo', this.onNewVideo);
   this.camera.on('shutter', this.onShutter);
   this.app.on('blur', this.teardownCamera);
   this.app.on('focus', this.setupCamera);
@@ -112,6 +114,27 @@ proto.teardownCamera = function() {
   if (this.app.inSecureMode) {
     this.filmstrip.clear();
   }
+};
+
+proto.onNewImage = function(data) {
+  var filmstrip = this.filmstrip;
+  var camera = this.camera;
+  var blob = data.blob;
+
+  // In either case, save
+  // the photo to device storage
+  camera._addPictureToStorage(blob, function(name, path) {
+    filmstrip.addImageAndShow(path, blob);
+    camera.storageCheck();
+  });
+
+  if (!this.activity.active) {
+    camera.resumePreview();
+  }
+};
+
+proto.onNewVideo = function(data) {
+  this.filmstrip.addVideoAndShow(data);
 };
 
 /**

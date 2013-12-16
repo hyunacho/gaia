@@ -19,7 +19,7 @@ suite('controllers/viewfinder', function() {
     req([
       'controllers/viewfinder',
       'camera',
-      'libs/view',
+      'vendor/view',
       'activity'
     ], function(controller, camera, View, activity) {
       Controller = self.modules.controller = controller;
@@ -38,18 +38,18 @@ suite('controllers/viewfinder', function() {
     this.app = {
       camera: new Camera(),
       activity: new Activity(),
+      filmstrip: new View(),
       views: {
-        viewfinder: new View(),
-        filmstrip: new View()
+        viewfinder: new View()
       }
     };
 
     sinon.stub(this.app.camera, 'on');
   });
 
-  suite('on viewfinder click', function() {
+  suite('click:viewfinder', function() {
     setup(function() {
-      this.app.views.filmstrip.toggle = sinon.spy();
+      this.app.filmstrip.toggle = sinon.spy();
     });
 
     test('Should *not* hide the filmstrip if recording', function() {
@@ -60,7 +60,7 @@ suite('controllers/viewfinder', function() {
       this.controller = new Controller(this.app);
       this.app.views.viewfinder.emit('click');
 
-      assert.isFalse(this.app.views.filmstrip.toggle.called);
+      assert.isFalse(this.app.filmstrip.toggle.called);
     });
 
     test('Should *not* hide the filmstrip if activity is pending', function() {
@@ -75,7 +75,7 @@ suite('controllers/viewfinder', function() {
       // Tigger a click event
       this.app.views.viewfinder.emit('click');
 
-      assert.isFalse(this.app.views.filmstrip.toggle.called);
+      assert.isFalse(this.app.filmstrip.toggle.called);
     });
 
     test('Should hide the filmstrip if activity is pending', function() {
@@ -88,7 +88,7 @@ suite('controllers/viewfinder', function() {
       // Tigger a click event
       this.app.views.viewfinder.emit('click');
 
-      assert.isTrue(this.app.views.filmstrip.toggle.called);
+      assert.isTrue(this.app.filmstrip.toggle.called);
     });
   });
 });

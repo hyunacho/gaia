@@ -1,5 +1,5 @@
 require.config({
-  baseUrl: 'js',
+  baseUrl: '/js',
   paths: {
     'LazyL10n': '../shared/js/lazy_l10n',
     'LazyLoader': '../shared/js/lazy_loader',

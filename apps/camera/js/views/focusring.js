@@ -1,7 +1,7 @@
 define(function(require) {
 'use strict';
 
-var View = require('libs/view');
+var View = require('vendor/view');
 
 return View.extend({
   className: 'focus-ring',

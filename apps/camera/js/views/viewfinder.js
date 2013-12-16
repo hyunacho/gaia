@@ -5,7 +5,7 @@ define(function(require) {
  * Dependencies
  */
 
-var View = require('libs/view');
+var View = require('vendor/view');
 var bind = require('utils/bind');
 var constants = require('constants');
 

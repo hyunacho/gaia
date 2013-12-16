@@ -6,59 +6,29 @@ define(function(require, exports, module) {
  * Dependencies
  */
 
-var Sounds = require('sounds');
 var bind = require('utils/bind');
 var LazyL10n = require('LazyL10n');
-var Activity = require('activity');
-var HudView = require('views/hud');
 var constants = require('constants');
 var broadcast = require('broadcast');
 var bindAll = require('utils/bindAll');
-var GeoLocation = require('geolocation');
-var FocusRing = require('views/focusring');
-var ControlsView = require('views/controls');
-var ViewfinderView = require('views/viewfinder');
 var performanceTesting = require('performanceTesting');
-var Filmstrip = require('views/filmstrip');
 var lockscreen = require('lockscreen');
-var Camera = require('camera');
-var evt = require('libs/evt');
+var evt = require('vendor/evt');
 var dcf = require('dcf');
-var controllers = {
-  hud: require('controllers/hud'),
-  controls: require('controllers/controls'),
-  viewfinder: require('controllers/viewfinder'),
-  overlay: require('controllers/overlay'),
-  camera: require('controllers/camera')
-};
 
 /**
  * Locals
  */
 
-var proto = evt.mix(App.prototype);
 var LOCATION_PROMPT_DELAY = constants.PROMPT_DELAY;
+var proto = evt.mix(App.prototype);
+var unbind = bind.unbind;
 
 /**
  * Exports
  */
 
-exports = module.exports = create;
-exports.App = App;
-
-/**
- * Create new `App` and boot
- * after activity check complete.
- *
- * @param  {Object} options
- * @return {App}
- * @api public
- */
-function create(options) {
-  var app = new App(options);
-  app.activity.check(app.boot);
-  return app;
-}
+module.exports = App;
 
 /**
  * Initialize a new `App`
@@ -71,16 +41,17 @@ function create(options) {
  * @constructor
  */
 function App(options) {
-  options = options || {};
-
-  this.root = options.root || document.body;
-  this.inSecureMode = window.parent !== window;
-  this.geolocation = new GeoLocation();
-  this.activity = new Activity();
-  this.camera = new Camera();
-  this.sounds = new Sounds();
-  this.controllers = {};
-  this.views = {};
+  this.el = options.el;
+  this.win = options.win;
+  this.doc = options.doc;
+  this.inSecureMode = this.win.parent !== this.win;
+  this.geolocation = options.geolocation;
+  this.activity = options.activity;
+  this.filmstrip = options.filmstrip;
+  this.camera = options.camera;
+  this.sounds = options.sounds;
+  this.views = options.views;
+  this.controllers = options.controllers;
 
   // Bind context
   bindAll(this);
@@ -93,7 +64,7 @@ function App(options) {
  * @api private
  */
 proto.boot = function() {
-  this.setupViews();
+  this.filmstrip = this.filmstrip(this);
   this.runControllers();
   this.injectContent();
   this.bindEvents();
@@ -102,18 +73,8 @@ proto.boot = function() {
   this.emit('boot');
 };
 
-/**
- * Creates instances of all
- * the views the app requires.
- *
- * @api private
- */
-proto.setupViews = function() {
-  this.views.viewfinder = new ViewfinderView();
-  this.views.filmstrip = new Filmstrip(this);
-  this.views.controls = new ControlsView();
-  this.views.focusRing = new FocusRing();
-  this.views.hud = new HudView();
+proto.teardown = function() {
+  this.unbindEvents();
 };
 
 /**
@@ -123,11 +84,12 @@ proto.setupViews = function() {
  * @api private
  */
 proto.runControllers = function() {
-  controllers.viewfinder(this);
-  controllers.controls(this);
-  controllers.overlay(this);
-  controllers.camera(this);
-  controllers.hud(this);
+  this.controllers.viewfinder(this);
+  this.controllers.controls(this);
+  this.controllers.confirm(this);
+  this.controllers.overlay(this);
+  this.controllers.camera(this);
+  this.controllers.hud(this);
 };
 
 /**
@@ -137,10 +99,10 @@ proto.runControllers = function() {
  * @return {[type]} [description]
  */
 proto.injectContent = function() {
-  this.views.hud.appendTo(this.root);
-  this.views.controls.appendTo(this.root);
-  this.views.viewfinder.appendTo(this.root);
-  this.views.focusRing.appendTo(this.root);
+  this.views.hud.appendTo(this.el);
+  this.views.controls.appendTo(this.el);
+  this.views.viewfinder.appendTo(this.el);
+  this.views.focusRing.appendTo(this.el);
 };
 
 /**
@@ -150,10 +112,17 @@ proto.injectContent = function() {
  * @api private
  */
 proto.bindEvents = function() {
-  bind(document, 'visibilitychange', this.onVisibilityChange);
-  bind(window, 'beforeunload', this.onBeforeUnload);
+  bind(this.doc, 'visibilitychange', this.onVisibilityChange);
+  bind(this.win, 'beforeunload', this.onBeforeUnload);
   this.on('focus', this.onFocus);
-  this.on('blur', this.onFocus);
+  this.on('blur', this.onBlur);
+};
+
+proto.unbindEvents = function() {
+  unbind(this.doc, 'visibilitychange', this.onVisibilityChange);
+  unbind(this.win, 'beforeunload', this.onBeforeUnload);
+  this.off('focus', this.onFocus);
+  this.off('blur', this.onBlur);
 };
 
 /**
@@ -187,7 +156,7 @@ proto.onBlur = function() {
  * @api private
  */
 proto.geolocationWatch = function() {
-  var shouldWatch = !this.activity.active && !document.hidden;
+  var shouldWatch = !this.activity.active && !this.doc.hidden;
   if (shouldWatch) {
     this.geolocation.watch();
   }
@@ -202,7 +171,7 @@ proto.geolocationWatch = function() {
  * @api private
  */
 proto.onVisibilityChange = function() {
-  if (document.hidden) {
+  if (this.doc.hidden) {
     this.emit('blur');
   } else {
     this.emit('focus');
@@ -255,10 +224,6 @@ proto.miscStuff = function() {
     // should do in this condition.
   }
 
-  // This needs to be global so that
-  // the filmstrip.js can see it.
-  window.ViewfinderView = this.views.viewfinder;
-
   performanceTesting.dispatch('initialising-camera-preview');
 
   // Prevent the phone
@@ -286,4 +251,5 @@ proto.miscStuff = function() {
     lockscreen.disableTimeout();
   });
 };
+
 });
