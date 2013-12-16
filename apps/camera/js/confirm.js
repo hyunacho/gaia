@@ -30,25 +30,30 @@ var mediaFrame = document.getElementById('confirm-media-frame');
 var retakeButton = document.getElementById('retake-button');
 var selectButton = document.getElementById('select-button');
 
-// Create the MediaFrame for confirmations
-var frame = new MediaFrame(mediaFrame);
-
-// Enable panning and zooming for images
-addPanAndZoomHandlers(frame);
-
 // confirmImage() and confirmVideo() store the callback functions
 // in these variables so that the button callbacks can invoke them
-var retakecb, selectcb;
+var retakecb, selectcb, frame;
 
-// Event handlers for the two buttons
-retakeButton.onclick = function() {
-  confirm.hidden = true;
-  retakecb();
-};
-selectButton.onclick = function() {
-  confirm.hidden = true;
-  selectcb();
-};
+function init() {
+
+  // Create the MediaFrame for confirmations
+  frame = new MediaFrame(mediaFrame);
+
+  // Enable panning and zooming for images
+  addPanAndZoomHandlers(frame);
+
+
+  // Event handlers for the two buttons
+  retakeButton.onclick = function() {
+    confirm.hidden = true;
+    retakecb();
+  };
+
+  selectButton.onclick = function() {
+    confirm.hidden = true;
+    selectcb();
+  };
+}
 
 function confirmImage(blob, selectCallback, retakeCallback) {
   selectcb = selectCallback;
@@ -64,8 +69,7 @@ function confirmImage(blob, selectCallback, retakeCallback) {
 }
 
 function confirmVideo(blob, posterBlob, width, height, rotation,
-                      selectCallback, retakeCallback)
-{
+                      selectCallback, retakeCallback) {
   selectcb = selectCallback;
   retakecb = retakeCallback;
   // Show the dialog and then display the video in it.
@@ -80,6 +84,7 @@ function isShowing() {
 
 // Export the public functions of this module
 return {
+  init: init,
   confirmImage: confirmImage,
   confirmVideo: confirmVideo,
   isShowing: isShowing

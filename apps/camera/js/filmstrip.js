@@ -19,6 +19,7 @@ define(function(require, exports, module) {
 
   module.exports = function(app) {
     var camera = app.camera;
+    var ViewfinderView = app.views.viewfinder;
 
     // This array holds all the data we need for image and video previews
     var items = [];
@@ -50,8 +51,6 @@ define(function(require, exports, module) {
     deleteButton.onclick = deleteCurrentItem;
     shareButton.onclick = shareCurrentItem;
     mediaFrame.addEventListener('swipe', handleSwipe);
-    camera.on('newVideo', onNewVideo);
-    camera.on('newImage', onNewImage);
     broadcast.on('itemDeleted', onItemDeleted);
     broadcast.on('storageUnavailable', hidePreview);
     broadcast.on('storageShared', hidePreview);
@@ -131,17 +130,21 @@ define(function(require, exports, module) {
       ViewfinderView.el.pause();
     };
 
-    function onNewVideo(data) {
+    function addVideoAndShow(data) {
       addVideo(
-        data.file, data.video, data.poster,
-        data.width, data.height, data.rotation
+        data.file,
+        data.video,
+        data.poster,
+        data.width,
+        data.height,
+        data.rotation
       );
 
       show(FILMSTRIP_DURATION);
     }
 
-    function onNewImage(data) {
-      addImage(data.path, data.blob);
+    function addImageAndShow(path, blob) {
+      addImage(path, blob);
       show(FILMSTRIP_DURATION);
     }
 
@@ -605,7 +608,9 @@ define(function(require, exports, module) {
       deleteItem: deleteItem,
       clear: clear,
       hidePreview: hidePreview,
-      isPreviewShown: isPreviewShown
+      isPreviewShown: isPreviewShown,
+      addImageAndShow: addImageAndShow,
+      addVideoAndShow: addVideoAndShow
     };
 
     // camera.js needs this to be global

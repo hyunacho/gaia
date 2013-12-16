@@ -48,7 +48,7 @@ proto.bindEvents = function() {
   camera.state.on('change:recording', this.onRecordingChange);
   camera.state.on('change:mode', this.onCameraModeChange);
 
-  // Respond controls UI events
+  // Respond to UI events
   controls.on('click:switch', this.onSwitchButtonClick);
   controls.on('click:capture', this.onCaptureButtonClick);
   controls.on('click:cancel', this.onCancelButtonClick);

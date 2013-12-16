@@ -1,20 +1,18 @@
 define(function(require, exports, module){
 /*global CONFIG_MAX_IMAGE_PIXEL_SIZE*/
 /*jshint laxbreak:true*/
-
 'use strict';
 
 /**
  * Dependencies
  */
 
-var Model = require('libs/model');
+var Model = require('vendor/model');
 var constants = require('constants');
 var broadcast = require('broadcast');
 var bindAll = require('utils/bindAll');
 var getVideoRotation = require('getVideoRotation');
-var ConfirmDialog = require('confirm');
-var evt = require('libs/evt');
+var evt = require('vendor/evt');
 var dcf = require('dcf');
 
 /**
@@ -484,35 +482,14 @@ proto.stopRecording = function() {
       // has been saved, save a poster
       // image for the Gallery app.
       self.saveVideoPosterImage(videoFile, function(video, poster, data) {
-
-        // If this came from
-        // a 'pick' activity
-        if (self._pendingPick) {
-          self._savedMedia = {
-            video: video,
-            poster: poster
-          };
-
-          ConfirmDialog.confirmVideo(
-            video,
-            poster,
-            data.width,
-            data.height,
-            data.rotation,
-            self.selectPressed.bind(self),
-            self.retakePressed.bind(self));
-        }
-
-        else {
-          self.emit('newVideo', {
-            file: videoFile,
-            video: video,
-            poster: poster,
-            width: data.width,
-            height: data.height,
-            rotation: data.rotation
-          });
-        }
+        self.emit('newvideo', {
+          file: videoFile,
+          video: video,
+          poster: poster,
+          width: data.width,
+          height: data.height,
+          rotation: data.rotation
+        });
       });
     }
   }
@@ -789,82 +766,12 @@ proto.takePictureError = function() {
 };
 
 proto.takePictureSuccess = function(blob) {
-  var self = this;
-
   this.state.set({
     manuallyFocused: false,
     focusState: 'none'
   });
 
-  if (this._pendingPick) {
-
-    // If we're doing a Pick,
-    // ask the user to confirm the image
-    ConfirmDialog.confirmImage(
-      blob,
-      this.selectPressed.bind(this),
-      this.retakePressed.bind(this));
-
-    // Just save the blob temporarily
-    // until the user presses "Retake"
-    // or "Select".
-    this._savedMedia = { blob: blob };
-  }
-
-  // Otherwise (this is the normal
-  // case) start the viewfinder again
-  else {
-    this.resumePreview();
-  }
-
-  // In either case, save
-  // the photo to device storage
-  this._addPictureToStorage(blob, function(name, absolutePath) {
-    self.emit('newImage', {
-      path: absolutePath,
-      blob: blob
-    });
-
-    self.storageCheck();
-  });
-};
-
-proto.retakePressed = function() {
-  this._savedMedia = null;
-  if (this.isCameraMode()) {
-    this.resumePreview();
-  } else {
-    this.startPreview();
-  }
-};
-
-proto.selectPressed = function() {
-  var media = this._savedMedia;
-  var self = this;
-
-  this._savedMedia = null;
-
-  // Camera
-  if (this.isCameraMode()) {
-    this._resizeBlobIfNeeded(media.blob, function(resized_blob) {
-      self._pendingPick.postResult({
-        type: 'image/jpeg',
-        blob: resized_blob
-      });
-
-      self._pendingPick = null;
-    });
-
-  // Video
-  } else {
-    this._pendingPick.postResult({
-      type: 'video/3gpp',
-      blob: media.video,
-      poster: media.poster
-    });
-
-    this._pendingPick = null;
-  }
+  this.emit('newimage', { blob: blob });
 };
 
 proto._addPictureToStorage = function(blob, callback) {

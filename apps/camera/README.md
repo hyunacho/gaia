@@ -11,16 +11,23 @@ The camera app is very 'modular'. We have broken the codebase down into a collec
 
 ## Modules
 
-We are using AMD modules, loaded using 'Alemeda' (a lighter version of [RequireJS](http://requirejs.org)) and building/optimizing using ['r.js'](http://requirejs.org/docs/optimization.html) (the RequireJS optimizer). We have dependencies on files (`shared/js`)  which aren't AMD modules. For those we use the ['shim'](http://requirejs.org/docs/api.html#config-shim) options in our [`requirejs_config.js`](js/require_config.js)
+We are using [AMD](http://en.wikipedia.org/wiki/Asynchronous_module_definition) modules, loaded using 'Alemeda' (a lighter version of [RequireJS](http://requirejs.org)) and building/optimizing using ['r.js'](http://requirejs.org/docs/optimization.html) (the RequireJS optimizer). We have dependencies on files (`shared/js`)  which aren't AMD modules. For those we use the ['shim'](http://requirejs.org/docs/api.html#config-shim) options in our [`requirejs_config.js`](js/require_config.js)
 
 ## camera.js
 
-The [camera.js](js/camera.js) module is an interface to the camera hardware. It also maintains a degree of state, including things like: current camera (front/back), current flash mode (auto/on/off), current capture mode (camera/video).
+The [camera.js](js/camera.js) module is currently an interface to the camera hardware. It also maintains a degree of state, including things like: current camera (front/back), current flash mode (auto/on/off), current capture mode (camera/video).
 
 Before the refactor, the entire app was inside `camera.js`, so there are still remnants of things that shouldn't belong there:
 
 - Confirm dialogs
 - Device storage
+
+Moving forward we would like to see `camera.js` broken down further into distinct parts,
+
+- Camera acquisition/configuration
+- Flash settings
+- Capture
+- Image processing
 
 ## Views
 
@@ -31,9 +38,9 @@ When we speak of 'views' we are referring to a reusable UI component that makes 
 - [Focus Ring](js/views/focusring.js)
 - [Overlay](js/views/overlay.js)
 - [HUD](js/views/hud.js) (heads up display)
-- [Filmstrip](js/views/filmstrip.js) (legacy)
+- [Filmstrip](js/filmstrip.js) (legacy)
 
-Each view is an instantiable 'class', which means we can stamp out as many as we need.
+Each view is an instantiable 'class' which extends from a [base class](js/lib/view.js). The base class provides the view with some basic methods. Because views are instantiable, we can stamp out as many as we need.
 
 ```js
 var viewfinder1 = new Viewfinder();
@@ -116,8 +123,7 @@ Our `Makefile` has two tasks, one to **'build'** and one to **'clean'** (delete 
 
 The are still some modules have not been reworked into the new architecture:
 
-- [confirm.js](js/confirm.js)
 - [panzoom.js](js/panzoom.js)
-- [filmstrip.js](js/panzoom.js)
+- [filmstrip.js](js/filmstrip.js)
 
 As far as I know there is nothing blocking work on aligning `confirm.js` and `panzoom.js` with our new architecture. `filmstrip.js` has been touched as little as possible as plans in `1.4` propose very different funtionality. Therefore work to refactor this module would probably be discarded as `1.4` features are implemented.

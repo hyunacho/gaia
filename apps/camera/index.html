@@ -27,13 +27,12 @@
     <!-- <script defer src="/shared/js/lazy_loader.js"></script> -->
 
     <link rel="stylesheet" type="text/css" href="style/main.css" />
-    <script defer data-main="js/main.js" src="js/libs/alameda.js"></script>
+    <script defer data-main="js/main.js" src="js/vendor/alameda.js"></script>
   </head>
   <body class="filmstriphidden">
 
     <!-- see filmstrip.js and filmstrip.css for these elements -->
-    <div id="filmstrip" class="filmstrip">
-    </div>
+    <div id="filmstrip" class="filmstrip"></div>
     <div id="preview" class="preview offscreen">
       <div id="frame-container" class="frame-container">     <!-- media frame rotates inside this -->
         <div id="media-frame" class="media-frame"></div> <!-- image or video here -->
@@ -44,16 +43,5 @@
         <a id="share-button" class="share-button button"></a>
       </footer>
     </div>
-
-    <!-- see confirm.js and confirm.css for these elements -->
-    <div id="confirm" class="confirm" hidden>
-      <div id="confirm-media-frame" class="confirm-media-frame"></div> <!-- image or video here -->
-      <footer id="confirm-controls" class="confirm-controls">
-        <button id="retake-button" class="retake-button" data-l10n-id="retake-button"></button>
-        <button id="select-button" class="select-button recommend"
-                data-l10n-id="select-button"></button>
-      </footer>
-    </div>
-
   </body>
 </html>
