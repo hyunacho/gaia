@@ -14,7 +14,7 @@ define(function(require, exports, module) {
    */
 
   var counter = 1;
-  var noop = function(){};
+  var noop = function() {};
 
   /**
    * Exports
@@ -29,7 +29,7 @@ define(function(require, exports, module) {
    *
    * @constructor
    */
-  function View(options){
+  function View(options) {
     options = options || {};
     this.el = options.el || this.el || document.createElement(this.tag);
     this.el.id = this.el.id || ('view' + counter++);
@@ -101,7 +101,7 @@ define(function(require, exports, module) {
    * querySelector.
    *
    * @param  {String} query
-   * @return {Element|null}
+   * @return { Element | null}
    */
   proto.find = function(query) {
     return this.el.querySelector(query);
@@ -149,10 +149,6 @@ define(function(require, exports, module) {
   proto.initialize = noop;
   proto.template = function() { return ''; };
 
-  // Allow base view
-  // to be extended
-  View.extend = extend;
-
   /**
    * Extends the base view
    * class with the given
@@ -164,29 +160,19 @@ define(function(require, exports, module) {
    * @param  {Object} properties
    * @return {Function}
    */
-  function extend(props) {
+  View.extend = function(props) {
     var Parent = this;
 
-    // The child class constructor
-    // just calls the parent constructor
-    var Extended = function(){
+    // The extended constructor
+    // calls the parent constructor
+    var Child = function() {
       Parent.apply(this, arguments);
     };
 
-    // Base the Child prototype
-    // on the View's prototype.
-    var C = function(){};
-    C.prototype = Parent.prototype;
-    Extended.prototype = new C();
+    Child.prototype = Object.create(Parent.prototype);
+    Child.extend = View.extend;
+    mixin(Child.prototype, props);
 
-    // Add reference to the constructor
-    Extended.prototype.constructor = Extended;
-
-    // Allow new classes to
-    // extend from this class.
-    Extended.extend = View.extend;
-    mixin(Extended.prototype, props);
-
-    return Extended;
-  }
+    return Child;
+  };
 });
