@@ -114,6 +114,27 @@ proto.teardownCamera = function() {
   }
 };
 
+proto.onNewImage = function(data) {
+  var filmstrip = this.filmstrip;
+  var camera = this.camera;
+  var blob = data.blob;
+
+  // In either case, save
+  // the photo to device storage
+  camera._addPictureToStorage(blob, function(name, path) {
+    filmstrip.addImageAndShow(path, blob);
+    camera.storageCheck();
+  });
+
+  if (!this.activity.active) {
+    camera.resumePreview();
+  }
+};
+
+proto.onNewVideo = function(data) {
+  this.filmstrip.addVideoAndShow(data);
+};
+
 /**
  * Plays the 'recordingStart'
  * sound effect.
