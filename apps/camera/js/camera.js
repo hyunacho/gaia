@@ -1,20 +1,18 @@
 define(function(require, exports, module){
 /*global CONFIG_MAX_IMAGE_PIXEL_SIZE*/
 /*jshint laxbreak:true*/
-
 'use strict';
 
 /**
  * Dependencies
  */
 
-var Model = require('libs/model');
+var Model = require('vendor/model');
 var constants = require('constants');
 var broadcast = require('broadcast');
 var bindAll = require('utils/bindAll');
 var getVideoRotation = require('getVideoRotation');
-var ConfirmDialog = require('confirm');
-var evt = require('libs/evt');
+var evt = require('vendor/evt');
 var dcf = require('dcf');
 
 /**
