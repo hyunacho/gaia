@@ -5,7 +5,7 @@ define(function(require, exports, module) {
  * Dependencies
  */
 
-var View = require('libs/view');
+var View = require('vendor/view');
 var bind = require('utils/bind');
 var find = require('utils/find');
 var formatTimer = require('utils/formattimer');

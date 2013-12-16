@@ -19,7 +19,7 @@ suite('controllers/viewfinder', function() {
     req([
       'controllers/viewfinder',
       'camera',
-      'libs/view',
+      'vendor/view',
       'activity'
     ], function(controller, camera, View, activity) {
       Controller = self.modules.controller = controller;

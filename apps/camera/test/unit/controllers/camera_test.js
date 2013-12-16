@@ -19,8 +19,8 @@ suite('controllers/camera', function() {
       'controllers/camera',
       'camera',
       'activity',
-      'libs/view',
-      'libs/evt'
+      'vendor/view',
+      'vendor/evt'
     ], function(controller, camera, View, activity, evt) {
       Controller = self.modules.controller = controller;
       self.modules.camera = camera;

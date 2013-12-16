@@ -13,7 +13,7 @@ var broadcast = require('broadcast');
 var bindAll = require('utils/bindAll');
 var performanceTesting = require('performanceTesting');
 var lockscreen = require('lockscreen');
-var evt = require('libs/evt');
+var evt = require('vendor/evt');
 var dcf = require('dcf');
 
 /**
