@@ -182,25 +182,25 @@ suite('Sounds', function() {
     });
   });
 
-  suite('Sounds#_play()', function() {
+  suite('Sounds#playSound()', function() {
     setup(function() {
       this.mockSound.audio = { play: sinon.spy() };
     });
 
     test('Should *not* play the sound if it\'s not enabled', function() {
-      this.sounds._play(this.mockSound);
+      this.sounds.playSound(this.mockSound);
       assert.ok(this.mockSound.audio.play.notCalled);
     });
 
     test('Should play the sound if it\'s enabled', function() {
       this.mockSound.enabled = true;
-      this.sounds._play(this.mockSound);
+      this.sounds.playSound(this.mockSound);
       assert.ok(this.mockSound.audio.play.called);
     });
 
-    test('Should throw exception if sound is undefine', function() {
+    test('Should throw exception if sound is undefined', function() {
       try {
-        this.sounds._play();
+        this.sounds.playSound();
       } catch (e) {
         assert.ok('correctly threw exception');
         return;
