@@ -115,7 +115,8 @@ function Camera() {
   this._savedMedia = null;
 
   // Bind context
-  bindAll(this);
+  this.storageCheck = this.storageCheck.bind(this);
+  this.onStorageChange = this.onStorageChange.bind(this);
 
   // Whenever the camera is
   // configured, we run a storage
