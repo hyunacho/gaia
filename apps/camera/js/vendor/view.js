@@ -33,6 +33,7 @@ define(function(require, exports, module) {
     options = options || {};
     this.el = options.el || this.el || document.createElement(this.tag);
     this.el.id = this.el.id || ('view' + counter++);
+    this.name = options.name || this.name;
     this.els = {};
 
     if (!this.el.className) {

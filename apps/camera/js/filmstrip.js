@@ -19,6 +19,7 @@ define(function(require, exports, module) {
 
   module.exports = function(app) {
     var camera = app.camera;
+    var ViewfinderView = app.views.viewfinder;
 
     // This array holds all the data we need for image and video previews
     var items = [];

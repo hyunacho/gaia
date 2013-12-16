@@ -41,16 +41,17 @@ exports.App = App;
  * @constructor
  */
 function App(options) {
-  options = options || {};
-  this.inSecureMode = window.parent !== window;
   this.el = options.el;
+  this.win = options.win;
+  this.doc = options.doc;
+  this.inSecureMode = this.win.parent !== this.win;
   this.geolocation = options.geolocation;
   this.activity = options.activity;
+  this.filmstrip = options.filmstrip;
   this.camera = options.camera;
   this.sounds = options.sounds;
   this.views = options.views;
   this.controllers = options.controllers;
-  this.doc = options.doc;
 
   // Bind context
   bindAll(this);
@@ -63,6 +64,7 @@ function App(options) {
  * @api private
  */
 proto.boot = function() {
+  this.filmstrip = this.filmstrip(this);
   this.runControllers();
   this.injectContent();
   this.bindEvents();
@@ -84,6 +86,7 @@ proto.teardown = function() {
 proto.runControllers = function() {
   this.controllers.viewfinder(this);
   this.controllers.controls(this);
+  this.controllers.confirm(this);
   this.controllers.overlay(this);
   this.controllers.camera(this);
   this.controllers.hud(this);
@@ -110,14 +113,14 @@ proto.injectContent = function() {
  */
 proto.bindEvents = function() {
   bind(this.doc, 'visibilitychange', this.onVisibilityChange);
-  bind(window, 'beforeunload', this.onBeforeUnload);
+  bind(this.win, 'beforeunload', this.onBeforeUnload);
   this.on('focus', this.onFocus);
   this.on('blur', this.onBlur);
 };
 
 proto.unbindEvents = function() {
   unbind(this.doc, 'visibilitychange', this.onVisibilityChange);
-  unbind(this.doc, 'beforeunload', this.onBeforeUnload);
+  unbind(this.win, 'beforeunload', this.onBeforeUnload);
   this.off('focus', this.onFocus);
   this.off('blur', this.onBlur);
 };
