@@ -7,8 +7,9 @@ define(function(require, exports, module) {
  * Module Dependencies
  */
 
+var prepareBlob = require('utils/prepare-preview-blob');
+var ConfirmView = require('views/confirm');
 var bindAll = require('utils/bindAll');
-var prepareBlob = require('utils/prepare-blob-for-preview');
 
 /**
  * Locals
@@ -20,20 +21,24 @@ var proto = ConfirmController.prototype;
  * Exports
  */
 
-module.exports = function(app) {
-  return new ConfirmController(app);
+module.exports = function(options) {
+  return new ConfirmController(options);
 };
 
 /**
  * Initialize a new `ConfirmController`
  *
- * @param {App} app
+ * @param {Object} options
  */
-function ConfirmController(app) {
-  this.ConfirmView = app.views.Confirm;
-  this.activity = app.activity;
-  this.camera = app.camera;
-  this.app = app;
+function ConfirmController(options) {
+  this.activity = options.activity;
+  this.camera = options.camera;
+  this.container = options.el;
+
+  // Allow these dependencies
+  // to be injected if need be.
+  this.ConfirmView = options.ConfirmView || ConfirmView;
+  this.prepareBlob = options.prepareBlob || prepareBlob;
 
   // Bind methods
   bindAll(this);
@@ -42,19 +47,25 @@ function ConfirmController(app) {
   this.bindEvents();
 }
 
+/**
+ * Bind callbacks to required events.
+ *
+ * @api private
+ */
 proto.bindEvents = function() {
   this.camera.on('newimage', this.onNewImage);
   this.camera.on('newvideo', this.onNewVideo);
 };
 
 /**
- * When inside a 'pick' activity will
- * present the user with a confirm overlay
- * where they can decide to 'select' or
- * 'retake' the photo.
+ * When inside a 'pick' activity
+ * will present the user with a
+ * confirm overlay where they can
+ * decide to 'select' or 'retake'
+ * the photo.
  *
- * @param  {[type]} data [description]
- * @return {[type]}      [description]
+ * @param  {Object} data
+ * @api private
  */
 proto.onNewImage = function(data) {
   if (!this.activity.active) { return; }
@@ -66,12 +77,12 @@ proto.onNewImage = function(data) {
 
   confirm
     .render()
-    .appendTo(this.app.el)
+    .appendTo(this.container)
     .setupMediaFrame()
     .on('click:select', onSelectClick)
     .on('click:retake', onRetakeClick);
 
-  prepareBlob(blob, confirm.showImage);
+  this.prepareBlob(blob, confirm.showImage);
 
   function onSelectClick() {
     camera._resizeBlobIfNeeded(blob, function(resized) {
@@ -79,7 +90,6 @@ proto.onNewImage = function(data) {
         type: 'image/jpeg',
         blob: resized
       });
-      activity.reset();
     });
   }
 
@@ -99,7 +109,7 @@ proto.onNewVideo = function(data) {
 
   confirm
     .render()
-    .appendTo(this.app.el)
+    .appendTo(this.container)
     .setupMediaFrame()
     .showVideo(data)
     .on('click:select', onSelectClick)
@@ -111,7 +121,6 @@ proto.onNewVideo = function(data) {
       blob: data.video,
       poster: data.poster
     });
-    activity.reset();
   }
 
   function onRetakeClick() {

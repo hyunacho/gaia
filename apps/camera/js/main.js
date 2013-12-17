@@ -33,8 +33,7 @@ require(['config/require', 'config'], function() {
       viewfinder: new ViewfinderView(),
       controls: new ControlsView(),
       focusRing: new FocusRing(),
-      hud: new HudView(),
-      Confirm: ConfirmView
+      hud: new HudView()
     };
 
     /**
