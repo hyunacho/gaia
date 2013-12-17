@@ -5,7 +5,7 @@ define(function(require, exports, module) {
  * Dependencies
  */
 
-var constants = require('constants');
+var constants = require('config/camera');
 var performance = require('performanceTesting');
 var bindAll = require('utils/bindAll');
 

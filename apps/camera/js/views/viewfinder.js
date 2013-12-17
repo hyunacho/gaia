@@ -5,9 +5,9 @@ define(function(require) {
  * Dependencies
  */
 
-var View = require('vendor/view');
 var bind = require('utils/bind');
-var constants = require('constants');
+var constants = require('config/camera');
+var View = require('vendor/view');
 
 /**
  * Locals

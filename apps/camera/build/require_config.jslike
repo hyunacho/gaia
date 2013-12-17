@@ -1,7 +1,7 @@
 {
   appDir: '..',
   baseUrl: 'js',
-  mainConfigFile: '../js/require_config.js',
+  mainConfigFile: '../js/config/require.js',
   dir: '../../../build_stage/camera',
   name: 'main',
 
