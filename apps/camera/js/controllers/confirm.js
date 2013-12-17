@@ -8,7 +8,7 @@ define(function(require, exports, module) {
  */
 
 var bindAll = require('utils/bindAll');
-var parseJpegMetadata = require('jpegMetaDataParser');
+var prepareBlob = require('lib/prepare-blob-for-preview');
 
 /**
  * Locals
@@ -47,6 +47,15 @@ proto.bindEvents = function() {
   this.camera.on('newvideo', this.onNewVideo);
 };
 
+/**
+ * When inside a 'pick' activity will
+ * present the user with a confirm overlay
+ * where they can decide to 'select' or
+ * 'retake' the photo.
+ *
+ * @param  {[type]} data [description]
+ * @return {[type]}      [description]
+ */
 proto.onNewImage = function(data) {
   if (!this.activity.active) { return; }
 
@@ -62,18 +71,7 @@ proto.onNewImage = function(data) {
     .on('click:select', onSelectClick)
     .on('click:retake', onRetakeClick);
 
-  parseJpegMetadata(blob, onJpegParsed);
-
-  function onJpegParsed(metadata) {
-    confirm.showImage({
-      blob: blob,
-      width: metadata.width,
-      height: metadata.height,
-      preview: metadata.preview,
-      rotation: metadata.rotation,
-      mirrored: metadata.mirrored
-    });
-  }
+  prepareBlob(blob, confirm.showImage);
 
   function onSelectClick() {
     camera._resizeBlobIfNeeded(blob, function(resized) {
