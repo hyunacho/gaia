@@ -2,17 +2,9 @@ define(function(require, exports, module) {
 'use strict';
 
 /**
- * Dependencies
- */
-
-var constants = require('constants');
-
-/**
  * Locals
  */
 
-var VIDEO = constants.CAMERA_MODE_TYPE.VIDEO;
-var CAMERA = constants.CAMERA_MODE_TYPE.CAMERA;
 var proto = Activity.prototype;
 
 /**
@@ -21,6 +13,12 @@ var proto = Activity.prototype;
 
 module.exports = Activity;
 
+/**
+ * Initialize a new `Activity`
+ *
+ * @constructor
+ * @api public
+ */
 function Activity() {
   this.name = null;
   this.active = false;
@@ -48,25 +46,22 @@ proto.check = function(done) {
     return;
   }
 
-  navigator.mozSetMessageHandler('activity', function(activity) {
-    var parsed = self.parse(activity);
+  navigator.mozSetMessageHandler('activity', onActivity);
 
+  function onActivity(activity) {
+    var parsed = self.parse(activity);
     self.active = true;
     self.name = parsed.name;
     self.allowedTypes = parsed.types;
     self.mode = parsed.mode;
     self.raw = activity;
-
     done();
-  });
+  }
 };
 
 /**
  * Parses a raw activity object
  * and returns relevant information.
- *
- * NOTE: This is a public method
- * for testing purposes only.
  *
  * @param  {Activity} activity
  * @return {Object}
@@ -76,25 +71,45 @@ proto.parse = function(activity) {
     name: activity.source.name,
     types: this.getTypes(activity)
   };
-
   data.mode = this.modeFromTypes(data.types);
-
   return data;
 };
 
+/**
+ * Post data back to the app
+ * which spawned the activity.
+ *
+ * @param  {Object} data
+ * @api public
+ */
 proto.postResult = function(data) {
   if (this.raw) {
     this.raw.postResult(data);
+    this.reset();
   }
 };
 
+/**
+ * Cancel the activity.
+ *
+ * This should cause the user
+ * to be navigated back to the
+ * app which spawned the activity.
+ *
+ * @api public
+ */
 proto.cancel = function() {
   if (this.raw) {
     this.raw.postError('pick cancelled');
+    this.reset();
   }
-  this.reset();
 };
 
+/**
+ * Reset the activity state.
+ *
+ * @api private
+ */
 proto.reset = function() {
   this.raw = null;
   this.name = null;
@@ -138,8 +153,7 @@ proto.getTypes = function(activity) {
  * @return {String}
  */
 proto.modeFromTypes = function(types) {
-  if (!types.image && types.video) { return VIDEO; }
-  else { return CAMERA; }
+  return !types.image && types.video ? 'video' : 'camera';
 };
 
 });
