@@ -911,7 +911,7 @@ proto.prepareTakePicture = function(done) {
 proto.takePicture = function(options) {
   var position = options && options.position;
   var config = {
-    rotation: window.orientation.get(),
+    rotation: orientation.get(),
     dateTime: Date.now() / 1000,
     fileFormat: this.fileFormat
   };
