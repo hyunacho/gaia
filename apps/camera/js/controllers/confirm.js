@@ -8,7 +8,7 @@ define(function(require, exports, module) {
  */
 
 var bindAll = require('utils/bindAll');
-var prepareBlob = require('lib/prepare-blob-for-preview');
+var prepareBlob = require('utils/prepare-blob-for-preview');
 
 /**
  * Locals
