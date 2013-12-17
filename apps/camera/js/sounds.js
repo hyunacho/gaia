@@ -31,6 +31,7 @@ function Sounds(list) {
  * up an observer.
  *
  * @param {Object} data
+ * @api private
  */
 proto.add = function(data) {
   var self = this;
@@ -114,7 +115,7 @@ proto.setEnabled = function(sound, value) {
  * @api public
  */
 proto.play = function(name) {
-  this._play(this.items[name]);
+  this.playSound(this.items[name]);
 };
 
 /**
@@ -123,7 +124,7 @@ proto.play = function(name) {
  * @param  {Object} sound
  * @api private
  */
-proto._play = function(sound) {
+proto.playSound = function(sound) {
   if (sound.enabled) {
     sound.audio.play();
   }

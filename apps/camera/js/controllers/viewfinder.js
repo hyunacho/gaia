@@ -1,73 +1,73 @@
 define(function(require, exports, module) {
 'use strict';
 
-  /**
-   * Dependencies
-   */
+/**
+ * Dependencies
+ */
 
-  var bindAll = require('utils/bindAll');
+var bindAll = require('utils/bindAll');
 
-  /**
-   * Locals
-   */
+/**
+ * Locals
+ */
 
-  var proto = ViewfinderController.prototype;
+var proto = ViewfinderController.prototype;
 
-  /**
-   * Exports
-   */
+/**
+ * Exports
+ */
 
-  module.exports = ViewfinderController;
+module.exports = ViewfinderController;
 
-  function ViewfinderController(app) {
-    if (!(this instanceof ViewfinderController)) {
-      return new ViewfinderController(app);
-    }
-
-    this.viewfinder = app.views.viewfinder;
-    this.filmstrip = app.filmstrip;
-    this.activity = app.activity;
-    this.camera = app.camera;
-    bindAll(this);
-    this.bindEvents();
+/**
+ * Initialize a new `ViewfinderController`
+ *
+ * @param {App} app
+ */
+function ViewfinderController(app) {
+  if (!(this instanceof ViewfinderController)) {
+    return new ViewfinderController(app);
   }
 
-  proto.bindEvents = function() {
-    this.camera.on('cameraChange', this.onCameraChange);
-    this.viewfinder.on('click', this.onViewfinderClick);
-  };
+  this.viewfinder = app.views.viewfinder;
+  this.filmstrip = app.filmstrip;
+  this.activity = app.activity;
+  this.camera = app.camera;
+  bindAll(this);
+  this.bindEvents();
+}
 
-  /**
-   * The viewfinder size is updated
-   * when the camera is changed.
-   *
-   * HACK: The viewfinder view has a
-   * dependency on the camera.js module
-   * due to legacy architecture.
-   *
-   * @param  {MozCamera} camera
-   */
-  proto.onCameraChange = function(camera) {
-    this.viewfinder.setPreviewSize(camera, this.camera);
-  };
+proto.bindEvents = function() {
+  this.camera.on('cameraChange', this.onCameraChange);
+  this.viewfinder.on('click', this.onViewfinderClick);
+};
 
-  proto.onViewfinderClick = function() {
-    var recording = this.camera.state.get('recording');
+/**
+ * The viewfinder size is updated
+ * when the camera is changed.
+ *
+ * HACK: The viewfinder view has a
+ * dependency on the camera.js module
+ * due to legacy architecture.
+ *
+ * @param  {MozCamera} camera
+ */
+proto.onCameraChange = function(camera) {
+  this.viewfinder.setPreviewSize(camera, this.camera);
+};
 
-    // We will just ignore
-    // because the filmstrip
-    // shouldn't be shown while
-    // Camera is recording.
-    if (recording || this.activity.active) {
-      return;
-    }
+proto.onViewfinderClick = function() {
+  var recording = this.camera.state.get('recording');
 
-    this.filmstrip.toggle();
-  };
+  // We will just ignore
+  // because the filmstrip
+  // shouldn't be shown while
+  // Camera is recording.
+  if (recording || this.activity.active) {
+    return;
+  }
 
-  /**
-   * Expose `ViewfinderController`
-   */
+  this.filmstrip.toggle();
+};
 
-  exports.ViewfinderController = ViewfinderController;
 });

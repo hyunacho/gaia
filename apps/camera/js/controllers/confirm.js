@@ -7,9 +7,8 @@ define(function(require, exports, module) {
  * Module Dependencies
  */
 
-var Confirm = require('views/confirm');
-var parseJpegMetadata = require('jpegMetaDataParser');
 var bindAll = require('utils/bindAll');
+var parseJpegMetadata = require('jpegMetaDataParser');
 
 /**
  * Locals
@@ -21,15 +20,25 @@ var proto = ConfirmController.prototype;
  * Exports
  */
 
-exports = module.exports = function(app) {
+module.exports = function(app) {
   return new ConfirmController(app);
 };
 
+/**
+ * Initialize a new `ConfirmController`
+ *
+ * @param {App} app
+ */
 function ConfirmController(app) {
+  this.ConfirmView = app.views.Confirm;
   this.activity = app.activity;
   this.camera = app.camera;
   this.app = app;
+
+  // Bind methods
   bindAll(this);
+
+  // Attach events
   this.bindEvents();
 }
 
@@ -42,7 +51,7 @@ proto.onNewImage = function(data) {
   if (!this.activity.active) { return; }
 
   var activity = this.activity;
-  var confirm = new Confirm();
+  var confirm = new this.ConfirmView();
   var camera = this.camera;
   var blob = data.blob;
 
@@ -85,8 +94,9 @@ proto.onNewImage = function(data) {
 proto.onNewVideo = function(data) {
   if (!this.activity.active) { return; }
 
+  var ConfirmView = this.ConfirmView;
+  var confirm = new ConfirmView();
   var activity = this.activity;
-  var confirm = new Confirm();
   var camera = this.camera;
 
   confirm

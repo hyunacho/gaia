@@ -20,6 +20,11 @@ var proto = OverlayController.prototype;
 
 module.exports = OverlayController;
 
+/**
+ * Initialize a new `OverlayController`
+ *
+ * @param {App} app
+ */
 function OverlayController(app) {
   if (!(this instanceof OverlayController)) {
     return new OverlayController(app);
