@@ -5,11 +5,11 @@ define(function(require, exports, module) {
    * Dependencies
    */
 
-  var broadcast = require('broadcast');
-  var orientation = require('orientation');
   var parseJPEGMetadata = require('jpegMetaDataParser');
   var addPanAndZoomHandlers = require('panzoom');
-  var constants = require('constants');
+  var orientation = require('orientation');
+  var constants = require('config/camera');
+  var broadcast = require('broadcast');
 
   /**
    * Locals
