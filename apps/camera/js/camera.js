@@ -7,11 +7,11 @@ define(function(require, exports, module){
  * Dependencies
  */
 
-var Model = require('vendor/model');
-var constants = require('constants');
-var broadcast = require('broadcast');
-var bindAll = require('utils/bindAll');
 var getVideoRotation = require('getVideoRotation');
+var constants = require('config/camera');
+var orientation = require('orientation');
+var broadcast = require('broadcast');
+var Model = require('vendor/model');
 var evt = require('vendor/evt');
 var dcf = require('dcf');
 
@@ -398,7 +398,7 @@ proto.startRecording = function() {
     var pickData = self._pendingPick && self._pendingPick.source.data;
     var maxFileSizeBytes = pickData && pickData.maxFileSizeBytes;
     var config = {
-      rotation: window.orientation.get(),
+      rotation: orientation.get(),
       maxFileSizeBytes: freeBytes - RECORD_SPACE_PADDING
     };
 
@@ -660,7 +660,7 @@ proto.loadCameraPreview = function(cameraNumber, callback) {
 
       // 'Video' Mode
       if (self.isVideoMode()) {
-        videoProfile.rotation = window.orientation.get();
+        videoProfile.rotation = orientation.get();
         camera.getPreviewStreamVideoMode(videoProfile, gotPreviewScreen);
       }
     });
