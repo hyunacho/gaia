@@ -2,12 +2,6 @@ define(function(require, exports, module) {
 'use strict';
 
 /**
- * Locals
- */
-
-var proto = Activity.prototype;
-
-/**
  * Exports
  */
 
@@ -37,7 +31,7 @@ function Activity() {
  * @param  {Function} done
  * @api public
  */
-proto.check = function(done) {
+Activity.prototype.check = function(done) {
   var hasMessage = navigator.mozHasPendingMessage('activity');
   var self = this;
 
@@ -66,7 +60,7 @@ proto.check = function(done) {
  * @param  {Activity} activity
  * @return {Object}
  */
-proto.parse = function(activity) {
+Activity.prototype.parse = function(activity) {
   var data = {
     name: activity.source.name,
     types: this.getTypes(activity)
@@ -82,7 +76,7 @@ proto.parse = function(activity) {
  * @param  {Object} data
  * @api public
  */
-proto.postResult = function(data) {
+Activity.prototype.postResult = function(data) {
   if (this.raw) {
     this.raw.postResult(data);
     this.reset();
@@ -98,7 +92,7 @@ proto.postResult = function(data) {
  *
  * @api public
  */
-proto.cancel = function() {
+Activity.prototype.cancel = function() {
   if (this.raw) {
     this.raw.postError('pick cancelled');
     this.reset();
@@ -110,7 +104,7 @@ proto.cancel = function() {
  *
  * @api private
  */
-proto.reset = function() {
+Activity.prototype.reset = function() {
   this.raw = null;
   this.name = null;
   this.active = false;
@@ -125,7 +119,7 @@ proto.reset = function() {
  * @param  {Activity} activity
  * @return {Object}
  */
-proto.getTypes = function(activity) {
+Activity.prototype.getTypes = function(activity) {
   var raw = activity.source.data.type || ['image/*', 'video/*'];
   var types = {};
 
@@ -152,7 +146,7 @@ proto.getTypes = function(activity) {
  * @param  {Object} types
  * @return {String}
  */
-proto.modeFromTypes = function(types) {
+Activity.prototype.modeFromTypes = function(types) {
   return !types.image && types.video ? 'video' : 'camera';
 };
 
