@@ -1,4 +1,4 @@
-require(['require_config', 'config'], function() {
+require(['config/require', 'config'], function() {
   'use strict';
 
   define('boot', function(require) {
@@ -15,8 +15,8 @@ require(['require_config', 'config'], function() {
     var FocusRing = require('views/focusring');
     var ControlsView = require('views/controls');
     var ViewfinderView = require('views/viewfinder');
-    var ConfirmView = require('views/confirm');
     var sounds = new Sounds(require('config/sounds'));
+    var ConfirmView = require('views/confirm');
     var GeoLocation = require('geolocation');
     var Activity = require('activity');
 
@@ -33,8 +33,7 @@ require(['require_config', 'config'], function() {
       viewfinder: new ViewfinderView(),
       controls: new ControlsView(),
       focusRing: new FocusRing(),
-      hud: new HudView(),
-      Confirm: ConfirmView
+      hud: new HudView()
     };
 
     /**

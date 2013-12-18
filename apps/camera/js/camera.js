@@ -7,11 +7,11 @@ define(function(require, exports, module){
  * Dependencies
  */
 
-var Model = require('vendor/model');
-var constants = require('constants');
+var createVideoPosterImage = require('lib/create-video-poster-image');
+var constants = require('config/camera');
+var orientation = require('orientation');
 var broadcast = require('broadcast');
-var bindAll = require('utils/bindAll');
-var getVideoRotation = require('getVideoRotation');
+var Model = require('vendor/model');
 var evt = require('vendor/evt');
 var dcf = require('dcf');
 
@@ -115,8 +115,9 @@ function Camera() {
   this._savedMedia = null;
 
   // Bind context
-  this.storageCheck = this.storageCheck.bind(this);
+  this.updateVideoElapsed = this.updateVideoElapsed.bind(this);
   this.onStorageChange = this.onStorageChange.bind(this);
+  this.storageCheck = this.storageCheck.bind(this);
 
   // Whenever the camera is
   // configured, we run a storage
@@ -171,10 +172,7 @@ proto.isVideoMode = function() {
  * @return {String}
  */
 proto.toggleMode = function() {
-  var newMode = this.isCameraMode()
-    ? VIDEO
-    : CAMERA;
-
+  var newMode = this.isCameraMode() ? VIDEO : CAMERA;
   this.setCaptureMode(newMode);
   this.configureFlashModes(this.flash.all);
   return newMode;
@@ -398,7 +396,7 @@ proto.startRecording = function() {
     var pickData = self._pendingPick && self._pendingPick.source.data;
     var maxFileSizeBytes = pickData && pickData.maxFileSizeBytes;
     var config = {
-      rotation: window.orientation.get(),
+      rotation: orientation.get(),
       maxFileSizeBytes: freeBytes - RECORD_SPACE_PADDING
     };
 
@@ -455,7 +453,7 @@ proto.updateVideoElapsed = function() {
 };
 
 proto.stopRecording = function() {
-  var videoFile = this._videoRootDir + this._videoPath;
+  var filename = this._videoRootDir + this._videoPath;
   var videoStorage = this._videoStorage;
   var self = this;
 
@@ -474,114 +472,45 @@ proto.stopRecording = function() {
     // video file writing completion
     // if e.path matches current video
     // filename. Note e.path is absolute path.
-    if (e.reason === 'modified' && e.path === videoFile) {
-
+    if (e.reason === 'modified' && e.path === filename) {
       // Un-register the listener
       videoStorage.removeEventListener('change', onVideoStorageChange);
+      getBlobFromStorage();
+    }
+  }
 
-      // Now that the video file
-      // has been saved, save a poster
-      // image for the Gallery app.
-      self.saveVideoPosterImage(videoFile, function(video, poster, data) {
+  function getBlobFromStorage() {
+    var req = videoStorage.get(filename);
+
+    req.onsuccess = onSuccess;
+    req.onerror = onError;
+
+    function onSuccess() {
+      var blob = req.result;
+
+      createVideoPosterImage(blob, filename, function(err, data) {
+        if (err) {
+          // We need to delete all corrupted
+          // video files, those of them may be
+          // tracks without samples (Bug 899864).
+          self._videoStorage.delete(filename);
+          return;
+        }
+
         self.emit('newvideo', {
-          file: videoFile,
-          video: video,
-          poster: poster,
+          blob: blob,
+          filename: filename,
+          poster: data.poster,
           width: data.width,
           height: data.height,
           rotation: data.rotation
         });
       });
     }
-  }
-};
 
-/**
- * Given the filename of a newly
- * recorded video, create a poster
- * image for it, and save that
- * poster as a jpeg file.
- *
- * When done, pass the video blob
- * and the poster blob to the
- * callback function along with
- * the video dimensions and rotation.
- *
- * @param  {String}   filename
- * @param  {Function} callback
- */
-proto.saveVideoPosterImage = function(filename, callback) {
-  var getreq = this._videoStorage.get(filename);
-  var URL = window.URL;
-  var self = this;
-
-  getreq.onsuccess = onSuccess;
-  getreq.onerror = onError;
-
-  function onSuccess() {
-    var videoblob = getreq.result;
-
-    getVideoRotation(videoblob, function(rotation) {
-      if (typeof rotation !== 'number') {
-        console.warn('Unexpected rotation:', rotation);
-        rotation = 0;
-      }
-
-      var offscreenVideo = document.createElement('video');
-      var url = URL.createObjectURL(videoblob);
-
-      offscreenVideo.preload = 'metadata';
-      offscreenVideo.src = url;
-
-      offscreenVideo.onerror = function() {
-        URL.revokeObjectURL(url);
-        offscreenVideo.removeAttribute('src');
-        offscreenVideo.load();
-        console.warn('not a video file', filename, 'delete it!');
-
-        // We need to delete all corrupted
-        // video files, those of them may be
-        // tracks without samples (Bug 899864).
-        self._videoStorage.delete(filename);
-      };
-
-      offscreenVideo.onloadedmetadata = function() {
-        var videowidth = offscreenVideo.videoWidth;
-        var videoheight = offscreenVideo.videoHeight;
-
-        // First, create a full-size
-        // unrotated poster image
-        var postercanvas = document.createElement('canvas');
-        var postercontext = postercanvas.getContext('2d');
-        postercanvas.width = videowidth;
-        postercanvas.height = videoheight;
-        postercontext.drawImage(offscreenVideo, 0, 0);
-
-        // We're done with the
-        // offscreen video element now
-        URL.revokeObjectURL(url);
-        offscreenVideo.removeAttribute('src');
-        offscreenVideo.load();
-
-        // Save the poster image to
-        // storage, then call the callback.
-        // The Gallery app depends on this
-        // poster image being saved here.
-        postercanvas.toBlob(function savePoster(poster) {
-          var posterfile = filename.replace('.3gp', '.jpg');
-          self._pictureStorage.addNamed(poster, posterfile);
-          callback(videoblob, poster, {
-            width: videowidth,
-            height: videoheight,
-            rotation: rotation
-          });
-        }, 'image/jpeg');
-      };
-    });
-  }
-
-  function onError() {
-    console.warn('saveVideoPosterImage:', filename);
+    function onError() {
+      console.warn('getBlobFromStorage:', filename);
+    }
   }
 };
 
@@ -660,7 +589,7 @@ proto.loadCameraPreview = function(cameraNumber, callback) {
 
       // 'Video' Mode
       if (self.isVideoMode()) {
-        videoProfile.rotation = window.orientation.get();
+        videoProfile.rotation = orientation.get();
         camera.getPreviewStreamVideoMode(videoProfile, gotPreviewScreen);
       }
     });
@@ -911,7 +840,7 @@ proto.prepareTakePicture = function(done) {
 proto.takePicture = function(options) {
   var position = options && options.position;
   var config = {
-    rotation: window.orientation.get(),
+    rotation: orientation.get(),
     dateTime: Date.now() / 1000,
     fileFormat: this.fileFormat
   };

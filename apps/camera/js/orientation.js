@@ -16,7 +16,7 @@ define(function(require, exports, module) {
    * Exports
    */
 
-  module.exports = window.orientation = {
+  module.exports = {
     on: listener.on,
     off: listener.off,
     get: function() {

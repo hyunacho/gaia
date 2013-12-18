@@ -6,13 +6,13 @@ define(function(require, exports, module) {
  * Dependencies
  */
 
-var bind = require('utils/bind');
-var LazyL10n = require('LazyL10n');
-var constants = require('constants');
-var broadcast = require('broadcast');
-var bindAll = require('utils/bindAll');
 var performanceTesting = require('performanceTesting');
+var constants = require('config/camera');
+var bindAll = require('utils/bindAll');
 var lockscreen = require('lockscreen');
+var broadcast = require('broadcast');
+var LazyL10n = require('LazyL10n');
+var bind = require('utils/bind');
 var evt = require('vendor/evt');
 var dcf = require('dcf');
 
@@ -106,8 +106,7 @@ proto.injectContent = function() {
 };
 
 /**
- * Attaches callbacks to
- * some important events.
+ * Attaches event handlers.
  *
  * @api private
  */
@@ -118,6 +117,11 @@ proto.bindEvents = function() {
   this.on('blur', this.onBlur);
 };
 
+/**
+ * Detaches event handlers.
+ *
+ * @api private
+ */
 proto.unbindEvents = function() {
   unbind(this.doc, 'visibilitychange', this.onVisibilityChange);
   unbind(this.win, 'beforeunload', this.onBeforeUnload);

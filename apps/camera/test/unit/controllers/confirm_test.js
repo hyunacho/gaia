@@ -22,12 +22,12 @@ suite('controllers/confirm', function() {
     this.app = {
       activity: {},
       camera: { on: sinon.spy() },
-      views: { Confirm: ConfirmView }
+      ConfirmView: ConfirmView
     };
 
     this.controller = new Controller(this.app);
     this.sandbox = sinon.sandbox.create();
-    this.sandbox.spy(this.app.views, 'Confirm');
+    this.sandbox.spy(this.app, 'ConfirmView');
     this.sandbox.stub(ConfirmView.prototype);
   });
 
@@ -49,7 +49,7 @@ suite('controllers/confirm', function() {
     test('Should not do anything if there is no active activity', function() {
       this.app.activity.active = false;
       this.controller.onNewImage({});
-      assert.ok(this.app.views.Confirm.notCalled);
+      assert.ok(this.app.ConfirmView.notCalled);
     });
   });
 
@@ -57,7 +57,7 @@ suite('controllers/confirm', function() {
     test('Should not do anything if there is no active activity', function() {
       this.app.activity.active = false;
       this.controller.onNewVideo({});
-      assert.ok(this.app.views.Confirm.notCalled);
+      assert.ok(this.app.ConfirmView.notCalled);
     });
   });
 });

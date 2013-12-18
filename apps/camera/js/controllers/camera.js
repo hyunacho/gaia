@@ -5,7 +5,7 @@ define(function(require, exports, module) {
  * Dependencies
  */
 
-var constants = require('constants');
+var constants = require('config/camera');
 var performance = require('performanceTesting');
 var bindAll = require('utils/bindAll');
 
@@ -134,6 +134,9 @@ proto.onNewImage = function(data) {
 };
 
 proto.onNewVideo = function(data) {
+  var camera = this.camera;
+  var poster = data.poster;
+  camera._pictureStorage.addNamed(poster.blob, poster.filename);
   this.filmstrip.addVideoAndShow(data);
 };
 

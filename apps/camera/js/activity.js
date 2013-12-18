@@ -2,25 +2,17 @@ define(function(require, exports, module) {
 'use strict';
 
 /**
- * Dependencies
- */
-
-var constants = require('constants');
-
-/**
- * Locals
- */
-
-var VIDEO = constants.CAMERA_MODE_TYPE.VIDEO;
-var CAMERA = constants.CAMERA_MODE_TYPE.CAMERA;
-var proto = Activity.prototype;
-
-/**
  * Exports
  */
 
 module.exports = Activity;
 
+/**
+ * Initialize a new `Activity`
+ *
+ * @constructor
+ * @api public
+ */
 function Activity() {
   this.name = null;
   this.active = false;
@@ -39,7 +31,7 @@ function Activity() {
  * @param  {Function} done
  * @api public
  */
-proto.check = function(done) {
+Activity.prototype.check = function(done) {
   var hasMessage = navigator.mozHasPendingMessage('activity');
   var self = this;
 
@@ -48,54 +40,71 @@ proto.check = function(done) {
     return;
   }
 
-  navigator.mozSetMessageHandler('activity', function(activity) {
-    var parsed = self.parse(activity);
+  navigator.mozSetMessageHandler('activity', onActivity);
 
+  function onActivity(activity) {
+    var parsed = self.parse(activity);
     self.active = true;
     self.name = parsed.name;
     self.allowedTypes = parsed.types;
     self.mode = parsed.mode;
     self.raw = activity;
-
     done();
-  });
+  }
 };
 
 /**
  * Parses a raw activity object
  * and returns relevant information.
  *
- * NOTE: This is a public method
- * for testing purposes only.
- *
  * @param  {Activity} activity
  * @return {Object}
  */
-proto.parse = function(activity) {
+Activity.prototype.parse = function(activity) {
   var data = {
     name: activity.source.name,
     types: this.getTypes(activity)
   };
-
   data.mode = this.modeFromTypes(data.types);
-
   return data;
 };
 
-proto.postResult = function(data) {
+/**
+ * Post data back to the app
+ * which spawned the activity.
+ *
+ * @param  {Object} data
+ * @api public
+ */
+Activity.prototype.postResult = function(data) {
   if (this.raw) {
     this.raw.postResult(data);
+    this.reset();
   }
 };
 
-proto.cancel = function() {
+/**
+ * Cancel the activity.
+ *
+ * This should cause the user
+ * to be navigated back to the
+ * app which spawned the activity.
+ *
+ * @api public
+ */
+Activity.prototype.cancel = function() {
   if (this.raw) {
     this.raw.postError('pick cancelled');
+    this.reset();
   }
-  this.reset();
 };
 
-proto.reset = function() {
+/**
+ * Reset the activity state.
+ *
+ * @api private
+ */
+Activity.prototype.reset = function() {
   this.raw = null;
   this.name = null;
   this.active = false;
@@ -110,7 +119,7 @@ proto.reset = function() {
  * @param  {Activity} activity
  * @return {Object}
  */
-proto.getTypes = function(activity) {
+Activity.prototype.getTypes = function(activity) {
   var raw = activity.source.data.type || ['image/*', 'video/*'];
   var types = {};
 
@@ -137,9 +146,8 @@ proto.getTypes = function(activity) {
  * @param  {Object} types
  * @return {String}
  */
-proto.modeFromTypes = function(types) {
-  if (!types.image && types.video) { return VIDEO; }
-  else { return CAMERA; }
+Activity.prototype.modeFromTypes = function(types) {
+  return !types.image && types.video ? 'video' : 'camera';
 };
 
 });
