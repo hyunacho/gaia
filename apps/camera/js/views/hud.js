@@ -14,8 +14,9 @@ var find = require('utils/find');
  */
 
 module.exports = View.extend({
-  className: 'hud',
+  name: 'hud',
   buttonsDisabledClass: 'buttons-disabled',
+
   initialize: function() {
     this.el.innerHTML = this.render();
 
@@ -35,18 +36,28 @@ module.exports = View.extend({
     this.els.flashModeName.textContent = mode;
   },
 
+  /**
+   * Add the toggle state class,
+   * then remove it after 1 second
+   * of inactivity.
+   *
+   * We use this class to
+   * show the flash name text.
+   *
+   * @api private
+   */
   onFlashClick: function() {
     var toggleClass = 'is-toggling';
-     // Add the toggle state class,
-     // then remove it after 1 second
-     // of inactivity. We use this class
-     // to show the flash name text.
-     this.els.flash.classList.add(toggleClass);
-     clearTimeout(this.toggleTimer);
-     this.toggleTimer = setTimeout(function() {
-       this.els.flash.classList.remove(toggleClass);
-     }.bind(this), 1000);
-     this.emit('flashToggle');
+    var classes = this.els.flash.classList;
+
+    classes.add(toggleClass);
+    clearTimeout(this.toggleTimer);
+
+    this.toggleTimer = setTimeout(function() {
+      classes.remove(toggleClass);
+    }, 1000);
+
+    this.emit('flashToggle');
   },
 
   onCameraClick: function() {

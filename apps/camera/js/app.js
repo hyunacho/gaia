@@ -106,8 +106,7 @@ proto.injectContent = function() {
 };
 
 /**
- * Attaches callbacks to
- * some important events.
+ * Attaches event handlers.
  *
  * @api private
  */
@@ -118,6 +117,11 @@ proto.bindEvents = function() {
   this.on('blur', this.onBlur);
 };
 
+/**
+ * Detaches event handlers.
+ *
+ * @api private
+ */
 proto.unbindEvents = function() {
   unbind(this.doc, 'visibilitychange', this.onVisibilityChange);
   unbind(this.win, 'beforeunload', this.onBeforeUnload);

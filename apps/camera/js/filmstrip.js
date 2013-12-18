@@ -132,9 +132,9 @@ define(function(require, exports, module) {
 
     function addVideoAndShow(data) {
       addVideo(
-        data.file,
-        data.video,
-        data.poster,
+        data.filename,
+        data.blob,
+        data.poster.blob,
         data.width,
         data.height,
         data.rotation

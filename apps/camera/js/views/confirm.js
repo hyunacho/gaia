@@ -60,7 +60,7 @@ module.exports = View.extend({
   showVideo: function(data) {
     this.mediaFrame.displayVideo(
       data.video,
-      data.poster,
+      data.poster.blob,
       data.width,
       data.height,
       data.rotation);

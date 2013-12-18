@@ -118,8 +118,8 @@ proto.onNewVideo = function(data) {
   function onSelectClick() {
     activity.postResult({
       type: 'video/3gpp',
-      blob: data.video,
-      poster: data.poster
+      blob: data.blob,
+      poster: data.poster.blob
     });
   }
 

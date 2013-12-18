@@ -134,6 +134,9 @@ proto.onNewImage = function(data) {
 };
 
 proto.onNewVideo = function(data) {
+  var camera = this.camera;
+  var poster = data.poster;
+  camera._pictureStorage.addNamed(poster.blob, poster.filename);
   this.filmstrip.addVideoAndShow(data);
 };
 
