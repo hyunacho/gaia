@@ -29,8 +29,5 @@ class TestCamera(GaiaTestCase):
         self.assertTrue(self.camera.is_filmstrip_visible)
 
         # Check that video saved to SD card
-        videos_after_test = self.data_layer.video_files
-        self.assertEqual(len(videos_after_test), 1)
-
-        # Wait for Filmstrip to auto hide
-        self.camera.wait_for_filmstrip_not_visible()
+        self.wait_for_condition(lambda m: len(self.data_layer.video_files) == 1)
+        self.assertEqual(len(self.data_layer.video_files), 1)
