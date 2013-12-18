@@ -30,11 +30,8 @@ class TestCameraFlashModes(GaiaTestCase):
         self.assertTrue(self.camera.is_filmstrip_visible)
 
         # Check that picture saved to SD card
-        pictures_after_test = self.data_layer.picture_files
-        self.assertEqual(len(pictures_after_test), 1)
-
-        # Wait for Filmstrip to auto hide
-        self.camera.wait_for_filmstrip_not_visible()
+        self.wait_for_condition(lambda m: len(self.data_layer.picture_files) == 1)
+        self.assertEqual(len(self.data_layer.picture_files), 1)
 
         # Toggle flash mode to "off"
         self.camera.tap_toggle_flash_button()
@@ -47,11 +44,8 @@ class TestCameraFlashModes(GaiaTestCase):
         self.assertTrue(self.camera.is_filmstrip_visible)
 
         # Check that picture saved to SD card
-        pictures_after_test = self.data_layer.picture_files
-        self.assertEqual(len(pictures_after_test), 2)
-
-        # Wait for Filmstrip to auto hide
-        self.camera.wait_for_filmstrip_not_visible()
+        self.wait_for_condition(lambda m: len(self.data_layer.picture_files) == 2)
+        self.assertEqual(len(self.data_layer.picture_files), 2)
 
         # Toggle flash mode to "auto"
         self.camera.tap_toggle_flash_button()
@@ -64,8 +58,5 @@ class TestCameraFlashModes(GaiaTestCase):
         self.assertTrue(self.camera.is_filmstrip_visible)
 
         # Check that picture saved to SD card
-        pictures_after_test = self.data_layer.picture_files
-        self.assertEqual(len(pictures_after_test), 3)
-
-        # Wait for Filmstrip to auto hide
-        self.camera.wait_for_filmstrip_not_visible()
+        self.wait_for_condition(lambda m: len(self.data_layer.picture_files) == 3)
+        self.assertEqual(len(self.data_layer.picture_files), 3)
