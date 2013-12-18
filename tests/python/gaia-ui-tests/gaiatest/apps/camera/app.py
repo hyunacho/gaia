@@ -131,6 +131,10 @@ class Camera(Base):
         return gallery_app
 
     @property
+    def is_toggle_flash_button_visible(self):
+        return self.is_element_displayed(*self._toggle_flash_button_locator)
+
+    @property
     def is_filmstrip_visible(self):
         return self.is_element_present(*self._filmstrip_visible_locator)
 
