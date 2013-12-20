@@ -81,13 +81,15 @@ suite('controllers/hud', function() {
       this.hud = this.app.views.hud;
     });
 
-    test('Should show camera toggle button if device has front camera', function() {
+    test('Should show camera toggle button' +
+         'if device has front camera', function() {
       this.camera.hasFrontCamera.returns(true);
       this.controller.onCameraConfigured();
       assert.ok(this.hud.showCameraToggleButton.calledWith(true));
     });
 
-    test('Should set the hud flash mode with the current flash mode', function() {
+    test('Should set the hud flash mode with' +
+         'the current flash mode', function() {
       this.camera.getFlashMode.returns('some-flash-mode');
       this.controller.onCameraConfigured();
       assert.ok(this.hud.setFlashMode.calledWith('some-flash-mode'));
@@ -100,7 +102,8 @@ suite('controllers/hud', function() {
       this.hud = this.app.views.hud;
     });
 
-    test('Should set the hud flash mode with the new camera flash mode', function() {
+    test('Should set the hud flash mode with' +
+         'the new camera flash mode', function() {
       this.camera.toggleFlash.returns('new-flash-mode');
       this.controller.onFlashToggle();
       assert.ok(this.hud.setFlashMode.calledWith('new-flash-mode'));
@@ -141,7 +144,8 @@ suite('controllers/hud', function() {
       assert.ok(secondCall.args[0] === false);
     });
 
-    test('Should load the camera stream into the viewfinder element', function() {
+    test('Should load the camera stream into' +
+         'the viewfinder element', function() {
       this.controller.onCameraToggle();
       assert.ok(this.camera.loadStreamInto.calledWith(this.viewfinder.el));
     });
@@ -151,7 +155,8 @@ suite('controllers/hud', function() {
       assert.ok(this.viewfinder.fadeOut.calledBefore(this.camera.toggleCamera));
     });
 
-    test('Should fade the viewfinder back in after the new stream has loaded', function() {
+    test('Should fade the viewfinder back in after the' +
+         'new stream has loaded', function() {
       var loadStreamInto = this.camera.loadStreamInto;
       var fadeIn = this.viewfinder.fadeIn;
 

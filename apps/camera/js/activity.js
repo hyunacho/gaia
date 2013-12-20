@@ -11,7 +11,6 @@ module.exports = Activity;
  * Initialize a new `Activity`
  *
  * @constructor
- * @api public
  */
 function Activity() {
   this.name = null;
@@ -29,7 +28,6 @@ function Activity() {
  * when done.
  *
  * @param  {Function} done
- * @api public
  */
 Activity.prototype.check = function(done) {
   var hasMessage = navigator.mozHasPendingMessage('activity');
@@ -74,7 +72,7 @@ Activity.prototype.parse = function(activity) {
  * which spawned the activity.
  *
  * @param  {Object} data
- * @api public
+ *
  */
 Activity.prototype.postResult = function(data) {
   if (this.raw) {
@@ -90,7 +88,6 @@ Activity.prototype.postResult = function(data) {
  * to be navigated back to the
  * app which spawned the activity.
  *
- * @api public
  */
 Activity.prototype.cancel = function() {
   if (this.raw) {
@@ -102,7 +99,6 @@ Activity.prototype.cancel = function() {
 /**
  * Reset the activity state.
  *
- * @api private
  */
 Activity.prototype.reset = function() {
   this.raw = null;

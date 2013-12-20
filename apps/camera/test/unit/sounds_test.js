@@ -112,7 +112,7 @@ suite('Sounds', function() {
       // tests set this.mozSettingsGetResult
       // define the result of the mock call.
       navigator.mozSettings = {
-        createLock: function(){ return this; },
+        createLock: function() { return this; },
         get: function(key) {
           var mozSettings = this;
           setTimeout(function() {
@@ -157,7 +157,8 @@ suite('Sounds', function() {
       this.sounds.observeSetting(this.mockSound);
     });
 
-    test('Should call setEnabled with the value passed to the observe callback', function() {
+    test('Should call setEnabled with the value passed' +
+         'to the observe callback', function() {
       this.sounds.observeSetting(this.mockSound);
 
       // Manually call the callback

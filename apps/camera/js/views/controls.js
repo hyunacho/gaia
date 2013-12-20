@@ -74,7 +74,7 @@ module.exports = View.extend({
   },
 
   onButtonClick: function(event) {
-    var el  = event.currentTarget;
+    var el = event.currentTarget;
     var name = el.getAttribute('name');
     this.emit('click:' + name);
   }

@@ -26,7 +26,7 @@ exports.HudController = HudController;
  *
  * @param  {AppController} app
  * @return {HudController}
- * @api public
+ *
  */
 function create(app) {
   return new HudController(app).bindEvents();
@@ -37,7 +37,7 @@ function create(app) {
  *
  * @param {AppController} app
  * @constructor
- * @api private
+ *
  */
 function HudController(app) {
   this.viewfinder = app.views.viewfinder;
@@ -51,7 +51,7 @@ function HudController(app) {
  * Bind callbacks to events.
  *
  * @return {HudController} for chaining
- * @api private
+ *
  */
 proto.bindEvents = function() {
   this.hud.on('flashToggle', this.onFlashToggle);
@@ -67,7 +67,6 @@ proto.bindEvents = function() {
  * Update UI when a new
  * camera is configured.
  *
- * @api private
  */
 proto.onCameraConfigured = function() {
   var hasFrontCamera = this.camera.hasFrontCamera();
@@ -81,7 +80,6 @@ proto.onCameraConfigured = function() {
  * the camera and UI when
  * the flash button is pressed.
  *
- * @api private
  */
 proto.onFlashToggle = function() {
   var mode = this.camera.toggleFlash();
@@ -92,7 +90,6 @@ proto.onFlashToggle = function() {
  * Toggle the camera (front/back),
  * fading the viewfinder in between.
  *
- * @api private
  */
 proto.onCameraToggle = function() {
   var controls = this.controls;
@@ -123,7 +120,7 @@ proto.onCameraToggle = function() {
  * when recording
  *
  * @param  {Boolean} value
- * @api private
+ *
  */
 proto.onRecordingChange = function(value) {
   this.hud.toggleDisableButtons(value);

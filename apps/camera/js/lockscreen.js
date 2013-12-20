@@ -11,7 +11,6 @@ var screenLock;
  * Stops the device
  * from going to sleep.
  *
- * @api public
  */
 exports.disableTimeout = function() {
   if (!screenLock) {
@@ -25,7 +24,6 @@ exports.disableTimeout = function() {
  * once again sleep after
  * usual timeout.
  *
- * @api public
  */
 exports.enableTimeout = function() {
   if (screenLock) {

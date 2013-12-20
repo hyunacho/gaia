@@ -47,7 +47,8 @@ suite('activity', function() {
       this.camera.configureFlashModes.restore();
     });
 
-    test('Should call camera.configureFlashModes with the current cameras.flashModes', function() {
+    test('Should call camera.configureFlashModes' +
+         'with the current cameras.flashModes', function() {
       var allFlashModes = this.camera.flash.all;
       this.camera.toggleMode();
       assert.isTrue(this.camera.configureFlashModes.calledWith(allFlashModes));
@@ -87,7 +88,8 @@ suite('activity', function() {
         this.camera.flash.all = [];
       });
 
-      test('Should call camera.setFlash with the next flash in the available list', function() {
+      test('Should call camera.setFlash with the' +
+           'next flash in the available list', function() {
         this.camera.toggleFlash();
         assert.isTrue(this.camera.setFlashMode.calledWith(1));
       });
@@ -157,7 +159,8 @@ suite('activity', function() {
         });
       });
 
-      test('Should set the returned value at the camera storage state value', function(done) {
+      test('Should set the returned value at' +
+           'the camera storage state value', function(done) {
         var camera = this.camera;
         var getState = camera.getDeviceStorageState;
         var isSpace = camera.isSpaceOnStorage;
@@ -171,7 +174,8 @@ suite('activity', function() {
         });
       });
 
-      test('Should set the storage state to \'nospace\' if there is no space left on the device', function(done) {
+      test('Should set the storage state to \'nospace\' ' +
+           'if there is no space left on the device', function(done) {
         var camera = this.camera;
         var getState = camera.getDeviceStorageState;
         var isSpace = camera.isSpaceOnStorage;
@@ -213,7 +217,8 @@ suite('activity', function() {
         delete this.req;
       });
 
-      test('Should return true if there is enough space for at least one image', function(done) {
+      test('Should return true if there is enough space' +
+           'for at least one image', function(done) {
         this.req.result = 9999999999;
         this.camera.isSpaceOnStorage(function(result) {
           assert.isTrue(result);
@@ -221,7 +226,8 @@ suite('activity', function() {
         });
       });
 
-      test('Should return true if there is enough space for at least one image', function(done) {
+      test('Should return true if there is enough space' +
+           'for at least one image', function(done) {
         this.req.result = 99;
         this.camera.isSpaceOnStorage(function(result) {
           assert.isFalse(result);
@@ -250,7 +256,8 @@ suite('activity', function() {
         delete this.request;
       });
 
-      test('Should make request to pictureStorage if no storage state is set', function(done) {
+      test('Should make request to pictureStorage if ' +
+           'no storage state is set', function(done) {
         this.request.result = 'some-state';
 
         this.camera.getDeviceStorageState(function(result) {

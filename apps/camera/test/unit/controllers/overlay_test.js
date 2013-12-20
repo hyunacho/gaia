@@ -46,7 +46,8 @@ suite('controllers/overlay', function() {
     navigator.mozL10n.get.withArgs('nocard2-text').returns('nocard body');
     navigator.mozL10n.get.withArgs('nospace2-title').returns('nospace title');
     navigator.mozL10n.get.withArgs('nospace2-text').returns('nospace body');
-    navigator.mozL10n.get.withArgs('pluggedin-title').returns('pluggedin title');
+    navigator.mozL10n.get.withArgs(
+      'pluggedin-title').returns('pluggedin title');
     navigator.mozL10n.get.withArgs('pluggedin-text').returns('pluggedin body');
   });
 
@@ -68,13 +69,15 @@ suite('controllers/overlay', function() {
       sinon.stub(this.controller, 'insertOverlay');
     });
 
-    test('Should destroy any old storage overlays if storage becomes available, and not insert a new overlay', function() {
+    test('Should destroy any old storage overlays if storage' +
+         'becomes available, and not insert a new overlay', function() {
       this.controller.onStorageChange('available');
       assert.isTrue(this.controller.destroyOverlays.calledOnce);
       assert.isFalse(this.controller.insertOverlay.called);
     });
 
-    test('Should call insertOverlay whenever the value is not \'available\'', function() {
+    test('Should call insertOverlay whenever' +
+         'the value is not \'available\'', function() {
       this.controller.onStorageChange('foo');
       assert.isFalse(this.controller.destroyOverlays.called);
       assert.isTrue(this.controller.insertOverlay.calledWith('foo'));
@@ -85,7 +88,7 @@ suite('controllers/overlay', function() {
     setup(function() {
       this.OverlayProto = this.modules.Overlay.prototype;
       sinon.stub(this.OverlayProto, 'initialize');
-      sinon.stub(this.OverlayProto, 'appendTo', function(){ return this; });
+      sinon.stub(this.OverlayProto, 'appendTo', function() { return this; });
       this.controller = new Controller(this.app);
       sinon.spy(this.controller.overlays, 'push');
     });
@@ -126,7 +129,8 @@ suite('controllers/overlay', function() {
       var OverlayView = this.modules.Overlay;
       assert.isFalse(this.controller.overlays.push.called);
       this.controller.insertOverlay('unavailable');
-      assert.isTrue(this.controller.overlays.push.args[0][0] instanceof OverlayView);
+      assert.isTrue(
+        this.controller.overlays.push.args[0][0] instanceof OverlayView);
     });
   });
 
@@ -162,7 +166,7 @@ suite('controllers/overlay', function() {
   suite('OverlayController#onStorageSettingsClick()', function() {});
 
   suite('OverlayController#destroyOverlays()', function() {
-    setup(function(){
+    setup(function() {
       this.controller = new Controller(this.app);
 
       this.overlay1 = { destroy: sinon.spy() };
@@ -174,7 +178,8 @@ suite('controllers/overlay', function() {
       ];
     });
 
-    test('Should call destroy on each overlay in the overlays list', function() {
+    test('Should call destroy on each overlay in' +
+         'the overlays list', function() {
       this.controller.destroyOverlays();
       assert.isTrue(this.overlay1.destroy.called);
       assert.isTrue(this.overlay2.destroy.called);

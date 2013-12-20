@@ -44,7 +44,6 @@ module.exports = View.extend({
    * We use this class to
    * show the flash name text.
    *
-   * @api private
    */
   onFlashClick: function() {
     var toggleClass = 'is-toggling';

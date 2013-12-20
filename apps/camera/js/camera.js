@@ -1,4 +1,4 @@
-define(function(require, exports, module){
+define(function(require, exports, module) {
 /*global CONFIG_MAX_IMAGE_PIXEL_SIZE*/
 /*jshint laxbreak:true*/
 'use strict';
@@ -85,11 +85,11 @@ function Camera() {
     config: {
       camera: {
         defaultMode: 'auto',
-        supports: ['off', 'auto', 'on'],
+        supports: ['off', 'auto', 'on']
       },
       video: {
         defaultMode: 'off',
-        supports: ['off', 'torch'],
+        supports: ['off', 'torch']
       }
     },
 
@@ -176,13 +176,13 @@ proto.toggleMode = function() {
   this.setCaptureMode(newMode);
   this.configureFlashModes(this.flash.all);
   return newMode;
-},
+};
 
 /**
  * Sets the capture mode.
  *
  * @param {String} mode
- * @returns {String}
+ *
  */
 proto.setCaptureMode = function(mode) {
   this.state.set('mode', mode);
@@ -277,7 +277,7 @@ proto.setFocusMode = function() {
     this._cameraObj.focusMode = FOCUS_MODE_TYPE.MANUALLY_TRIGGERED;
     this._callAutoFocus = true;
   }
-},
+};
 
 /**
  * Takes a photo, or begins/ends
@@ -288,7 +288,7 @@ proto.setFocusMode = function() {
  *   - `position` {Object} - geolocation to store in EXIF
  *
  * @param  {Object} options
- * @api public
+ *  public
  */
 proto.capture = function(options) {
   var self = this;
@@ -309,7 +309,7 @@ proto.capture = function(options) {
   else {
     this.startRecording();
   }
-},
+};
 
 proto.startRecording = function() {
   var self = this;
@@ -420,14 +420,13 @@ proto.startRecording = function() {
 
     self.emit('recordingstart');
   }
-},
+};
 
 /**
  * Sets a start time and begins
  * updating the elapsed time
  * every second.
  *
- * @api private
  */
 proto.startRecordingTimer = function() {
   this.state.set('videoStart', new Date().getTime());
@@ -444,7 +443,6 @@ proto.startRecordingTimer = function() {
  * event emitted elsewhere to
  * update the UI accordingly.
  *
- * @api private
  */
 proto.updateVideoElapsed = function() {
   var now = new Date().getTime();
@@ -748,7 +746,7 @@ proto._resizeBlobIfNeeded = function(blob, callback) {
 };
 
 proto.storageCheck = function(done) {
-  done = done || function(){};
+  done = done || function() {};
 
   var self = this;
 
@@ -1032,10 +1030,10 @@ proto.pickVideoProfile = function(profiles) {
  * Releases the camera hardware.
  *
  * @param  {Function} done
- * @api public
+ *
  */
 proto.release = function(done) {
-  done = done || function(){};
+  done = done || function() {};
 
   if (!this._cameraObj) {
     return;
@@ -1056,7 +1054,7 @@ proto.release = function(done) {
 };
 
 proto.getPreferredSizes = function(done) {
-  done = done || function(){};
+  done = done || function() {};
 
   var key = 'camera.recording.preferredSizes';
   var self = this;

@@ -267,7 +267,8 @@ define(function(require, exports, module) {
 
       var item = items[currentItemIndex];
       var type = item.isImage ? 'image/*' : 'video/*';
-      var nameonly = item.filename.substring(item.filename.lastIndexOf('/') + 1);
+      var nameonly = item.filename.substring(
+        item.filename.lastIndexOf('/') + 1);
       var activity = new MozActivity({
         name: 'share',
         data: {
@@ -435,8 +436,9 @@ define(function(require, exports, module) {
         if (items.length === 0) {
           hidePreview();
         } else if (currentItemIndex === deleteIdx) {
-          // The delete item is current item, switch the frame to display the next
-          // item. But if we just deleted the last item, then we'll need to
+          // The delete item is current item,
+          // switch the frame to display the next item.
+          // But if we just deleted the last item, then we'll need to
           // display the previous item.
           var newindex = currentItemIndex;
           if (newindex >= items.length)

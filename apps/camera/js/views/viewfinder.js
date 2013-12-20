@@ -41,8 +41,11 @@ var getNewTouchB = function(touches) {
 var getDeltaScale = function(touchA, touchB) {
   if (!touchA || !lastTouchA || !touchB || !lastTouchB) return 0;
 
-  var oldDistance = Math.sqrt(Math.pow(lastTouchB.pageX - lastTouchA.pageX, 2) + Math.pow(lastTouchB.pageY - lastTouchA.pageY, 2));
-  var newDistance = Math.sqrt(Math.pow(touchB.pageX - touchA.pageX, 2) + Math.pow(touchB.pageY - touchA.pageY, 2));
+  var oldDistance = Math.sqrt(Math.pow(lastTouchB.pageX -
+                                       lastTouchA.pageX, 2) +
+                    Math.pow(lastTouchB.pageY - lastTouchA.pageY, 2));
+  var newDistance = Math.sqrt(Math.pow(touchB.pageX - touchA.pageX, 2) +
+                    Math.pow(touchB.pageY - touchA.pageY, 2));
   return newDistance - oldDistance;
 };
 
@@ -97,7 +100,8 @@ return View.extend({
   },
 
   setScale: function(scale) {
-    scale = Math.min(Math.max(scale, MIN_VIEWFINDER_SCALE), MAX_VIEWFINDER_SCALE);
+    scale = Math.min(Math.max(scale, MIN_VIEWFINDER_SCALE),
+                     MAX_VIEWFINDER_SCALE);
     this.el.style.transform = 'scale(' + scale + ', ' + scale + ')';
   },
 

@@ -106,7 +106,7 @@ proto.getOverlayData = function(value) {
  * storage panel when the default
  * storage is unavailable.
  *
- * @return void
+ * @return {undefined}
  */
 proto.onStorageSettingsClick = function() {
   var MozActivity = window.MozActivity;

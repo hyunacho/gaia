@@ -71,13 +71,15 @@ module.exports = View.extend({
     /*jshint maxlen:false*/
     return '<div class="confirm-media-frame js-media-frame"></div>' +
     '<footer id="confirm-controls" class="confirm-controls">' +
-      '<button class="retake-button js-retake" name="retake">' + data.retake + '</button>' +
-      '<button class="select-button recommend js-select" name="select">' + data.select + '</button>' +
+      '<button class="retake-button js-retake" name="retake">' +
+      data.retake + '</button>' +
+      '<button class="select-button recommend js-select" name="select">' +
+      data.select + '</button>' +
     '</footer>';
   },
 
   onButtonClick: function(event) {
-    var el  = event.currentTarget;
+    var el = event.currentTarget;
     var name = el.getAttribute('name');
     this.emit('click:' + name);
   },

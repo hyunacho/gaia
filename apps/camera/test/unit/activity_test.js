@@ -21,7 +21,8 @@ suite('activity', function() {
     this.activity = new Activity();
   });
 
-  test('Should call the callback synchronously if there is no pending activity', function() {
+  test('Should call the callback synchronously ' +
+       'if there is no pending activity', function() {
     var hasPendingMessage = this.sinon.stub(navigator, 'mozHasPendingMessage');
     var callback = this.sinon.spy();
 
@@ -36,39 +37,41 @@ suite('activity', function() {
     hasPendingMessage.restore();
   });
 
-  test('Should call the callback when the \'activity\' message event fires, when there is a pending message', function(done) {
-      var hasPendingMessage = this.sinon.stub(navigator, 'mozHasPendingMessage');
-      var setMessageHandler = this.sinon.stub(navigator, 'mozSetMessageHandler');
-      var callback = this.sinon.spy();
-      var activityObject = {
-        source: {
-          name: 'pick',
-          data: {
-            type: ['image/*']
-          }
+  test('Should call the callback when the \'activity\' ' +
+       'message event fires, when there is a pending message', function(done) {
+    var hasPendingMessage = this.sinon.stub(navigator, 'mozHasPendingMessage');
+    var setMessageHandler = this.sinon.stub(navigator, 'mozSetMessageHandler');
+    var callback = this.sinon.spy();
+    var activityObject = {
+      source: {
+        name: 'pick',
+        data: {
+          type: ['image/*']
         }
-      };
+      }
+    };
 
-      // Instruct the stub to report a pending message,
-      // then fire the 'activity' event async, calling
-      // the callback function it was given.
-      hasPendingMessage.withArgs('activity').returns(true);
-      setMessageHandler.withArgs('activity').callsArgWithAsync(1, activityObject);
+    // Instruct the stub to report a pending message,
+    // then fire the 'activity' event async, calling
+    // the callback function it was given.
+    hasPendingMessage.withArgs('activity').returns(true);
+    setMessageHandler.withArgs('activity').callsArgWithAsync(1, activityObject);
 
-      this.activity.check(function() {
-        callback();
-        done();
+    this.activity.check(function() {
+      callback();
+      done();
 
-        // Remove all stubs
-        hasPendingMessage.restore();
-        setMessageHandler.restore();
-      });
+      // Remove all stubs
+      hasPendingMessage.restore();
+      setMessageHandler.restore();
+    });
 
-      // Should not have been called sync
-      assert.isFalse(callback.called);
+    // Should not have been called sync
+    assert.isFalse(callback.called);
   });
 
-  test('Should return correct allowed type when just images are accepted', function() {
+  test('Should return correct allowed type when ' +
+       'just images are accepted', function() {
     var output = this.activity.parse({
       source: {
         name: 'pick',
@@ -82,7 +85,8 @@ suite('activity', function() {
     assert.isUndefined(output.types.video);
   });
 
-  test('Should return correct allowed types when image and video are accepted', function() {
+  test('Should return correct allowed types when ' +
+       'image and video are accepted', function() {
     var output = this.activity.parse({
       source: {
         name: 'pick',
@@ -108,7 +112,7 @@ suite('activity', function() {
     assert.isTrue(output.types.video);
   });
 
-  test('Should accept a given type string of \'videos\' (unsure why)', function() {
+  test('Should accept a given type string of videos(unsure why)', function() {
     var output = this.activity.parse({
       source: {
         name: 'pick',

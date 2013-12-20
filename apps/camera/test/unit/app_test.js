@@ -10,7 +10,7 @@ suite('app', function() {
       'app',
       'vendor/view',
       'geolocation',
-      'activity',
+      'activity'
     ], function(App, View, GeoLocation, Activity) {
       modules.app = App;
       modules.view = View;
@@ -105,7 +105,8 @@ suite('app', function() {
   });
 
   suite('App#boot()', function() {
-    test('Should run each of the controllers, passing itself as first argument', function() {
+    test('Should run each of the controllers,' +
+         'passing itself as first argument', function() {
       var controllers = this.app.controllers;
       var app = this.app;
 
@@ -145,7 +146,8 @@ suite('app', function() {
     });
 
     suite('app.geolocation', function() {
-      test('Should watch location if not in activity and app is visible', function() {
+      test('Should watch location if not in ' +
+           'activity and app is visible', function() {
         var geolocation = this.app.geolocation;
 
         this.app.doc.hidden = false;

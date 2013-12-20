@@ -1,7 +1,6 @@
 define(function(require, exports, module) {
 'use strict';
 
-
 /**
  * Exports
  */
@@ -28,6 +27,5 @@ function bind(el, name, fn, context) {
 exports.unbind = function(el, name, fn) {
   el.removeEventListener(name, fn);
 };
-
 
 });

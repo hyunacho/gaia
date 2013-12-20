@@ -67,8 +67,7 @@ proto.setup = function() {
   // The gallery button should not
   // be shown if an activity is pending
   // or the application is in 'secure mode'.
-  var showGallery = !activity.active
-    && !this.app.inSecureMode;
+  var showGallery = !activity.active && !this.app.inSecureMode;
 
   controls.set('mode', mode);
   controls.set('gallery', showGallery);
@@ -94,7 +93,6 @@ proto.onVideoTimeUpdate = function(value) {
  * mode. Then fades the viewfinder
  * back in.
  *
- * @api private
  */
 proto.onSwitchButtonClick = function() {
   var controls = this.controls;
@@ -124,7 +122,6 @@ proto.onSwitchButtonClick = function() {
  * navigate back to the app
  * that initiated the activity.
  *
- * @api private
  */
 proto.onCancelButtonClick = function() {
   this.activity.cancel();
@@ -135,7 +132,6 @@ proto.onCancelButtonClick = function() {
  * when the gallery button
  * is pressed.
  *
- * @api private
  */
 proto.onGalleryButtonClick = function() {
   var MozActivity = window.MozActivity;
@@ -158,7 +154,6 @@ proto.onGalleryButtonClick = function() {
  * Capture when the capture
  * button is pressed.
  *
- * @api private
  */
 proto.onCaptureButtonClick = function() {
   var position = this.app.geolocation.position;

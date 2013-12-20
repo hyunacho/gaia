@@ -29,12 +29,14 @@ suite('geolocation', function() {
   });
 
   suite('GeoLocation#watch()', function() {
-    test('Should begin watching geolocation position if no watcher currently in place', function() {
+    test('Should begin watching geolocation position if' +
+         'no watcher currently in place', function() {
       this.geolocation.watch();
       assert.isTrue(navigator.geolocation.watchPosition.calledOnce);
     });
 
-    test('Should begin watching geolocation position if no watcher currently in place', function() {
+    test('Should begin watching geolocation position if' +
+         'no watcher currently in place', function() {
       this.geolocation.watcher = 1;
       this.geolocation.watch();
       assert.isFalse(navigator.geolocation.watchPosition.called);
@@ -42,7 +44,8 @@ suite('geolocation', function() {
   });
 
   suite('GeoLocation#stopWatching()', function() {
-    test('Should call navigator.geolocation.clearWatch passing a reference to the watcher', function() {
+    test('Should call navigator.geolocation.clearWatch passing' +
+         'a reference to the watcher', function() {
       this.geolocation.watcher = 1;
       this.geolocation.stopWatching();
       assert.isTrue(navigator.geolocation.clearWatch.calledWith(1));

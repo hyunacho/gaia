@@ -47,10 +47,12 @@ module.exports = View.extend({
         '<p id="overlay-text">' + data.body + '<p>' +
       '</section>' +
       '<menu class="overlay-menu-close">' +
-        '<button class="full js-close-btn" type="button" name="close-btn">' + data.closeButtonText + '</button>' +
+        '<button class="full js-close-btn" type="button" name="close-btn">' +
+        data.closeButtonText + '</button>' +
       '</menu>' +
       '<menu class="overlay-menu-storage">' +
-        '<button class="full js-storage-btn" type="button" name="storage-settings-btn">' + data.storageButtonText + '</button>' +
+        '<button class="full js-storage-btn" type="button"' +
+        'name="storage-settings-btn">' + data.storageButtonText + '</button>' +
       '</menu>' +
     '</form>';
   },
@@ -63,7 +65,7 @@ module.exports = View.extend({
   },
 
   onButtonClick: function(event) {
-    var el  = event.currentTarget;
+    var el = event.currentTarget;
     var name = el.getAttribute('name');
     this.emit('click:' + name);
   }

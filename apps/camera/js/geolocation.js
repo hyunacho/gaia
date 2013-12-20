@@ -30,7 +30,6 @@ function GeoLocation() {
 /**
  * Watches device location.
  *
- * @api public
  */
 proto.watch = function() {
   if (!this.watcher) {
@@ -42,7 +41,6 @@ proto.watch = function() {
  * Stops watching
  * device location.
  *
- * @api public
  */
 proto.stopWatching = function() {
   geolocation.clearWatch(this.watcher);
@@ -53,7 +51,6 @@ proto.stopWatching = function() {
  * Updates the stored
  * position object.
  *
- * @api private
  */
 proto.setPosition = function(position) {
   this.position = {

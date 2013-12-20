@@ -72,7 +72,6 @@ proto.bindEvents = function() {
  * activity is chosen, else
  * we just default to 'camera'
  *
- * @api private
  */
 proto.setCaptureMode = function() {
   var initialMode = this.activity.mode || CAMERA;
@@ -144,7 +143,6 @@ proto.onNewVideo = function(data) {
  * Plays the 'recordingStart'
  * sound effect.
  *
- * @api private
  */
 proto.onRecordingStart = function() {
   this.app.sounds.play('recordingStart');
@@ -154,7 +152,6 @@ proto.onRecordingStart = function() {
  * Plays the 'recordingEnd'
  * sound effect.
  *
- * @api private
  */
 proto.onRecordingEnd = function() {
   this.app.sounds.play('recordingEnd');
@@ -164,7 +161,6 @@ proto.onRecordingEnd = function() {
  * Plays the 'shutter'
  * sound effect.
  *
- * @api private
  */
 proto.onShutter = function() {
   this.app.sounds.play('shutter');

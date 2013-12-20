@@ -31,7 +31,7 @@ function Sounds(list) {
  * up an observer.
  *
  * @param {Object} data
- * @api private
+ *
  */
 proto.add = function(data) {
   var self = this;
@@ -58,7 +58,7 @@ proto.add = function(data) {
  *
  * @param  {Object}   sound
  * @param  {Function} done
- * @api private
+ *
  */
 proto.isEnabled = function(sound, done) {
   var mozSettings = navigator.mozSettings;
@@ -85,7 +85,7 @@ proto.isEnabled = function(sound, done) {
  * on the given settings key.
  *
  * @param  {Object} sound
- * @api private
+ *
  */
 proto.observeSetting = function(sound) {
   var mozSettings = navigator.mozSettings;
@@ -102,7 +102,7 @@ proto.observeSetting = function(sound) {
  * Set a sounds `enabled` key.
  * @param {Object} sound
  * @param {Boolean} value
- * @api private
+ *
  */
 proto.setEnabled = function(sound, value) {
   sound.enabled = value;
@@ -112,7 +112,7 @@ proto.setEnabled = function(sound, value) {
  * Play a sound by name.
  *
  * @param  {String} name
- * @api public
+ *
  */
 proto.play = function(name) {
   this.playSound(this.items[name]);
@@ -122,7 +122,7 @@ proto.play = function(name) {
  * Play a sound.
  *
  * @param  {Object} sound
- * @api private
+ *
  */
 proto.playSound = function(sound) {
   if (sound.enabled) {
@@ -135,7 +135,7 @@ proto.playSound = function(sound) {
  *
  * @param  {String} url
  * @return {HTMLAudioElement}
- * @api private
+ *
  */
 proto.createAudio = function(url) {
   var audio = new Audio(url);

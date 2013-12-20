@@ -68,7 +68,8 @@ suite('controllers/camera', function() {
       assert.isTrue(this.app.camera.setCaptureMode.calledWith('camera'));
     });
 
-    test('Should set the capture mode to the mode specified by the activity if present', function() {
+    test('Should set the capture mode to the mode' +
+         'specified by the activity if present', function() {
       this.app.activity.mode = 'video';
       this.controller = new Controller(this.app);
       assert.isTrue(this.app.camera.setCaptureMode.calledWith('video'));

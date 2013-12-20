@@ -61,7 +61,6 @@ function App(options) {
  * Runs all the methods
  * to boot the app.
  *
- * @api private
  */
 proto.boot = function() {
   this.filmstrip = this.filmstrip(this);
@@ -81,7 +80,6 @@ proto.teardown = function() {
  * Runs controllers to glue all
  * the parts of the app together.
  *
- * @api private
  */
 proto.runControllers = function() {
   this.controllers.viewfinder(this);
@@ -108,7 +106,6 @@ proto.injectContent = function() {
 /**
  * Attaches event handlers.
  *
- * @api private
  */
 proto.bindEvents = function() {
   bind(this.doc, 'visibilitychange', this.onVisibilityChange);
@@ -120,7 +117,6 @@ proto.bindEvents = function() {
 /**
  * Detaches event handlers.
  *
- * @api private
  */
 proto.unbindEvents = function() {
   unbind(this.doc, 'visibilitychange', this.onVisibilityChange);
@@ -133,7 +129,6 @@ proto.unbindEvents = function() {
  * Tasks to run when the
  * app becomes visible.
  *
- * @api private
  */
 proto.onFocus = function() {
   var ms = LOCATION_PROMPT_DELAY;
@@ -144,7 +139,6 @@ proto.onFocus = function() {
  * Tasks to run when the
  * app is minimised/hidden.
  *
- * @api private
  */
 proto.onBlur = function() {
   this.geolocation.stopWatching();
@@ -157,7 +151,6 @@ proto.onBlur = function() {
  * activity and the app
  * isn't currently hidden.
  *
- * @api private
  */
 proto.geolocationWatch = function() {
   var shouldWatch = !this.activity.active && !this.doc.hidden;
@@ -172,7 +165,6 @@ proto.geolocationWatch = function() {
  * that allow us to perform relate
  * work elsewhere,
  *
- * @api private
  */
 proto.onVisibilityChange = function() {
   if (this.doc.hidden) {
@@ -186,7 +178,6 @@ proto.onVisibilityChange = function() {
  * Runs just before the
  * app is destroyed.
  *
- * @api private
  */
 proto.onBeforeUnload = function() {
   this.views.viewfinder.setPreviewStream(null);
@@ -202,7 +193,6 @@ proto.onBeforeUnload = function() {
  * will be removed, and all this
  * logic will sit in specific places.
  *
- * @api private
  */
 proto.miscStuff = function() {
   var camera = this.camera;

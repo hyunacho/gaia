@@ -50,7 +50,6 @@ function ConfirmController(options) {
 /**
  * Bind callbacks to required events.
  *
- * @api private
  */
 proto.bindEvents = function() {
   this.camera.on('newimage', this.onNewImage);
@@ -65,7 +64,7 @@ proto.bindEvents = function() {
  * the photo.
  *
  * @param  {Object} data
- * @api private
+ *
  */
 proto.onNewImage = function(data) {
   if (!this.activity.active) { return; }

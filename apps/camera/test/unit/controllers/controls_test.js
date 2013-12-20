@@ -69,12 +69,14 @@ suite('controllers/controls', function() {
       assert.isTrue(this.app.views.controls.set.calledWith('gallery', false));
     });
 
-    test('Should show the gallery if no pending activity and not in \'secureMode\'', function() {
+    test('Should show the gallery if no pending activity' +
+         'and not in \'secureMode\'', function() {
       this.controller = new Controller(this.app);
       assert.isTrue(this.app.views.controls.set.calledWith('gallery', true));
     });
 
-    test('Should *not* show the cancel button when *not* within a \'pick\' activity', function() {
+    test('Should *not* show the cancel button when' +
+         '*not* within a \'pick\' activity', function() {
       this.controller = new Controller(this.app);
       assert.isTrue(this.app.views.controls.set.calledWith('cancel', false));
     });
@@ -91,20 +93,24 @@ suite('controllers/controls', function() {
       assert.isTrue(this.app.views.controls.set.calledWith('switchable', true));
     });
 
-    test('Should not be switchable when activity is active and only images are supported', function() {
+    test('Should not be switchable when activity is active and' +
+         'only images are supported', function() {
       this.app.activity.active = true;
       this.app.activity.allowedTypes.image = true;
       this.app.activity.allowedTypes.video = false;
       this.controller = new Controller(this.app);
-      assert.isTrue(this.app.views.controls.set.calledWith('switchable', false));
+      assert.isTrue(
+        this.app.views.controls.set.calledWith('switchable', false));
     });
 
-    test('Should not be switchable when activity is active and only videos are supported', function() {
+    test('Should not be switchable when activity is active and' +
+         'only videos are supported', function() {
       this.app.activity.active = true;
       this.app.activity.allowedTypes.image = false;
       this.app.activity.allowedTypes.video = true;
       this.controller = new Controller(this.app);
-      assert.isTrue(this.app.views.controls.set.calledWith('switchable', false));
+      assert.isTrue(
+        this.app.views.controls.set.calledWith('switchable', false));
     });
   });
 });
