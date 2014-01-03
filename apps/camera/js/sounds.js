@@ -56,28 +56,34 @@ proto.add = function(data) {
  * Check if a sound is
  * enabled inside mozSettings.
  *
+ * This is wrapped in a setTimeout
+ * to prevent expensive mozSettings
+ * API from blocking other operations.
+ *
  * @param  {Object}   sound
  * @param  {Function} done
- *
+ * @async
  */
 proto.isEnabled = function(sound, done) {
-  var mozSettings = navigator.mozSettings;
-  var key = sound.setting;
+  setTimeout(function() {
+    var mozSettings = navigator.mozSettings;
+    var key = sound.setting;
 
-  // Requires navigator.mozSettings
-  if (!mozSettings) {
-    return;
-  }
+    // Requires navigator.mozSettings
+    if (!mozSettings) {
+      return;
+    }
 
-  mozSettings
-    .createLock()
-    .get(key)
-    .onsuccess = onSuccess;
+    mozSettings
+      .createLock()
+      .get(key)
+      .onsuccess = onSuccess;
 
-  function onSuccess(e) {
-    var result = e.target.result[key];
-    done(result);
-  }
+    function onSuccess(e) {
+      var result = e.target.result[key];
+      done(result);
+    }
+  });
 };
 
 /**
