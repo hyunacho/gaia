@@ -6,6 +6,7 @@ define(function(require, exports, module) {
  */
 
 var bindAll = require('utils/bindAll');
+var debug = require('debug')('controller:viewfinder');
 
 /**
  * Locals
@@ -29,12 +30,14 @@ function ViewfinderController(app) {
     return new ViewfinderController(app);
   }
 
+  debug('initializing');
   this.viewfinder = app.views.viewfinder;
   this.filmstrip = app.filmstrip;
   this.activity = app.activity;
   this.camera = app.camera;
   bindAll(this);
   this.bindEvents();
+  debug('initialized');
 }
 
 proto.bindEvents = function() {
@@ -59,15 +62,15 @@ proto.onCameraChange = function(camera) {
 proto.onViewfinderClick = function() {
   var recording = this.camera.state.get('recording');
 
-  // We will just ignore
-  // because the filmstrip
-  // shouldn't be shown while
+  // We will just ignore because the
+  // filmstrip shouldn't be shown while
   // Camera is recording.
   if (recording || this.activity.active) {
     return;
   }
 
   this.filmstrip.toggle();
+  debug('click');
 };
 
 });

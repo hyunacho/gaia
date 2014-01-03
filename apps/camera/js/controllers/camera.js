@@ -5,8 +5,9 @@ define(function(require, exports, module) {
  * Dependencies
  */
 
-var constants = require('config/camera');
+var debug = require('debug')('controller:camera');
 var performance = require('performanceTesting');
+var constants = require('config/camera');
 var bindAll = require('utils/bindAll');
 
 /**
@@ -27,15 +28,14 @@ function CameraController(app) {
     return new CameraController(app);
   }
 
-  this.app = app;
-  this.camera = app.camera;
-  this.activity = app.activity;
-  this.filmstrip = app.filmstrip;
+  debug('initializing');
   this.viewfinder = app.views.viewfinder;
+  this.filmstrip = app.filmstrip;
+  this.activity = app.activity;
+  this.camera = app.camera;
+  this.app = app;
 
-  // Bind context
   bindAll(this);
-
   this.setCaptureMode();
   this.bindEvents();
 
@@ -51,6 +51,8 @@ function CameraController(app) {
   if ('mozSettings' in navigator) {
     this.camera.getPreferredSizes();
   }
+
+  debug('initialized');
 }
 
 proto.bindEvents = function() {
@@ -62,6 +64,7 @@ proto.bindEvents = function() {
   this.app.on('blur', this.teardownCamera);
   this.app.on('focus', this.setupCamera);
   this.app.on('boot', this.setupCamera);
+  debug('events bound');
 };
 
 /**
@@ -76,14 +79,16 @@ proto.bindEvents = function() {
 proto.setCaptureMode = function() {
   var initialMode = this.activity.mode || CAMERA;
   this.camera.setCaptureMode(initialMode);
+  debug('capture mode set: %s', initialMode);
 };
 
 proto.setupCamera = function() {
-  var camera = this.camera;
-  camera.loadStreamInto(this.viewfinder.el, onStreamLoaded);
+  this.camera.loadStreamInto(this.viewfinder.el, onStreamLoaded);
+  debug('setting up');
 
   function onStreamLoaded(stream) {
     performance.dispatch('camera-preview-loaded');
+    debug('stream loaded %d ms after dom began loading', Date.now() - window.performance.timing.domLoading);
   }
 };
 
@@ -113,6 +118,7 @@ proto.teardownCamera = function() {
   if (this.app.inSecureMode) {
     this.filmstrip.clear();
   }
+  debug('torn down');
 };
 
 proto.onNewImage = function(data) {
@@ -130,6 +136,7 @@ proto.onNewImage = function(data) {
   if (!this.activity.active) {
     camera.resumePreview();
   }
+  debug('new image', data);
 };
 
 proto.onNewVideo = function(data) {
@@ -137,6 +144,7 @@ proto.onNewVideo = function(data) {
   var poster = data.poster;
   camera._pictureStorage.addNamed(poster.blob, poster.filename);
   this.filmstrip.addVideoAndShow(data);
+  debug('new video', data);
 };
 
 /**

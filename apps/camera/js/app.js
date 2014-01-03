@@ -11,6 +11,7 @@ var constants = require('config/camera');
 var bindAll = require('utils/bindAll');
 var lockscreen = require('lockscreen');
 var broadcast = require('broadcast');
+var debug = require('debug')('app');
 var LazyL10n = require('LazyL10n');
 var bind = require('utils/bind');
 var evt = require('vendor/evt');
@@ -52,9 +53,8 @@ function App(options) {
   this.sounds = options.sounds;
   this.views = options.views;
   this.controllers = options.controllers;
-
-  // Bind context
   bindAll(this);
+  debug('initialized');
 }
 
 /**
@@ -63,6 +63,7 @@ function App(options) {
  *
  */
 proto.boot = function() {
+  debug('boot');
   this.filmstrip = this.filmstrip(this);
   this.runControllers();
   this.injectContent();
@@ -70,6 +71,7 @@ proto.boot = function() {
   this.miscStuff();
   this.geolocationWatch();
   this.emit('boot');
+  debug('booted');
 };
 
 proto.teardown = function() {
@@ -82,12 +84,14 @@ proto.teardown = function() {
  *
  */
 proto.runControllers = function() {
+  debug('running controllers');
+  this.controllers.camera(this);
   this.controllers.viewfinder(this);
   this.controllers.controls(this);
   this.controllers.confirm(this);
   this.controllers.overlay(this);
-  this.controllers.camera(this);
   this.controllers.hud(this);
+  debug('controllers run');
 };
 
 /**
@@ -101,6 +105,7 @@ proto.injectContent = function() {
   this.views.controls.appendTo(this.el);
   this.views.viewfinder.appendTo(this.el);
   this.views.focusRing.appendTo(this.el);
+  debug('content injected');
 };
 
 /**
@@ -112,6 +117,7 @@ proto.bindEvents = function() {
   bind(this.win, 'beforeunload', this.onBeforeUnload);
   this.on('focus', this.onFocus);
   this.on('blur', this.onBlur);
+  debug('events bound');
 };
 
 /**
@@ -123,6 +129,7 @@ proto.unbindEvents = function() {
   unbind(this.win, 'beforeunload', this.onBeforeUnload);
   this.off('focus', this.onFocus);
   this.off('blur', this.onBlur);
+  debug('events unbound');
 };
 
 /**
@@ -133,6 +140,7 @@ proto.unbindEvents = function() {
 proto.onFocus = function() {
   var ms = LOCATION_PROMPT_DELAY;
   setTimeout(this.geolocationWatch, ms);
+  debug('focus');
 };
 
 /**
@@ -143,6 +151,7 @@ proto.onFocus = function() {
 proto.onBlur = function() {
   this.geolocation.stopWatching();
   this.activity.cancel();
+  debug('blur');
 };
 
 /**
@@ -156,6 +165,7 @@ proto.geolocationWatch = function() {
   var shouldWatch = !this.activity.active && !this.doc.hidden;
   if (shouldWatch) {
     this.geolocation.watch();
+    debug('geolocation watched');
   }
 };
 
@@ -182,6 +192,7 @@ proto.onVisibilityChange = function() {
 proto.onBeforeUnload = function() {
   this.views.viewfinder.setPreviewStream(null);
   this.emit('beforeunload');
+  debug('beforeunload');
 };
 
 /**
@@ -244,6 +255,8 @@ proto.miscStuff = function() {
   broadcast.on('filmstripPreviewHide', function() {
     lockscreen.disableTimeout();
   });
+
+  debug('misc stuff done');
 };
 
 });

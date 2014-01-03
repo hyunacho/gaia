@@ -6,6 +6,7 @@ define(function(require, exports, module) {
  */
 
 var bindAll = require('utils/bindAll');
+var debug = require('debug')('controller:hud');
 
 /**
  * Locals
@@ -40,11 +41,13 @@ function create(app) {
  *
  */
 function HudController(app) {
+  debug('initializing');
   this.viewfinder = app.views.viewfinder;
   this.controls = app.views.controls;
   this.hud = app.views.hud;
   this.camera = app.camera;
   bindAll(this);
+  debug('initialized');
 }
 
 /**

@@ -8,6 +8,7 @@ define(function(require, exports, module) {
  */
 
 var bindAll = require('utils/bindAll');
+var debug = require('debug')('controller:controls');
 
 /**
  * Locals
@@ -24,6 +25,7 @@ exports = module.exports = function(app) {
 };
 
 function ControlsController(app) {
+  debug('initializing');
   this.viewfinder = app.views.viewfinder;
   this.controls = app.views.controls;
   this.activity = app.activity;
@@ -34,6 +36,7 @@ function ControlsController(app) {
   bindAll(this);
   this.bindEvents();
   this.setup();
+  debug('initialized');
 }
 
 proto.bindEvents = function() {
@@ -53,6 +56,8 @@ proto.bindEvents = function() {
   controls.on('click:capture', this.onCaptureButtonClick);
   controls.on('click:cancel', this.onCancelButtonClick);
   controls.on('click:gallery', this.onGalleryButtonClick);
+
+  debug('events bound');
 };
 
 proto.setup = function() {

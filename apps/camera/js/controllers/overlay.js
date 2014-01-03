@@ -7,6 +7,7 @@ define(function(require, exports, module) {
 
 var Overlay = require('views/overlay');
 var bindAll = require('utils/bindAll');
+var debug = require('debug')('controller:overlay');
 
 /**
  * Locals
@@ -30,6 +31,7 @@ function OverlayController(app) {
     return new OverlayController(app);
   }
 
+  debug('initializing');
   this.activity = app.activity;
   this.camera = app.camera;
   this.overlays = [];
@@ -37,6 +39,7 @@ function OverlayController(app) {
 
   // Events
   this.camera.state.on('change:storage', this.onStorageChange);
+  debug('initialized');
 }
 
 proto.onStorageChange = function(value) {

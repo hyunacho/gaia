@@ -2,6 +2,9 @@ require(['config/require', 'config'], function() {
   'use strict';
 
   define('boot', function(require) {
+    var debug = require('debug')('main');
+    var timing = window.performance.timing;
+    debug('domloaded in %s', (timing.domComplete - timing.domLoading) + 'ms');
 
     /**
      * Module Dependencies
@@ -16,10 +19,8 @@ require(['config/require', 'config'], function() {
     var ControlsView = require('views/controls');
     var ViewfinderView = require('views/viewfinder');
     var sounds = new Sounds(require('config/sounds'));
-    var ConfirmView = require('views/confirm');
     var GeoLocation = require('geolocation');
     var Activity = require('activity');
-
     var controllers = {
       hud: require('controllers/hud'),
       controls: require('controllers/controls'),
@@ -29,12 +30,16 @@ require(['config/require', 'config'], function() {
       camera: require('controllers/camera')
     };
 
+    debug('required dependencies');
+
     var views = {
       viewfinder: new ViewfinderView(),
       controls: new ControlsView(),
       focusRing: new FocusRing(),
       hud: new HudView()
     };
+
+    debug('created views');
 
     /**
      * Create new `App`
@@ -52,6 +57,8 @@ require(['config/require', 'config'], function() {
       controllers: controllers,
       filmstrip: Filmstrip
     });
+
+    debug('created app');
 
     // Check activity, then boot
     app.activity.check(app.boot);

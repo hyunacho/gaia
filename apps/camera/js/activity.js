@@ -2,6 +2,12 @@ define(function(require, exports, module) {
 'use strict';
 
 /**
+ * Dependencies
+ */
+
+var debug = require('debug')('activity');
+
+/**
  * Exports
  */
 
@@ -20,6 +26,7 @@ function Activity() {
     video: false,
     both: false
   };
+  debug('initialized');
 }
 
 /**
@@ -34,10 +41,12 @@ Activity.prototype.check = function(done) {
   var self = this;
 
   if (!hasMessage) {
+    debug('none');
     done();
     return;
   }
 
+  debug('incoming');
   navigator.mozSetMessageHandler('activity', onActivity);
 
   function onActivity(activity) {
@@ -47,6 +56,7 @@ Activity.prototype.check = function(done) {
     self.allowedTypes = parsed.types;
     self.mode = parsed.mode;
     self.raw = activity;
+    debug('parsed');
     done();
   }
 };

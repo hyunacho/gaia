@@ -9,6 +9,7 @@ define(function(require, exports, module) {
 
 var prepareBlob = require('utils/prepare-preview-blob');
 var ConfirmView = require('views/confirm');
+var debug = require('debug')('controller:confirm');
 var bindAll = require('utils/bindAll');
 
 /**
@@ -31,6 +32,7 @@ module.exports = function(options) {
  * @param {Object} options
  */
 function ConfirmController(options) {
+  debug('initializing');
   this.activity = options.activity;
   this.camera = options.camera;
   this.container = options.el;
@@ -40,11 +42,9 @@ function ConfirmController(options) {
   this.ConfirmView = options.ConfirmView || ConfirmView;
   this.prepareBlob = options.prepareBlob || prepareBlob;
 
-  // Bind methods
   bindAll(this);
-
-  // Attach events
   this.bindEvents();
+  debug('initialized');
 }
 
 /**

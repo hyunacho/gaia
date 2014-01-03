@@ -10,6 +10,7 @@ define(function(require, exports, module) {
   var orientation = require('orientation');
   var constants = require('config/camera');
   var broadcast = require('broadcast');
+  var debug = require('debug')('filmstrip');
 
   /**
    * Locals
@@ -18,6 +19,7 @@ define(function(require, exports, module) {
   var FILMSTRIP_DURATION = constants.FILMSTRIP_DURATION;
 
   module.exports = function(app) {
+    debug('initializing');
     var camera = app.camera;
     var ViewfinderView = app.views.viewfinder;
 
@@ -42,6 +44,7 @@ define(function(require, exports, module) {
     var cameraButton = document.getElementById('camera-button');
     var shareButton = document.getElementById('share-button');
     var deleteButton = document.getElementById('delete-button');
+    debug('fetched elements');
 
     // Offscreen image for generating thumbnails
     var offscreenImage = new Image();
@@ -63,8 +66,11 @@ define(function(require, exports, module) {
     // Enable panning and zooming for images
     addPanAndZoomHandlers(frame);
 
+    debug('setup MediaFrame');
+
     // Start off with it positioned correctly.
     setOrientation(orientation.get());
+    debug('set orientation');
 
     // In secure mode, we never want the user to see the share button.
     // We also remove the delete button because we currently can't
@@ -617,6 +623,8 @@ define(function(require, exports, module) {
 
     // camera.js needs this to be global
     window.Filmstrip = Filmstrip;
+    debug('initialized');
+
     return Filmstrip;
   };
 });

@@ -10,7 +10,8 @@ require.config({
     'GestureDetector': '../shared/js/gesture_detector',
     'VideoPlayer': '../shared/js/media/video_player',
     'MediaFrame': '../shared/js/media/media_frame',
-    'BlobView': '../shared/js/blobview'
+    'BlobView': '../shared/js/blobview',
+    'debug': 'vendor/debug'
   },
   shim: {
     'LazyL10n': {
