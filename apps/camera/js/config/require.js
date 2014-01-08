@@ -11,7 +11,7 @@ require.config({
     'VideoPlayer': '../shared/js/media/video_player',
     'MediaFrame': '../shared/js/media/media_frame',
     'BlobView': '../shared/js/blobview',
-    'debug': 'vendor/debug'
+    'debug': 'debug'
   },
   shim: {
     'LazyL10n': {
