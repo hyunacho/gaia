@@ -12,29 +12,24 @@ module.exports = window.debug = debug;
 *
 * @param {String} name
 * @return {Type}
-* @api public
 */
 
 function debug(name) {
-  if (!debug.enabled(name)) return function(){};
+  if (!debug.enabled(name)) return function() {};
 
-  return function(fmt){
+  return function(fmt) {
     fmt = coerce(fmt);
 
     var curr = new Date;
     var ms = curr - (debug[name] || curr);
     debug[name] = curr;
 
-    fmt = name
-      + ' '
-      + fmt
-      + ' +' + debug.humanize(ms);
+    fmt = name + ' ' + fmt + ' +' + debug.humanize(ms);
 
     // This hackery is required for IE8
     // where `console.log` doesn't have 'apply'
-    window.console
-      && console.log
-      && Function.prototype.apply.call(console.log, console, arguments);
+    window.console && console.log &&
+      Function.prototype.apply.call(console.log, console, arguments);
   }
 }
 
@@ -50,16 +45,15 @@ debug.skips = [];
 * separated by a colon and wildcards.
 *
 * @param {String} name
-* @api public
 */
 
 debug.enable = function(name) {
   try {
     localStorage.debug = name;
-  } catch(e){}
+  } catch (e) {}
 
-  var split = (name || '').split(/[\s,]+/)
-    , len = split.length;
+  var split = (name || '').split(/[\s,]+/);
+  var len = split.length;
 
   for (var i = 0; i < len; i++) {
     name = split[i].replace('*', '.*?');
@@ -75,10 +69,9 @@ debug.enable = function(name) {
 /**
 * Disable debug output.
 *
-* @api public
 */
 
-debug.disable = function(){
+debug.disable = function() {
   debug.enable('');
 };
 
@@ -87,13 +80,12 @@ debug.disable = function(){
 *
 * @param {Number} m
 * @return {String}
-* @api private
 */
 
 debug.humanize = function(ms) {
-  var sec = 1000
-    , min = 60 * 1000
-    , hour = 60 * min;
+  var sec = 1000;
+  var min = 60 * 1000;
+  var hour = 60 * min;
 
   if (ms >= hour) return (ms / hour).toFixed(1) + 'h';
   if (ms >= min) return (ms / min).toFixed(1) + 'm';
@@ -106,7 +98,6 @@ debug.humanize = function(ms) {
 *
 * @param {String} name
 * @return {Boolean}
-* @api public
 */
 
 debug.enabled = function(name) {
@@ -136,6 +127,6 @@ function coerce(val) {
 
 try {
   if (window.localStorage) debug.enable(localStorage.debug);
-} catch(e){}
+} catch (e) {}
 
 });
