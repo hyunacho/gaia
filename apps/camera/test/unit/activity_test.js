@@ -21,7 +21,7 @@ suite('activity', function() {
     this.activity = new Activity();
   });
 
-  test('Should call the callback synchronously ' +
+  test.skip('Should call the callback synchronously ' +
        'if there is no pending activity', function() {
     var hasPendingMessage = this.sinon.stub(navigator, 'mozHasPendingMessage');
     var callback = this.sinon.spy();
@@ -37,7 +37,7 @@ suite('activity', function() {
     hasPendingMessage.restore();
   });
 
-  test('Should call the callback when the \'activity\' ' +
+  test.skip('Should call the callback when the \'activity\' ' +
        'message event fires, when there is a pending message', function(done) {
     var hasPendingMessage = this.sinon.stub(navigator, 'mozHasPendingMessage');
     var setMessageHandler = this.sinon.stub(navigator, 'mozSetMessageHandler');

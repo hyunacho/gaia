@@ -5,7 +5,7 @@ define(function(require, exports, module) {
 * Expose `debug()` as the module.
 */
 
-module.exports = window.debug = debug;
+module.exports = debug;
 
 /**
 * Create a debugger with the given `name`.
