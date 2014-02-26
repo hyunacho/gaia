@@ -57,6 +57,10 @@ ViewfinderController.prototype.updatePreview = function() {
   // Fade in 100ms later to avoid
   // seeing viewfinder being resized
   setTimeout(this.viewfinder.fadeIn, 100);
+
+  var dualShutter = this.camera.get('dual-shutter');
+  if(dualShutter)
+    this.camera.emit('updatePreview');
 };
 
 /**

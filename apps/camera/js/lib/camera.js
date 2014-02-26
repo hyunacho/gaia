@@ -361,7 +361,15 @@ Camera.prototype.takePicture = function(options) {
     self.resumePreview();
     self.set('focus', 'none');
     self.emit('newimage', { blob: blob });
-    self.emit('ready');
+
+    // For taking a picture during video recording on dual shutter mode
+    var notRecording = !self.get('recording');
+    if(notRecording)
+      self.emit('ready');
+    else {
+      self.emit('dual');
+      self.emit('image-flash');
+    }      
   }
 
   function onError() {
@@ -374,7 +382,12 @@ Camera.prototype.takePicture = function(options) {
 Camera.prototype.prepareTakePicture = function(done) {
   var self = this;
 
-  if (!this.autoFocus.auto) {
+  /**
+  * Add 'recording' condition to prevent set the focus
+  * when take a picture during video recording on dual shutter mode
+  */
+  var recording = this.get('recording');
+  if (!this.autoFocus.auto || recording) {
     done();
     return;
   }
@@ -524,6 +537,9 @@ Camera.prototype.onRecordingError = function(id) {
 };
 
 Camera.prototype.onShutter = function() {
+  var recording = this.get('recording');
+  if(recording) return;
+
   this.emit('shutter');
 };
 

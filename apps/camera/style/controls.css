@@ -22,6 +22,14 @@
   pointer-events: none;
 }
 
+/**
+ * @ when the dual shutter enabled
+ */
+
+.controls[dual-enabled=true] {
+  display: none;
+}
+
 .switch-button,
 .capture-button,
 .misc-button {

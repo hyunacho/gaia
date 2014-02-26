@@ -8,6 +8,7 @@ define(function(require, exports, module) {
 var performanceTesting = require('performanceTesting');
 var ViewfinderView = require('views/viewfinder');
 var ControlsView = require('views/controls');
+var DualShutterView = require('views/dual-shutter');
 var FocusRing = require('views/focus-ring');
 var lockscreen = require('lib/lock-screen');
 var constants = require('config/camera');
@@ -107,6 +108,7 @@ App.prototype.runControllers = function() {
   this.controllers.camera(this);
   this.controllers.viewfinder(this);
   this.controllers.controls(this);
+  this.controllers.dualShutter(this);
   this.controllers.confirm(this);
   this.controllers.overlay(this);
   this.controllers.sounds(this);
@@ -117,6 +119,7 @@ App.prototype.runControllers = function() {
 App.prototype.initializeViews = function() {
   this.views.viewfinder = new ViewfinderView();
   this.views.controls = new ControlsView();
+  this.views.dualShutter = new DualShutterView();
   this.views.focusRing = new FocusRing();
   this.views.hud = new HudView();
   debug('views initialized');
@@ -125,6 +128,7 @@ App.prototype.initializeViews = function() {
 App.prototype.injectViews = function() {
   this.views.hud.appendTo(this.el);
   this.views.controls.appendTo(this.el);
+  this.views.dualShutter.appendTo(this.el);
   this.views.viewfinder.appendTo(this.el);
   this.views.focusRing.appendTo(this.el);
   debug('views injected');

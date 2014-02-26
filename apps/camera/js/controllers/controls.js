@@ -42,6 +42,9 @@ ControlsController.prototype.bindEvents = function() {
   this.app.on('camera:loading', this.disableButtons);
   this.app.on('camera:ready', this.enableButtons);
   this.app.on('camera:busy', this.disableButtons);
+
+  this.app.camera.on('shutterMode', this.setShutterMode);
+
   debug('events bound');
 };
 
@@ -59,6 +62,8 @@ ControlsController.prototype.configure = function() {
   this.controls.set('cancel', isCancellable);
   this.controls.set('switchable', isSwitchable);
   this.controls.set('mode', initialMode);
+
+  this.setShutterMode();
 };
 
 ControlsController.prototype.disableButtons = function() {
@@ -67,6 +72,14 @@ ControlsController.prototype.disableButtons = function() {
 
 ControlsController.prototype.enableButtons = function() {
   this.controls.enable('buttons');
+};
+
+ControlsController.prototype.setShutterMode = function() {
+  var enableDualShutter = this.app.settings.dualShutter.selected('value');
+  if(enableDualShutter) {
+    this.controls.set('dual-enabled', enableDualShutter);
+    this.disableButtons();
+  }
 };
 
 ControlsController.prototype.onSwitchClick = function() {

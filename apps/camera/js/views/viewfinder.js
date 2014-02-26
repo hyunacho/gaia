@@ -151,6 +151,17 @@ module.exports = View.extend({
     if (done) { setTimeout(done, this.fadeTime); }
   },
 
+  /**
+  * Image capturing effect during the video recording
+  */
+  imageFlash: function() {
+    if (!this.el.classList.contains('image-flash')) {
+      this.el.classList.add('image-flash');
+    }
+    else
+      this.el.classList.remove('image-flash');
+  },
+
   updatePreview: function(preview, mirrored) {
     var container = this.container;
     var aspects = {

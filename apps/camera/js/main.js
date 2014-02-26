@@ -25,6 +25,7 @@ require(['config/require', 'config'], function() {
     var controllers = {
       hud: require('controllers/hud'),
       controls: require('controllers/controls'),
+      dualShutter: require('controllers/dual-shutter'),
       viewfinder: require('controllers/viewfinder'),
       overlay: require('controllers/overlay'),
       confirm: require('controllers/confirm'),
