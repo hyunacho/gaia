@@ -134,6 +134,7 @@ CameraController.prototype.onNewImage = function(image) {
     debug('stored image', filepath);
     if (!self.activity.active) {
       filmstrip.addImageAndShow(filepath, blob);
+      self.app.emit('addItem', { filepath: filepath, media: image });
     }
   });
 
@@ -162,6 +163,7 @@ CameraController.prototype.onNewVideo = function(video) {
     // Add the poster image to the image storage
     poster.filepath = video.filepath.replace('.3gp', '.jpg');
     storage.addImage(poster.blob, { filepath: poster.filepath });
+    app.emit('addItem', { filepath: filepath, media: video });
 
     // Now we have stored the blob
     // we can delete the temporary one.
