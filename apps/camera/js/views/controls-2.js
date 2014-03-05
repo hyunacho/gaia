@@ -42,7 +42,7 @@ module.exports = View.extend({
       '<div class="controls-2_left">' +
         '<div>' +
           '<div class="controls-2_gallery-button test-gallery icon-gallery js-btn" name="gallery"></div>' +
-          '<div class="controls-2_thumbnail js-thumbnail js-btn" name="gallery"></div>' +
+          '<div class="controls-2_thumbnail js-thumbnail js-btn" name="thumbnail"></div>' +
         '</div>' +
       '</div>' +
       '<div class="controls-2_middle">' +
@@ -66,6 +66,11 @@ module.exports = View.extend({
       this.els.thumbnail.appendChild(this.els.image);
     }
     this.els.image.src = window.URL.createObjectURL(blob);
+  },
+
+  removeThumbnail: function() {
+    this.els.thumbnail.removeChild(this.els.image);
+    this.els.image = null;
   }
 });
 

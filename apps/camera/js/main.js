@@ -27,6 +27,7 @@ require(['config/require', 'config'], function() {
       indicators: require('controllers/indicators'),
       controls: require('controllers/controls'),
       recordingTimer: require('controllers/recording-timer'),
+      previewGallery: require('controllers/preview-gallery'),
       settings: require('controllers/settings'),
       activity: require('controllers/activity'),
       overlay: require('controllers/overlay'),
