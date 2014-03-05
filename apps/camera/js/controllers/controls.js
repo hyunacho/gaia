@@ -40,6 +40,7 @@ ControlsController.prototype.bindEvents = function() {
 
   this.controls.on('tap:capture', this.app.firer('capture'));
   this.controls.on('tap:gallery', this.onGalleryButtonClick);
+  this.controls.on('tap:thumbnail', this.app.firer('preview'));
   this.controls.on('tap:switch', this.app.settings.mode.next);
   this.controls.on('tap:cancel', this.onCancelButtonClick);
 
