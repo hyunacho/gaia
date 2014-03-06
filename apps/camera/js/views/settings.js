@@ -30,7 +30,10 @@ module.exports = View.extend({
 
   onItemClick: function(view) {
     var model = view.model;
-
+    if (model.get('key') == 'hdr') {
+      model.next();
+      return;
+    }
     this.optionsView = new OptionsView({ model: model })
       .render()
       .appendTo(this.els.pane2)

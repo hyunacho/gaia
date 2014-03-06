@@ -27,7 +27,7 @@ function RecordingTimerController(app) {
 
 RecordingTimerController.prototype.bindEvents = function() {
   this.app.on('change:recording', this.onRecordingChange);
-  this.app.on('camera:recorderTimeUpdate', this.recordingTimerView.setValue);
+  this.app.on('camera:timeupdate', this.recordingTimerView.setValue);
   debug('events bound');
 };
 

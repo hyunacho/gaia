@@ -25,7 +25,6 @@ function Storage() {
   this.video = navigator.getDeviceStorage('videos');
   this.image = navigator.getDeviceStorage('pictures');
   this.image.addEventListener('change', this.onStorageChange);
-  this.createVideoFilepath = this.createVideoFilepath.bind(this);
   debug('initialized');
 }
 
@@ -97,41 +96,6 @@ Storage.prototype.addVideo = function(blob, done) {
     self.emit('error');
   }
 };
-
-/**
- * Create a new video filepath.
- *
- * The CameraControl API will not
- * automatically create directories
- * for the new file if they do not
- * exist.
- *
- * So we write a dummy file to the
- * same directory via DeviceStorage
- * to ensure that the directory exists
- * before attempting to record to this
- * filepath.
- *
- * @param  {Function} done
- * @public
- */
-Storage.prototype.createVideoFilepath = function(done) {
-  var videoStorage = this.video;
-  createFilename(this.video, 'video', function(filepath) {
-    var dummyFilepath = getDir(filepath) + 'tmp.3gp';
-    var blob = new Blob([''], { type: 'video/3gpp' });
-    var req = videoStorage.addNamed(blob, dummyFilepath);
-    req.onsuccess = function(e) {
-      videoStorage.delete(e.target.result);
-      done(filepath);
-    };
-  });
-};
-
-function getDir(filepath) {
-  var index = filepath.lastIndexOf('/') + 1;
-  return index ? filepath.substring(0, index) : '';
-}
 
 Storage.prototype.onStorageChange = function(e) {
   debug('state change: %s', e.reason);

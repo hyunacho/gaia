@@ -27,7 +27,6 @@ require(['config/require', 'config'], function() {
       indicators: require('controllers/indicators'),
       controls: require('controllers/controls'),
       recordingTimer: require('controllers/recording-timer'),
-      previewGallery: require('controllers/preview-gallery'),
       settings: require('controllers/settings'),
       activity: require('controllers/activity'),
       overlay: require('controllers/overlay'),
@@ -35,7 +34,11 @@ require(['config/require', 'config'], function() {
       camera: require('controllers/camera'),
       sounds: require('controllers/sounds'),
       timer: require('controllers/timer'),
-      hud: require('controllers/hud')
+      hud: require('controllers/hud'),
+      lowBattery:require('controllers/low-battery'),
+      notification:require('controllers/notification'),
+      focusring:require('controllers/focusring'),
+
     };
 
     debug('required dependencies');

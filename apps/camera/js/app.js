@@ -9,8 +9,8 @@ var performanceTesting = require('performanceTesting');
 var ViewfinderView = require('views/viewfinder');
 var IndicatorsView = require('views/indicators');
 var ControlsView2 = require('views/controls-2');
+var ControlsDualView = require('views/controls-dual');
 var RecordingTimerView = require('views/recording-timer');
-var PreviewGalleryView = require('views/preview-gallery');
 var ControlsView = require('views/controls');
 var FocusRing = require('views/focus-ring');
 var lockscreen = require('lib/lock-screen');
@@ -90,9 +90,11 @@ App.prototype.boot = function() {
 
 App.prototype.configure = function() {
   var newControls = this.settings.newControls.selected('value');
+  var dualShutter = this.settings.dualShutter.selected('value');
   var mode = this.activity.mode;
   if (mode) { this.set('mode', mode, { silent: true }); }
   this.ControlsView = newControls ? ControlsView2 : ControlsView;
+  this.ControlsView = dualShutter ? ControlsDualView : this.ControlsView;
 };
 
 App.prototype.teardown = function() {
@@ -118,12 +120,14 @@ App.prototype.runControllers = function() {
   this.controllers.viewfinder(this);
   this.controllers.indicators(this);
   this.controllers.recordingTimer(this);
-  this.controllers.previewGallery(this);
   this.controllers.controls(this);
   this.controllers.confirm(this);
   this.controllers.overlay(this);
   this.controllers.sounds(this);
   this.controllers.hud(this);
+  this.controllers.notification(this);
+  this.controllers.lowBattery(this);
+  this.controllers.focusring(this);
   debug('controllers run');
 };
 
@@ -134,20 +138,18 @@ App.prototype.initializeViews = function() {
   this.views.controls = new this.ControlsView();
   this.views.indicators = new IndicatorsView();
   this.views.recordingTimer = new RecordingTimerView();
-  this.views.previewGallery = new PreviewGalleryView();
   this.views.focusRing = new FocusRing();
   this.views.hud = new HudView();
   debug('views initialized');
 };
 
 App.prototype.injectViews = function() {
+  this.views.hud.appendTo(this.el);
+  this.views.controls.appendTo(this.el);
   this.views.viewfinder.appendTo(this.el);
   this.views.recordingTimer.appendTo(this.el);
-  this.views.previewGallery.appendTo(this.el);
+  this.views.focusRing.appendTo(this.views.viewfinder.el);
   this.views.indicators.appendTo(this.el);
-  this.views.focusRing.appendTo(this.el);
-  this.views.controls.appendTo(this.el);
-  this.views.hud.appendTo(this.el);
   debug('views injected');
 };
 

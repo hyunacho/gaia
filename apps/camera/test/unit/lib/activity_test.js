@@ -14,8 +14,6 @@ suite('activity', function() {
 
   setup(function() {
 
-    this.clock = sinon.useFakeTimers();
-
     // Ensure unit tests still work
     // when these APIs don't exist.
     navigator.mozHasPendingMessage =
@@ -32,21 +30,22 @@ suite('activity', function() {
 
   teardown(function() {
     this.sandbox.restore();
-    this.clock.restore();
   });
 
   test('Should call the callback (async) if there ' +
-    'is no pending activity', function() {
+    'is no pending activity', function(done) {
     var callback = this.sinon.spy();
 
     // Instruct the stub to return false
     // when called with 'activity' argument.
     navigator.mozHasPendingMessage.withArgs('activity').returns(false);
 
-    this.activity.check(callback);
+    this.activity.check(function() {
+      callback();
+      done();
+    });
+
     assert.ok(!callback.called);
-    this.clock.tick(1);
-    assert.ok(callback.called);
   });
 
   test('Should call the callback when the \'activity\' ' +

@@ -7,6 +7,7 @@ define(function(require, exports, module) {
 
 var debug = require('debug')('controller:camera');
 var bindAll = require('lib/bind-all');
+var bind = require('lib/bind');
 
 /**
  * Exports
@@ -68,7 +69,7 @@ CameraController.prototype.bindEvents = function() {
 
   // Relaying camera events means other modules
   // don't have to depend directly on camera
-  camera.on('change:videoElapsed', app.firer('camera:recorderTimeUpdate'));
+  camera.on('change:videoElapsed', app.firer('camera:timeupdate'));
   camera.on('change:capabilities', this.app.setter('capabilities'));
   camera.on('configured', app.firer('camera:configured'));
   camera.on('change:recording', app.setter('recording'));
@@ -77,6 +78,12 @@ CameraController.prototype.bindEvents = function() {
   camera.on('loaded', app.firer('camera:loaded'));
   camera.on('ready', app.firer('camera:ready'));
   camera.on('busy', app.firer('camera:busy'));
+  camera.on('dual', app.firer('camera:dual'));
+  camera.on('updatePreview', app.firer('camera:updatePreview'));
+  camera.on('image-flash', this.onImageFlash);
+  // Face detection
+  camera.on('facedetected', app.firer('camera:facedetected'));
+  camera.on('facenotdetected', app.firer('camera:facenotdetected'));
 
   // Camera
   camera.on('filesizelimitreached', this.onFileSizeLimitReached);
@@ -90,30 +97,30 @@ CameraController.prototype.bindEvents = function() {
   app.on('capture', this.capture);
   app.on('boot', this.camera.load);
   app.on('blur', this.onBlur);
+  app.on('toggleRecordingDual', this.onToggleRecordingDual);
 
   // Settings
   settings.pictureSizes.on('change:selected', this.onPictureSizeChange);
   settings.recorderProfiles.on('change:selected', this.onRecorderProfileChange);
   settings.flashModes.on('change:selected', this.setFlashMode);
   settings.on('change:cameras', this.loadCamera);
-  settings.on('change:mode', this.setFlashMode);
+  settings.on('change:mode', this.setFlashForMode);   //setFlashMode
   settings.on('change:mode', this.setMode);
-  settings.on('change:hdr', this.camera.setHDR);
-
+  settings.on('change:hdr', this.camera.setHDRMode);
+  //bind volume key events
+  bind(app.win,'keypress',this.onKeyPress);
   debug('events bound');
 };
 
 CameraController.prototype.onSettingsConfigured = function() {
   var recorderProfile = this.settings.recorderProfiles.selected('key');
   var pictureSize = this.settings.pictureSizes.selected('data');
-  var hdr = this.settings.hdr.selected('key');
 
   this.setFlashMode();
-  this.camera.setHDR(hdr);
   this.camera.setRecorderProfile(recorderProfile);
   this.camera.setPictureSize(pictureSize);
   this.camera.configure();
-
+  this.camera.setHDRMode(this.settings.hdr.selected('key'));
   // TODO: Move to a new StorageController (or App?)
   var maxFileSize = (pictureSize.width * pictureSize.height * 4) + 4096;
   this.storage.setMaxFileSize(maxFileSize);
@@ -122,7 +129,28 @@ CameraController.prototype.onSettingsConfigured = function() {
 
 CameraController.prototype.capture = function() {
   var position = this.app.geolocation.position;
-  this.camera.capture({ position: position });
+  // For taking a picture during video recording on dual shutter mode
+  var recording = this.camera.get('recording');
+  var dualShutter = this.settings.dualShutter.selected('value');
+  var isVideo = this.settings.mode.is('video');
+
+  if(dualShutter && recording) {
+    this.camera.takePicture({ position: position });
+    this.viewfinder.imageFlash();
+  }
+  else {
+    this.camera.capture({ position: position });
+  }
+};
+
+CameraController.prototype.onToggleRecordingDual = function() {
+  var position = this.app.geolocation.position;
+  var recording = this.camera.get('recording');
+  if (recording) {
+    this.camera.stopRecording({ position: position });
+    this.app.settings.get('mode').next();
+  }
+  else { this.camera.startRecording({ position: position }); }
 };
 
 CameraController.prototype.onNewImage = function(image) {
@@ -137,7 +165,6 @@ CameraController.prototype.onNewImage = function(image) {
     debug('stored image', filepath);
     if (!self.activity.active) {
       filmstrip.addImageAndShow(filepath, blob);
-      self.app.emit('addItem', { filepath: filepath, media: image });
     }
   });
 
@@ -145,22 +172,10 @@ CameraController.prototype.onNewImage = function(image) {
   this.app.emit('newimage', image);
 };
 
-/**
- * Store the poster image,
- * then emit the app 'newvideo'
- * event. This signifies the video
- * fully ready.
- *
- * We don't store the video blob like
- * we do for images, as it is recorded
- * directly to the final location.
- * This is for memory reason.
- *
- * @param  {Object} video
- */
 CameraController.prototype.onNewVideo = function(video) {
   var storage = this.storage;
   var poster = video.poster;
+  var camera = this.camera;
   var tmpBlob = video.blob;
   var app = this.app;
 
@@ -178,22 +193,16 @@ CameraController.prototype.onNewVideo = function(video) {
     // Add the poster image to the image storage
     poster.filepath = video.filepath.replace('.3gp', '.jpg');
     storage.addImage(poster.blob, { filepath: poster.filepath });
-    app.emit('addItem', { filepath: filepath, media: video });
 
+    // Now we have stored the blob
+    // we can delete the temporary one.
+    // NOTE: If we could 'move' the temp
+    // file it would be a lot better.
+    camera.deleteTmpVideoFile();
     app.emit('newvideo', video);
   });
 
   debug('new video', video);
-};
-
-CameraController.prototype.onPictureSizeChange = function() {
-  var value = this.settings.pictureSizes.selected('data');
-  this.setPictureSize(value);
-};
-
-CameraController.prototype.onRecorderProfileChange = function() {
-  var value = this.settings.recorderProfiles.selected('key');
-  this.setRecorderProfile(value);
 };
 
 CameraController.prototype.onPictureSizeChange = function() {
@@ -230,6 +239,7 @@ CameraController.prototype.showSizeLimitAlert = function() {
 CameraController.prototype.setMode = function(mode) {
   this.camera.setMode(mode);
   this.viewfinder.fadeOut(this.camera.configure);
+  //this.setFlashForMode(mode);
 };
 
 /**
@@ -294,6 +304,11 @@ CameraController.prototype.setFlashMode = function() {
  * @private
  */
 CameraController.prototype.onBlur = function() {
+  var recording = this.camera.get('recording');
+  var dualShutter = this.settings.dualShutter.selected('value');
+  if(dualShutter && recording)
+    this.app.settings.get('mode').next();
+
   this.camera.set('previewActive', false);
   this.camera.set('focus', 'none');
   this.camera.stopRecording();
@@ -320,14 +335,75 @@ CameraController.prototype.setSelfTimer = function(value){
 *@ paramet
 **/
 CameraController.prototype.cancelSelfTimer = function(){
-    if(this.selfTimer)
-    {
-      clearInterval(this.selfTimer);
-      clearTimeout(this.selfTimeout);
-      this.selfTimer = null;
-      this.selfTimeout = null;
-      // hide timer UI
-      this.selfTimerView.removeTimerUI();
-    }
+  if (this.selfTimer) {
+    clearInterval(this.selfTimer);
+    clearTimeout(this.selfTimeout);
+    this.selfTimer = null;
+    this.selfTimeout = null;
+    // hide timer UI
+    this.selfTimerView.removeTimerUI();
+  }
 };
+
+/**
+ * Image flashed when take a picture 
+ * during the video recording
+ */
+CameraController.prototype.onImageFlash = function() {
+  this.viewfinder.imageFlash();
+};
+
+/**
+  * Capture picture on volume key press
+  *
+  ***/
+CameraController.prototype.onKeyPress = function(evt){
+  if (evt.keyCode == evt.DOM_VK_PAGE_UP || evt.keyCode == evt.DOM_VK_PAGE_DOWN ) {
+    this.capture();
+  }
+};
+
+
+CameraController.prototype.setFlashForMode = function(mode){
+  var flashModeCamera = this.settings.flashModesPicture.selected('key');
+  var flashModeVideo = this.settings.flashModesVideo.selected('key');
+  if (mode == 'video') {
+    if (flashModeCamera == 'on') {
+      if (flashModeVideo == 'torch') {
+        this.camera.setFlashMode(flashModeVideo);
+      } else {
+        this.settings.flashModesVideo.next()
+        this.camera.setFlashMode(this.settings.flashModesVideo.selected('key'));
+      }
+    } else if (flashModeCamera == 'auto') {
+      var luminance = this.camera.getLuminance();
+      if(luminance == 'low') {
+          if (flashModeVideo == 'torch') {
+            this.camera.setFlashMode(flashModeVideo);
+          } else {
+            this.settings.flashModesVideo.next()
+            this.camera.setFlashMode('torch');
+          }
+      } else {
+          if (flashModeVideo == 'off') {
+            this.camera.setFlashMode(flashModeVideo);
+          } else {
+            this.settings.flashModesVideo.next()
+            this.camera.setFlashMode('off');
+          }
+      }
+    } else if (flashModeCamera == 'off') {
+      if (flashModeVideo == 'off') {
+        this.camera.setFlashMode(flashModeVideo);
+      } else {
+        this.settings.flashModesVideo.next()
+        this.camera.setFlashMode('off');
+      }
+    }
+  } else {
+    this.camera.setFlashMode(flashModeCamera);
+  }
+  
+};
+
 });

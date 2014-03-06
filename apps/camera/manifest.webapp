@@ -13,10 +13,12 @@
     "storage":{},
     "device-storage:pictures":{ "access": "readwrite" },
     "device-storage:videos":{ "access": "readwrite" },
-    "settings":{ "access": "readonly" },
+    "settings":{ "access": "readwrite" },
+    "permissions":{},
     "camera":{},
     "geolocation":{},
-    "audio-channel-notification":{}
+    "audio-channel-notification":{},
+    "webapps-manage":{}
   },
   "activities": {
     "record": {

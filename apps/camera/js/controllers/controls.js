@@ -40,18 +40,45 @@ ControlsController.prototype.bindEvents = function() {
 
   this.controls.on('tap:capture', this.app.firer('capture'));
   this.controls.on('tap:gallery', this.onGalleryButtonClick);
-  this.controls.on('tap:thumbnail', this.app.firer('preview'));
   this.controls.on('tap:switch', this.app.settings.mode.next);
+  this.controls.on('tap:videoRecord', this.onVideoButtonClick);
+  this.app.on('camera:updatePreview', this.checkVideoRecording);
   this.controls.on('tap:cancel', this.onCancelButtonClick);
 
   this.app.on('camera:loading', this.disableButtons);
   this.app.on('camera:ready', this.enableButtons);
+  this.app.on('camera:dual', this.enableButtons);
   this.app.on('camera:busy', this.disableButtons);
   this.app.on('timer:clear', this.enableButtons);
   this.app.on('timer:end', this.enableButtons);
   this.app.on('timer:start', this.disableButtons);
 
   debug('events bound');
+};
+
+/**
+* When start the recording,
+* change the mode to video and wait for updating the preview.
+* After updating the preview, start the recording in checkVideoRecording().
+* In recording mode, stop the recording
+* and then change the mode to camera in CameraController.
+*/
+ControlsController.prototype.onVideoButtonClick = function() {
+  var notRecording = !this.app.camera.get('recording');
+
+  if(notRecording) {
+    this.app.settings.get('mode').next();
+    this.preparedRecording = true;
+  }
+  else // stop
+    this.app.emit('toggleRecordingDual');
+};
+
+ControlsController.prototype.checkVideoRecording = function() {
+  if(this.preparedRecording) { // start
+    this.app.emit('toggleRecordingDual');
+    this.preparedRecording = false;
+  }
 };
 
 ControlsController.prototype.configure = function() {
@@ -68,11 +95,6 @@ ControlsController.prototype.configure = function() {
   this.controls.set('cancel', isCancellable);
   this.controls.set('gallery', showGallery);
   this.controls.set('mode', initialMode);
-
-  debug('cancelable: %s', isCancellable);
-  debug('switchable: %s', isSwitchable);
-  debug('gallery: %s', showGallery);
-  debug('mode: %s', initialMode);
 };
 
 ControlsController.prototype.disableButtons = function() {

@@ -17,8 +17,8 @@ var model = require('vendor/model');
  * Locals
  */
 
-var recordSpaceMin = constants.RECORD_SPACE_MIN;
-var recordSpacePadding = constants.RECORD_SPACE_PADDING;
+var RECORD_SPACE_MIN = constants.RECORD_SPACE_MIN;
+var RECORD_SPACE_PADDING = constants.RECORD_SPACE_PADDING;
 
 /**
  * Locals
@@ -49,13 +49,11 @@ function Camera(options) {
   this.container = options.container;
   this.mozCamera = null;
   this.cameraList = navigator.mozCameras.getListOfCameras();
-  this.orientation = options.orientation || orientation;
   this.autoFocus = {};
-  this.video = {
+  this.tmpVideo = {
     storage: navigator.getDeviceStorage('videos'),
-    filepath: null,
-    minSpace: options.recordSpaceMin || recordSpaceMin,
-    spacePadding : options.recordSpacePadding || recordSpacePadding
+    filename: null,
+    filepath: null
   };
 
   debug('initialized');
@@ -113,19 +111,17 @@ Camera.prototype.gotCamera = function(mozCamera) {
   var capabilities = mozCamera.capabilities;
   this.mozCamera = mozCamera;
   this.mozCamera.onShutter = this.onShutter;
-  this.mozCamera.onRecorderStateChange = this.onRecorderStateChange;
+  this.mozCamera.onRecorderStateChange = self.onRecorderStateChange;
   this.configureFocus(capabilities.focusModes);
-  this.set('capabilities', this.formatCapabilities(capabilities));
+  this.set('capabilities', capabilities);
   this.setWhiteBalance('auto');
-};
-
-Camera.prototype.formatCapabilities = function(capabilities) {
-  var hasHDR = capabilities.sceneModes.indexOf('hdr') > -1;
-  capabilities.hdr = hasHDR ? ['on', 'off'] : undefined;
-  return capabilities;
+  this.setISOMode('auto');
 };
 
 Camera.prototype.configure = function() {
+  // To avoid getting/setting mozCamera on dual shutter mode when receive blur/focus events
+  if (!this.mozCamera) { return; }
+
   var self = this;
   var success = function() {
     self.emit('configured');
@@ -146,6 +142,84 @@ Camera.prototype.configure = function() {
     options.previewSize.height);
 
   this.mozCamera.setConfiguration(options, success, error);
+  //var faceDetected = this.faceFocusStart();
+ /* setTimeout(function() {
+    if (faceDetected === false) {
+      self.mozCamera.stopFaceDetection();
+      self.enableCAF();
+    }   
+  }, 10000); */
+};
+
+Camera.prototype.setAutoFocusMode = function(){
+  this.mozCamera.focusMode = 'none';
+};
+
+
+Camera.prototype.setContinuousAutoFocus = function(){
+  //
+  var self = this;
+  this.mozCamera.focusMode = "continuous-picture";
+
+  this.mozCamera.onAutoFocusMove = onAutoFocusMove;
+  function onAutoFocusMove(success) {
+    var bool = success;
+    if (bool === true) {
+      self.set('focus','focused');
+    }    
+    setTimeout(function() {
+      self.set('focus','none');
+    }, 500);
+    console.log("AutoFocusMove Value  = "+ bool);
+  }
+};
+
+Camera.prototype.disableFaceTracking = function(){
+  this.mozCamera.stopFaceDetection();
+};
+
+Camera.prototype.disableAutoFocusMove = function(){
+  this.mozCamera.onAutoFocusMove = null;
+};
+
+
+Camera.prototype.startFaceDetection = function(){
+  window.facenotDetected = 0;
+  window.faceDetected = 0;
+  var self = this;
+  var faceDetected = false;
+  if (this.mozCamera.capabilities.maxFaceDetected == 0) {
+    console.log("Face-detection is not supported");
+  } else {
+    console.log("Face-detection is supported");
+    try {
+      this.mozCamera.startFaceDetection();
+    } catch (e) {
+      // Although capabilities.maxFaceDetected returns 0,
+      // If you call startFaceDetection(), an exception will be thrown.
+      // the exception types are not implemented and not decided.
+      console.log("StartFaceDetection is failed: "+e.message);
+    }
+  }
+
+  // on face detection
+  this.mozCamera.onFaceDetected = function(faces) {
+    console.log('GJP faces.length: '+ faces.length);
+   if (faces.length === 0) {
+      window.facenotDetected = window.facenotDetected + 1;
+      if (window.facenotDetected > 60) {
+        window.faceDetected = 0;
+        self.emit('facenotdetected');
+      }
+      return;
+    }
+    window.facenotDetected = 0;
+    window.faceDetected = window.faceDetected + 1;
+    if (window.faceDetected > 30) {
+      self.emit('facedetected', faces);
+      window.faceDetected = 0;
+    }
+  };
 };
 
 Camera.prototype.previewSizes = function() {
@@ -345,10 +419,9 @@ Camera.prototype.takePicture = function(options) {
   rotation = selectedCamera === 'front'? -rotation: rotation;
 
   this.emit('busy');
-  this.focus(onFocused);
+  this.setAutoFocus(onReady);
 
-  function onFocused(err) {
-    if (err) { return complete(); }
+  function onReady() {
     var position = options && options.position;
     var config = {
       rotation: rotation,
@@ -377,40 +450,42 @@ Camera.prototype.takePicture = function(options) {
       blob.thumbnail = thumbnail;
       self.emit('newimage', image);
     });
-    self.emit('ready');
+
+    var recording = self.get('recording');
+    if(recording) {
+      self.emit('image-flash');
+      self.emit('dual');
+    }      
+    else
+      self.emit('ready');
   }
 
   function onError() {
     var title = navigator.mozL10n.get('error-saving-title');
     var text = navigator.mozL10n.get('error-saving-text');
     alert(title + '. ' + text);
-    complete();
-  }
-
-  function complete() {
-    self.emit('ready');
   }
 };
 
-/**
- * Focus the camera, callback when done.
- *
- * If the camera don't support focus,
- * callback is called (sync).
- *
- * If the focus fails, the 'focus' state
- * is set, then reset after 1 second.
- *
- * @param  {Function} done
- * @private
- */
-Camera.prototype.focus = function(done) {
-  if (!this.autoFocus.auto) { return done(); }
-  var reset = function() { self.set('focus', 'none'); };
+Camera.prototype.setAutoFocus = function(done) {
   var self = this;
 
-  this.set('focus', 'focusing');
+  /**
+  * Add 'recording' condition to prevent set the focus
+  * when take a picture during video recording on dual shutter mode
+  */
+  var recording = this.get('recording');
+  // Check focus state. if it is
+  // still focusing don't call one
+  // more time. 
+  var focusState = this.get('focus');
+  if (!this.autoFocus.auto || recording || focusState === 'focusing') {
+    done();
+    return;
+  }
+
   this.mozCamera.autoFocus(onFocus);
+  this.set('focus', 'focusing');
 
   function onFocus(success) {
     if (success) {
@@ -419,44 +494,40 @@ Camera.prototype.focus = function(done) {
       return;
     }
 
+    // On failure
     self.set('focus', 'fail');
     setTimeout(reset, 1000);
-    done('failed');
+    done();
+  }
+
+  function reset() {
+    self.set('focus', 'none');
   }
 };
 
-/**
- * Start/stop recording.
- *
- * @param  {Object} options
- */
-Camera.prototype.toggleRecording = function(options) {
+Camera.prototype.toggleRecording = function(o) {
   var recording = this.get('recording');
-  if (recording) { this.stopRecording(options); }
-  else { this.startRecording(options); }
+  if (recording) { this.stopRecording(o); }
+  else { this.startRecording(o); }
 };
 
 Camera.prototype.startRecording = function(options) {
-  var selectedCamera = this.get('selectedCamera');
-  var frontCamera = selectedCamera === 'front';
-  var rotation = this.orientation.get();
-  var storage = this.video.storage;
-  var video = this.video;
+  var storage = this.tmpVideo.storage;
+  var mozCamera = this.mozCamera;
   var self = this;
+  var rotation = orientation.get();
+  var selectedCamera = this.get('selectedCamera');
+  rotation = selectedCamera === 'front'? -rotation: rotation;
 
-  // Rotation is flipped for front camera
-  if (frontCamera) { rotation = -rotation; }
-
-  this.emit('busy');
 
   // First check if there is enough free space
-  this.getFreeVideoStorageSpace(gotStorageSpace);
+  this.getTmpStorageSpace(gotStorageSpace);
 
   function gotStorageSpace(err, freeBytes) {
     if (err) { return self.onRecordingError(); }
 
-    var notEnoughSpace = freeBytes < self.video.minSpace;
-    var remaining = freeBytes - self.video.spacePadding;
+    var notEnoughSpace = freeBytes < RECORD_SPACE_MIN;
+    var remaining = freeBytes - RECORD_SPACE_PADDING;
     var targetFileSize = self.get('maxFileSizeBytes');
     var maxFileSizeBytes = targetFileSize || remaining;
 
@@ -474,45 +545,40 @@ Camera.prototype.startRecording = function(options) {
       maxFileSizeBytes: maxFileSizeBytes
     };
 
-    self.createVideoFilepath(function(filepath) {
-      video.filepath = filepath;
-      self.mozCamera.startRecording(
-        config,
-        storage,
-        filepath,
-        onSuccess,
-        self.onRecordingError);
-    });
-  }
-
-  function onSuccess() {
-    self.set('recording', true);
-    self.startVideoTimer();
-    self.emit('ready');
-
-    // User closed app while
-    // recording was trying to start
-    //
-    // TODO: Not sure this should be here
-    if (document.hidden) {
-      self.stopRecording();
+    self.tmpVideo.filename = self.createTmpVideoFilename();
+    mozCamera.startRecording(
+      config,
+      storage,
+      self.tmpVideo.filename,
+      onSuccess,
+      self.onRecordingError);
     }
-  }
+
+    function onSuccess() {
+      self.set('recording', true);
+      self.startVideoTimer();
+
+      // User closed app while
+      // recording was trying to start
+      if (document.hidden) {
+        self.stopRecording();
+      }
+
+    }
 };
 
 Camera.prototype.stopRecording = function() {
   debug('stop recording');
 
   var notRecording = !this.get('recording');
-  var storage = this.video.storage;
-  var video = this.video;
+  var filename = this.tmpVideo.filename;
+  var storage = this.tmpVideo.storage;
   var self = this;
 
   if (notRecording) {
     return;
   }
 
-  this.stopVideoTimer();
   this.mozCamera.stopRecording();
   this.set('recording', false);
   this.stopVideoTimer();
@@ -524,7 +590,8 @@ Camera.prototype.stopRecording = function() {
 
   function onStorageChange(e) {
     debug('video file ready', e.path);
-    var matchesFile = e.path.indexOf(video.filepath) > -1;
+    var filepath = self.tmpVideo.filepath = e.path;
+    var matchesFile = !!~filepath.indexOf(filename);
 
     // Regard the modification as
     // video file writing completion
@@ -532,17 +599,18 @@ Camera.prototype.stopRecording = function() {
     // filename. Note e.path is absolute path.
     if (e.reason === 'modified' && matchesFile) {
       storage.removeEventListener('change', onStorageChange);
-      self.getVideoBlob(gotVideoBlob);
+      self.getTmpVideoBlob(gotVideoBlob);
     }
   }
 
   function gotVideoBlob(blob) {
     getVideoMetaData(blob, function(err, data) {
-      if (err) { return this.onRecordingError(); }
+      if (err) {
+        return;
+      }
 
       self.emit('newvideo', {
         blob: blob,
-        filepath: video.filepath,
         poster: data.poster,
         width: data.width,
         height: data.height,
@@ -561,15 +629,12 @@ Camera.prototype.onRecordingError = function(id) {
   var title = navigator.mozL10n.get(id + '-title');
   var text = navigator.mozL10n.get(id + '-text');
   alert(title + '. ' + text);
-  this.emit('ready');
 };
 
-/**
- * Emit useful event hook.
- *
- * @private
- */
 Camera.prototype.onShutter = function() {
+  var recording = this.get('recording');
+  if(recording) return;
+
   this.emit('shutter');
 };
 
@@ -581,30 +646,16 @@ Camera.prototype.onPreviewStateChange = function(previewState) {
   }
 };
 
-/**
- * Emit useful event hook.
- *
- * @param  {String} msg
- * @private
- */
 Camera.prototype.onRecorderStateChange = function(msg) {
   if (msg === 'FileSizeLimitReached') {
     this.emit('filesizelimitreached');
   }
 };
 
-/**
- * Get the number of remaining
- * bytes in video storage.
- *
- * @param  {Function} done
- * @async
- * @private
- */
-Camera.prototype.getFreeVideoStorageSpace = function(done) {
-  debug('get free storage space');
+Camera.prototype.getTmpStorageSpace = function(done) {
+  debug('get temp storage space');
 
-  var storage = this.video.storage;
+  var storage = this.tmpVideo.storage;
   var req = storage.freeSpace();
   req.onerror = onError;
   req.onsuccess = onSuccess;
@@ -620,17 +671,12 @@ Camera.prototype.getFreeVideoStorageSpace = function(done) {
   }
 };
 
-/**
- * Get the recorded video out of storage.
- *
- * @param  {Function} done
- * @private
- * @async
- */
-Camera.prototype.getVideoBlob = function(done) {
-  debug('get video blob');
-  var video = this.video;
-  var req = video.storage.get(video.filepath);
+Camera.prototype.getTmpVideoBlob = function(done) {
+  debug('get tmp video blob');
+
+  var filepath = this.tmpVideo.filepath;
+  var storage = this.tmpVideo.storage;
+  var req = storage.get(filepath);
   req.onsuccess = onSuccess;
   req.onerror = onError;
 
@@ -640,28 +686,19 @@ Camera.prototype.getVideoBlob = function(done) {
   }
 
   function onError() {
-    console.error('failed to get \'%s\' from storage', video.filepath);
+    debug('failed to get \'%s\' from storage', filepath);
   }
 };
 
-/**
- * Get a unique video filepath
- * to record a new video to.
- *
- * Your application can overwrite
- * this method with something
- * so that you can record directly
- * to final location. We do this
- * in CameraController.
- *
- * Callback function signature used
- * so that an async override can
- * be used if you wish.
- *
- * @param  {Function} done
- */
-Camera.prototype.createVideoFilepath = function(done) {
-  done(Date.now() + '_tmp.3gp');
+Camera.prototype.createTmpVideoFilename = function() {
+  return Date.now() + '_tmp.3gp';
+};
+
+Camera.prototype.deleteTmpVideoFile = function() {
+  var storage = this.tmpVideo.storage;
+  storage.delete(this.tmpVideo.filepath);
+  this.tmpVideo.filename = null;
+  this.tmpVideo.filepath = null;
 };
 
 Camera.prototype.resumePreview = function() {
@@ -679,6 +716,11 @@ Camera.prototype.setMode = function(mode) {
   this.mode = mode;
   return this;
 };
+
+// Camera.prototype.updatePreviewSize = function(mode) {
+//   this.previewSize = mode === 'picture' ?
+//     this.picturePreviewSize : this.videoPreviewSize;
+// };
 
 /**
  * Sets a start time and begins
@@ -705,7 +747,7 @@ Camera.prototype.stopVideoTimer = function() {
  * We listen for the 'change:'
  * event emitted elsewhere to
  * update the UI accordingly.
- *
+ * 
  */
 Camera.prototype.updateVideoElapsed = function() {
   var now = new Date().getTime();
@@ -714,7 +756,7 @@ Camera.prototype.updateVideoElapsed = function() {
 };
 
 /**
- * Set white balance.
+ * Set the mozCamera white-balance value.
  *
  * @param {String} value
  */
@@ -727,91 +769,136 @@ Camera.prototype.setWhiteBalance = function(value){
 };
 
 /**
- * Set HDR mode.
- *
- * HDR is a scene mode, so we
- * transform the hdr value to
- * the appropriate scene value.
- *
- * @param {String} value
- */
-Camera.prototype.setHDR = function(value){
-  if (!value) { return; }
-  var scene = value === 'on' ? 'hdr' : 'auto';
-  this.setSceneMode(scene);
+*set focus Area
+* To focus on user specified region
+* of viewfinder set focus areas.
+*
+* @param  {object} rect
+* The argument is an object that
+* contains boundaries of focus area
+* in camera coordinate system, where
+* the top-left of the camera field
+* of view is at (-1000, -1000), and
+* bottom-right of the field at
+* (1000, 1000).
+*
+**/
+Camera.prototype.setFocusArea = function(rect) {
+  this.mozCamera.focusAreas = [{
+    top: rect.top,
+    bottom: rect.bottom,
+    left: rect.left,
+    right: rect.right,
+    weight: 1
+  }];
 };
 
 /**
- * Set scene mode.
- *
- * @param {String} value
+* To focus on user specified region
+* of viewfinder set metering areas.
+*
+* @param  {object} rect
+* The argument is an object that
+* contains boundaries of metering area
+* in camera coordinate system, where
+* the top-left of the camera field
+* of view is at (-1000, -1000), and
+* bottom-right of the field at
+* (1000, 1000).
+*
+**/
+Camera.prototype.setMeteringArea = function(rect) {
+  this.mozCamera.meteringAreas = [{
+    top: rect.top,
+    bottom: rect.bottom,
+    left: rect.left,
+    right: rect.right,
+    weight: 1
+  }];
+};
+
+/**
+* Once touch focus is done
+* clear the ring UI.
+*
+* Timeout is needed to show
+* the focused UI for sometime
+* before making it disappear.
+**/
+Camera.prototype.clearFocusRing = function() {
+  var self = this;
+  setTimeout(function() {
+    self.set('focus', 'none');
+  }, 1000);
+};
+
+/**
+ *Set ISO value for 
+ * better picture 
+ **/
+Camera.prototype.setISOMode = function(value) {
+ /***** Nexus HDR Imp  *****/
+  var capabilities = this.get('capabilities');
+  var hasISO = 'isoModes' in capabilities ? capabilities.isoModes : [];
+  if (hasISO.indexOf(value) > -1 ) {
+    this.mozCamera.isoMode = value;
+   }
+  //enable the below code for G2 Model
+ // var capabilities =  this.mozCamera.getParameter("iso-values");
+ // if (capabilities.indexOf(value) > -1) {
+ //   this.mozCamera.setParameter('iso',value);
+ // }
+  //console.log(' Set value :: '+value+" <--->get value:: "+ this.mozCamera.getParameter('iso'));
+};
+
+/**
+ *set HDR mode on/Off from settings
+ *@ parameter receive value On/Off
  */
+
+Camera.prototype.setHDRMode = function(value){
+  /***** Nexus HDR Imp  *****/
+  if (value == 'on') {
+    this.setSceneMode('hdr');
+  } else {
+    this.setSceneMode('auto');
+  }
+  /***** G2 HDR API  *****/
+ /*if (value == 'on') {
+     this.mozCamera.setParameter('hdr-mode','1');
+  } else {
+    this.mozCamera.setParameter('hdr-mode','0');
+  }*/
+ 
+};
+
+/**
+ * configure scene mode value 
+ *@ parameter value to set in scene mode
+ **/
 Camera.prototype.setSceneMode = function(value){
-  var modes =  this.get('capabilities').sceneModes;
+  /*var modes =  this.get('capabilities').sceneModes;
   if (modes.indexOf(value) > -1) {
-    this.mozCamera.sceneMode = value;
-  }
+    this.mozCamera.sceneMode  = value;
+  }*/
 };
 
-Camera.prototype.isZoomSupported = function() {
-  return this.mozCamera.capabilities.zoomRatios.length > 1;
-};
-
-Camera.prototype.getMinimumZoom = function() {
-  var zoomRatios = this.mozCamera.capabilities.zoomRatios;
-  if (zoomRatios.length === 0) {
-    return 1.0;
-  }
-
-  return zoomRatios[0];
-};
-
-Camera.prototype.getMaximumZoom = function() {
-  var zoomRatios = this.mozCamera.capabilities.zoomRatios;
-  if (zoomRatios.length === 0) {
-    return 1.0;
-  }
-
-  return zoomRatios[zoomRatios.length - 1];
-};
-
-Camera.prototype.getZoom = function() {
-  return this.mozCamera.zoom;
-};
-
-Camera.prototype.setZoom = function(zoom) {
-  this.mozCamera.zoom = zoom;
-  this.emit('zoomChange', zoom);
-};
-
-Camera.prototype.getZoomPreviewAdjustment = function() {
-  var zoom = this.mozCamera.zoom;
-
-  var previewSize = this.previewSize();
-  var maxPreviewSize = this.mozCamera.capabilities.previewSizes[0];
-
-  var maxHardwareZoomX = maxPreviewSize.width  / previewSize.width;
-  var maxHardwareZoomY = maxPreviewSize.height / previewSize.height;
-  var maxHardwareZoom = Math.max(maxHardwareZoomX, maxHardwareZoomY);
-
-  if (zoom <= maxHardwareZoom) {
-    return 1.0;
-  }
-  
-  var virtualPreviewSize = {
-    width:  previewSize.width  * maxHardwareZoom,
-    height: previewSize.height * maxHardwareZoom
-  };
-  var targetPreviewSize = {
-    width:  previewSize.width  * zoom,
-    height: previewSize.height * zoom
-  };
-
-  var zoomAdjustmentX = targetPreviewSize.width /
-                         virtualPreviewSize.width;
-  var zoomAdjustmentY = targetPreviewSize.height /
-                         virtualPreviewSize.height;
-  return Math.max(zoomAdjustmentX, zoomAdjustmentY);
+/**
+ * Get luminance value 
+ *return  low or high 
+ ***/
+Camera.prototype.getLuminance = function() {
+  var luminance = 'low';
+  //uncomment this code for G2 Device which is having mozCamera.getParameter API
+  /*
+  try{
+    luminance =  this.mozCamera.getParameter("luminance-condition") ?
+                   this.mozCamera.getParameter("luminance-condition") : 'low';
+  } catch (e) {
+    alert("Exception :: "+e.message);
+    luminance = 'low';
+  } */
+  return luminance;
 };
 
 });

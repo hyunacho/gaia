@@ -37,6 +37,9 @@ module.exports = View.extend({
 
   set: function(time) {
     var isNear = time <= this.near;
+    if (isNear) {
+      this.emit('timer:near');
+    }
     this.els.count.textContent = time;
     this.el.classList.toggle('near', isNear);
     this.time = time;
@@ -74,7 +77,7 @@ module.exports = View.extend({
   },
 
   template: function() {
-    return '<div class="timer_count js-count"></div>';
+    return '<div class="timer_count js-count rotates"></div>';
   }
 });
 

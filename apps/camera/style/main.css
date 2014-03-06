@@ -16,6 +16,7 @@
 @import url("focusring.css");
 @import url("controls.css");
 @import url("controls-2.css");
+@import url("controls-dual.css");
 @import url("overlay.css");
 @import url("hud.css");
 @import url("filmstrip.css");
@@ -24,8 +25,7 @@
 @import url("setting.css");
 @import url("setting-options.css");
 @import url("recording-timer.css");
-@import url("preview-gallery.css");
 @import url("VideoPlayer.css");
+@import url("notification.css");
 @import url("indicators.css");
 @import url("timer.css");
-@import url("zoom-bar.css");

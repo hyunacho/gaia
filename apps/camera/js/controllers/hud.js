@@ -58,7 +58,7 @@ HudController.prototype.bindEvents = function() {
   this.hud.on('click:flash', this.onFlashClick);
   this.app.on('settings:configured', this.onSettingsConfigured);
   this.app.on('change:recording', this.onRecordingChange);
-  this.app.on('camera:ready', this.onCameraReady);
+  this.app.on('camera:ready', this.hud.show);
   this.app.on('camera:busy', this.hud.hide);
   this.app.on('timer:start', this.hud.hide);
   this.app.on('timer:clear', this.hud.show);
@@ -74,7 +74,6 @@ HudController.prototype.onCameraClick = function() {
 
 HudController.prototype.onFlashClick = function() {
   this.settings.flashModes.next();
-  this.hud.set('flashMode' , this.settings.flashModes.selected('key'));
 };
 
 HudController.prototype.updateFlash = function() {
@@ -87,12 +86,6 @@ HudController.prototype.updateFlash = function() {
 
 HudController.prototype.onRecordingChange = function(recording) {
   this.hud.toggle(!recording);
-};
-
-HudController.prototype.onCameraReady = function() {
-  if (!this.app.camera.get('recording')) {
-    this.hud.show();
-  }
 };
 
 });

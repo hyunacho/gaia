@@ -14,7 +14,7 @@ var View = require('vendor/view');
  */
 
 module.exports = View.extend({
-  name: 'controls-2',
+  name: 'controls-dual',
   className: 'test-controls',
 
   initialize: function() {
@@ -39,25 +39,25 @@ module.exports = View.extend({
   template: function() {
     /*jshint maxlen:false*/
     return '<div class="inner js-inner">' +
-      '<div class="controls-2_left">' +
+      '<div class="controls-dual_left">' +
         '<div>' +
-          '<div class="controls-2_gallery-button icon-gallery js-btn" name="gallery"></div>' +
-          '<div class="controls-2_thumbnail js-thumbnail js-btn" name="gallery"></div>' +
+          '<div class="controls-dual_gallery-button icon-gallery js-btn" name="gallery"></div>' +
+          '<div class="controls-dual_thumbnail js-thumbnail js-btn" name="gallery"></div>' +
         '</div>' +
       '</div>' +
-      '<div class="controls-2_middle">' +
-        '<div class="capture-button-2 js-btn" name="capture">' +
+      '<div class="controls-dual_middle rotates">' +
+        '<div class="capture-button-dual js-btn" name="capture">' +
           '<div class="circle outer-circle"></div>' +
           '<div class="circle inner-circle"></div>' +
           '<div class="center icon"></div>' +
         '</div>' +
       '</div>' +
-      '<div class="controls-2_right">' +
-        '<div class="mode-toggle js-btn icon" name="switch">' +
-          '<div><span class="selected-mode-icon icon"></span></div>' +
+      '<div class="controls-dual_right">' +
+        '<div class="video-record-dual js-btn" name="videoRecord">' +
+          '<div class="circle outer-circle"></div>' +
+          '<div class="center dot"></div>' +
         '</div>' +
-      '</div>' +
-    '</div>';
+      '</div>';
   },
 
   setThumbnail: function(blob) {
@@ -67,6 +67,7 @@ module.exports = View.extend({
     }
     this.els.image.src = window.URL.createObjectURL(blob);
   }
+
 });
 
 });

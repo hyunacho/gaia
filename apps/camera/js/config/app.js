@@ -4,9 +4,8 @@ define(function(require, exports, module) {
 module.exports = {
   showSettings: true,
   newControls: true,
+  dualShutter: true,
   showIndicators: true,
-  viewfinderFill: true,
-  enableZoom: true,
   mode: {
     title: 'Mode',
     options: [
@@ -63,14 +62,14 @@ module.exports = {
       // NOTE: Disabled due to Helix crashing
       // when trying to record at these resolutions.
 
-      // {
-      //   key: '720p',
-      //   title: '720p 1040X720'
-      // },
-      // {
-      //   key: '480p',
-      //   title: '480p 720X480'
-      // },
+      {
+         key: '720p',
+         title: '720p 1280X720'
+      },
+      {
+        key: '480p',
+        title: '480p 720X480'
+      },
       {
         key: 'cif',
         title: 'CIF 352X288'
@@ -92,14 +91,14 @@ module.exports = {
       // NOTE: Disabled due to Helix crashing
       // when trying to record at these resolutions.
 
-      // {
-      //   key: '720p',
-      //   title: '720p 1040X720'
-      // },
-      // {
-      //   key: '480p',
-      //   title: '480p 720X480'
-      // },
+      {
+        key: '720p',
+        title: '720p 1280X720'
+      },
+      {
+        key: '480p',
+        title: '480p 720X480'
+      },
       {
         key: 'cif',
         title: 'CIF 352X288'
@@ -185,17 +184,19 @@ module.exports = {
 
   hdr: {
     title: 'HDR',
-    icon: 'icon-hdr-menu',
+    icon: 'icon-hdr',
     options: [
-      {
-        key: 'off',
-        title: 'l10n-off'
-      },
       {
         key: 'on',
         title: 'l10n-on'
+      },
+      {
+        key: 'off',
+        title: 'l10n-off'
       }
+      
     ],
+    selected: 'off',
     persistent: true,
     menu: 8
   },
@@ -217,7 +218,7 @@ module.exports = {
         title: 'Beauty'
       }
     ],
-    persistent: true,
+    persistent: false,
     menu: 9
   },
 
@@ -245,13 +246,29 @@ module.exports = {
         key: 'hdr'
       },
       {
-        key: 'timer'
-      },
-      {
         key: 'scene'
       },
       {
         key: 'grid'
+      },
+      {
+        key: 'timer'
+      },
+      {
+        key: 'pictureSizesBack',
+        condition: { 'cameras': 'back' }
+      },
+      {
+        key: 'pictureSizesFront',
+        condition: { 'cameras': 'front' }
+      },
+      {
+        key: 'recorderProfilesBack',
+        condition: { 'cameras': 'back' }
+      },
+      {
+        key: 'recorderProfilesFront',
+        condition: { 'cameras': 'front' }
       }
     ]
   }

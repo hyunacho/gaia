@@ -159,12 +159,8 @@ define(function(require, exports, module) {
   };
 
   View.prototype.toggle = function(key, value) {
-    if (arguments.length === 1 && typeof key === 'boolean') {
-      value = key;
-      key = ''
-    } else {
-      key = key ? key + '-' : '';
-    }
+    key = key ? key + '-' : '';
+    key = arguments.length === 1 && typeof key === 'boolean' ? '' : key;
     this.el.classList.toggle(key + 'hidden', !value);
     this.el.classList.toggle(key + 'visible', value);
   };

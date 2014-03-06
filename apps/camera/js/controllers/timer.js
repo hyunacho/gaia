@@ -45,7 +45,9 @@ function TimerController(app) {
 TimerController.prototype.bindEvents = function() {
   this.timer.on('start', this.app.firer('timer:start'));
   this.timer.on('clear', this.app.firer('timer:clear'));
+  this.timer.on('timer:near', this.playSound);
   this.app.on('capture', this.onCapture);
+  this.app.on('toggleRecordingDual', this.onCapture);
 };
 
 /**
@@ -97,8 +99,8 @@ TimerController.prototype.startTimer = function(time) {
 TimerController.prototype.bindTimerEvents = function() {
   this.timer.on('clear', this.unbindTimerEvents);
   this.timer.on('end', this.onTimerEnd);
-  this.app.on('click', this.timer.clear);
-  this.app.on('blur', this.timer.clear);
+  this.app.on('click', this.clearTimer);
+  this.app.on('blur', this.clearTimer);
 };
 
 /**
@@ -110,8 +112,8 @@ TimerController.prototype.bindTimerEvents = function() {
 TimerController.prototype.unbindTimerEvents = function() {
   this.timer.off('clear', this.unbindTimerEvents);
   this.timer.off('end', this.onTimerEnd);
-  this.app.off('click', this.timer.clear);
-  this.app.off('blur', this.timer.clear);
+  this.app.off('click', this.clearTimer);
+  this.app.off('blur', this.clearTimer);
 };
 
 /**
@@ -135,5 +137,24 @@ TimerController.prototype.onTimerEnd = function() {
 function async(fn) {
   return function() { setTimeout(fn); };
 }
+
+/**
+ *
+ *****/
+TimerController.prototype.clearTimer = function() {
+  var mode = this.app.settings.mode.selected('key')
+  this.timer.clear();
+  if (mode == 'video') {
+    this.app.settings.get('mode').next();
+  }
+};
+
+/**
+ * Play sound when self timer time is about to finish
+ * We are playing recording start sound as of now
+ ***/
+TimerController.prototype.playSound = function() {
+  this.app.sounds.play('recordingStart');
+};
 
 });

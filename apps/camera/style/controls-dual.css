@@ -5,7 +5,7 @@
  * The main camera control bar.
  */
 
-.controls-2 {
+.controls-dual {
   position: absolute;
   bottom: 0; left: 0;
   z-index: 50;
@@ -20,7 +20,7 @@
 /** Inner
  ---------------------------------------------------------*/
 
-.controls-2 > .inner {
+.controls-dual > .inner {
   display: flex;
   height: 122px;
 }
@@ -29,15 +29,15 @@
  * @buttons-enabled=false
  */
 
-.controls-2[buttons-enabled=false] > .inner {
+.controls-dual[buttons-enabled=false] > .inner {
   pointer-events: none;
 }
 
 /** Containers
  ---------------------------------------------------------*/
 
-.controls-2_left,
-.controls-2_right {
+.controls-dual_left,
+.controls-dual_right {
   display: flex;
   flex: 1;
   align-items: center;
@@ -46,7 +46,7 @@
 /** Left
  ---------------------------------------------------------*/
 
-.controls-2_left > div {
+.controls-dual_left > div {
   display: block;
   position: relative;
   width: 100%;
@@ -56,7 +56,7 @@
 /** Right
  ---------------------------------------------------------*/
 
-.controls-2_right {
+.controls-dual_right {
   justify-content: flex-end;
   margin-right: 1.4rem;
   -moz-user-select: none;
@@ -65,7 +65,7 @@
 /** Gallery Button
  ---------------------------------------------------------*/
 
-.controls-2_gallery-button {
+.controls-dual_gallery-button {
   position: absolute;
   left: 25%;
   top: 50%;
@@ -76,10 +76,7 @@
   color: white;
 }
 
-/** Thumbnail
- ---------------------------------------------------------*/
-
-.controls-2_thumbnail > img {
+.controls-dual_thumbnail > img {
   position: absolute;
   display: block;
   left: 25%;
@@ -91,6 +88,25 @@
   border: solid 2px #ffffff;
   border-radius: 100px;
   animation: thumbnail-fade-in 300ms;
+}
+
+/** Right
+ ---------------------------------------------------------*/
+
+.controls-dual_right {
+  justify-content: flex-end;
+  margin-right: 1.4rem;
+  -moz-user-select: none;
+}
+
+/** Right
+ ---------------------------------------------------------*/
+
+.controls-dual_left > div {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 
 /** Mode Toggle
@@ -121,10 +137,6 @@
   content: "\e602";
   background-color: transparent;
 }
-
-/**
- * @mode=video
- */
 
 [mode=video] .mode-toggle::before {
   left: .5em;
@@ -161,10 +173,67 @@
   transform: translateX(1.1em);
 }
 
+/** Video Record Button
+ ---------------------------------------------------------*/
+
+.video-record-dual {
+  position:relative;
+  font-size: 54px;
+  width: 1em;
+  height: 1em;
+  margin-top: -51px;
+  top: 20%;
+  right: 20%;
+  -moz-user-select: none;
+}
+
+/** Video Outer Circle
+ ---------------------------------------------------------*/
+
+.video-record-dual .outer-circle {
+  background: #FFFFFF;
+  opacity: 1;
+  transition: transform 200ms ease-in;
+}
+
+[mode=video] .video-record-dual .outer-circle {
+  background-color: #D92E2E;
+  transform: scale(1.4);
+  transition: transform 200ms ease-in;
+}
+
+[mode=video] .video-record-dual .dot {
+  border-radius: 0;  
+  background-color: #FFFFFF;
+  transform: scale(1.4);
+  transition: transform 200ms ease-in;
+}
+
+/** Video Recording Dot
+ ---------------------------------------------------------*/
+
+.video-record-dual .dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -0.5em;
+  margin-left: -0.5em;
+  font-size: 14px;
+  border-radius: 50%;
+  width: 1em;
+  height: 1em;
+  background: #D92E2E;
+  opacity: 1;
+}
+
+.video-record-dual[disabled] {
+  pointer-events: none;
+}
+
 /** Capture Button
  ---------------------------------------------------------*/
 
-.capture-button-2 {
+.capture-button-dual {
   position:relative;
   font-size: 102px;
   width: 1em;
@@ -177,7 +246,8 @@
 /** Circle
  ---------------------------------------------------------*/
 
-.capture-button-2 .circle {
+.capture-button-dual .circle,
+.video-record-dual .circle {
   position: absolute;
   width: 100%;
   height: 100%;
@@ -193,39 +263,27 @@
 }
 
 [mode=video] .outer-circle {
-  background: #D92E2E;
+  background: #C3F5FF;
 }
 
 /** Inner Circle
  ---------------------------------------------------------*/
 
-.capture-button-2 .inner-circle {
+.capture-button-dual .inner-circle {
   background-color: white;
   transform: scale(0.74);
 }
 
-[mode=video][recording=true] .capture-button-2 .inner-circle {
-  background-color: #D92E2E;
-}
-
-.capture-button-2:active .inner-circle {
+.capture-button-dual:active .inner-circle {
   background-color: #00caf2;
   transform: scale(1.0);
   transition: transform 200ms ease-in;
 }
 
-[mode=video] .capture-button-2:active .inner-circle {
-  background-color: #D92E2E;
-}
-
-[mode=video] .inner-circle {
-  position: relative;
-}
-
 /** Icon
  ---------------------------------------------------------*/
 
-.capture-button-2 .center::after {
+.capture-button-dual .center::after {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -239,24 +297,12 @@
   content: "\e60f";
 }
 
-.capture-button-2:active .center::after{
+.capture-button-dual:active .center::after{
   color: white;
 }
 
-[mode=video] .capture-button-2 .center::after {
-  width: 20px;
-  height: 20px;
-  margin-top: -10px;
-  margin-left: -10px;
-  border-radius: 50%;
-  background-color: #D92E2E;
-  color: white;
-  content: "";
-}
-
-[mode=video][recording=true] .capture-button-2 .center::after {
-  border-radius: 25%;
-  background-color: white;
+[recording=true] .controls-dual_left {
+  visibility: hidden;
 }
 
 /** Pulse Animation

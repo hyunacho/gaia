@@ -125,6 +125,8 @@ define(function(require, exports, module) {
      * And it is also shown for 5 seconds after leaving preview mode.
      */
     function show(time) {
+      return;
+      
       document.body.classList.remove('filmstriphidden');
 
       if (hideTimer) {
@@ -156,7 +158,7 @@ define(function(require, exports, module) {
       // If we're showing previews be sure we're showing the filmstrip
       // with no timeout and be sure that the viewfinder video is paused.
       show();
-      ViewfinderView.stopPreview();
+      ViewfinderView.els.video.pause();
     };
 
     function addVideoAndShow(video) {
@@ -224,8 +226,7 @@ define(function(require, exports, module) {
         return;
       }
 
-      ViewfinderView.startPreview(); // Restart the viewfinder
-
+      ViewfinderView.els.video.play(); // Restart the viewfinder
       show(FILMSTRIP_DURATION); // Fade the filmstrip after a delay
       preview.classList.add('offscreen');
       frame.clear();
