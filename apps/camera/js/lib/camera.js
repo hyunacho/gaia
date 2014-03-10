@@ -538,7 +538,7 @@ Camera.prototype.stopRecording = function() {
 
   function gotVideoBlob(blob) {
     getVideoMetaData(blob, function(err, data) {
-      if (err) { return this.onRecordingError(); }
+      if (err) { return self.onRecordingError(); }
 
       self.emit('newvideo', {
         blob: blob,
@@ -556,11 +556,13 @@ Camera.prototype.stopRecording = function() {
 
 // TODO: This is UI stuff, so
 // shouldn't be handled in this file.
-Camera.prototype.onRecordingError = function(id) {
-  id = id !== 'FAILURE' ? id : 'error-recording';
-  var title = navigator.mozL10n.get(id + '-title');
-  var text = navigator.mozL10n.get(id + '-text');
-  alert(title + '. ' + text);
+Camera.prototype.onRecordingError = function(id) {  
+  if(id !== undefined) {
+    id = id !== 'FAILURE' ? id : 'error-recording';
+    var title = navigator.mozL10n.get(id + '-title');
+    var text = navigator.mozL10n.get(id + '-text');
+    alert(title + '. ' + text);
+  }
   this.emit('ready');
 };
 
