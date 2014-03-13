@@ -7,8 +7,8 @@
   padding: 0;
   margin: 0;
   border-width: 0;
-  background: #000; /* opaque */
-  z-index: 100;     /* on top of all the camera stuff */
+  background: #000;
+  z-index: 100;
   transition: transform 0.5s linear;
   overflow: hidden;
   transform-origin: 0 0;
@@ -32,11 +32,14 @@
 
 .media-frame {
   position: absolute;
-  /* size, position, and rotation are set based on the phone orientation */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .media-frame > img {
-  top: 0;  /* javascript modifies this position with a transform */
+  top: 0;
   left: 0;
   position: absolute;
   border-width: 0;
@@ -52,16 +55,18 @@
 
 .preview-controls {
   position: absolute;
+  display: flex;
   left: 0;
   right: 0;
   bottom: 0;
+  width: 100%;
   height: 45px;
   background-color: rgba(0, 0, 0, 0.8);
-  z-index: 100; /* above the dynamically inserted frame elements */
+  z-index: 100;
 }
 
 .preview-controls > * {
-  display: block;
+  display: flex;
   padding: 0;
   margin: 0;
   border-width: 0;
@@ -80,10 +85,10 @@
   background-position: center center;
   background-repeat: no-repeat;
   background-color: rgba(0,0,0,.4);
-  background-clip: padding-box; /* 1 */
-  border: solid 2rem transparent; /* 1 */
-  -moz-box-sizing: content-box; /* 1 */
-  transition: background-color 1s; /* 2 */
+  background-clip: padding-box;
+  border: solid 2rem transparent;
+  -moz-box-sizing: content-box;
+  transition: background-color 1s;
   color: #fff;
 }
 
@@ -96,31 +101,25 @@
 }
 
 .gallery-button {
-  position: absolute;
   left: 0;
   width: 33%;
   height: 100%;
-  display: flex;
   justify-content: center;
   color: white;
 }
 
 .share-button {
-  position: absolute;
   left: 33%;
   width: 33%;
   height: 100%;
-  display: flex;
   justify-content: center;
   color: white;
 }
 
 .delete-button {
-  position: absolute;
   left: 67%;
   width: 33%;
   height: 100%;
-  display: flex;
   justify-content: center;
   color: white;
 }
@@ -145,8 +144,43 @@
   color: #FFFFFF;
 }
 
+/**
+ * @deg90
+ */
+
+body.deg90 .media-frame {
+  width: 100vh;
+  height: 100vw;
+  top: calc((100vh - 100vw) / 2);
+  left: calc((100vw - 100vh) / 2);
+  transform: rotate(-90deg);
+}
+
 body.deg90 .camera-back {
   bottom: 0;
+}
+
+body.deg90 .count-text {
+  width: 100vh;
+  bottom: 0;
+  left: calc(100% - 83px);
+  transform-origin: left bottom;
+  transform: rotate(-90deg);
+}
+
+body.deg90 .preview-controls {
+  width: 100vh;
+  left: 100%;
+  transform-origin: left bottom;
+  transform: rotate(-90deg);
+}
+
+/**
+ * @deg180
+ */
+
+body.deg180 .media-frame {
+  transform: rotate(-180deg);
 }
 
 body.deg180 .camera-back {
@@ -154,34 +188,9 @@ body.deg180 .camera-back {
   right: 0;
 }
 
-body.deg270 .camera-back {
-  top: 0;
-  right: 0;
-}
-
-body.deg90 .count-text {
-  bottom: 0;
-  left: calc(100% - 83px);
-  transform-origin: left bottom;
-  transform: rotate(-90deg);
-}
-
 body.deg180 .count-text {
   top: 88px;
   transform: rotate(-180deg);
-}
-
-body.deg270 .count-text {
-  top: 0;
-  left: calc(83px + 2rem);
-  transform-origin: left top;
-  transform: rotate(-270deg);
-}
-
-body.deg90 .preview-controls {
-  left: 100%;
-  transform-origin: left bottom;
-  transform: rotate(-90deg);
 }
 
 body.deg180 .preview-controls {
@@ -189,7 +198,33 @@ body.deg180 .preview-controls {
   transform: rotate(-180deg);
 }
 
+/**
+ * @deg270
+ */
+
+body.deg270 .media-frame {
+  width: 100vh;
+  height: 100vw;
+  top: calc((100vh - 100vw) / 2);
+  left: calc((100vw - 100vh) / 2);
+  transform: rotate(-270deg);
+}
+
+body.deg270 .camera-back {
+  top: 0;
+  right: 0;
+}
+
+body.deg270 .count-text {
+  width: 100vh;
+  top: 0;
+  left: calc(83px + 2rem);
+  transform-origin: left top;
+  transform: rotate(-270deg);
+}
+
 body.deg270 .preview-controls {
+  width: 100vh;
   top: 0;
   left: 45px;
   transform-origin: left top;

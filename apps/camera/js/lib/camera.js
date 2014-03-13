@@ -539,14 +539,18 @@ Camera.prototype.stopRecording = function() {
   function gotVideoBlob(blob) {
     getVideoMetaData(blob, function(err, data) {
       if (err) { return this.onRecordingError(); }
-
-      self.emit('newvideo', {
-        blob: blob,
-        filepath: video.filepath,
-        poster: data.poster,
-        width: data.width,
-        height: data.height,
-        rotation: data.rotation
+      data.filepath = video.filepath;
+      createThumbnailImage(data.poster.blob, true, data.rotation, false, function(thumbnail) {
+        var video = {
+          blob: blob,
+          filepath: data.filepath,
+          poster: data.poster,
+          width: data.width,
+          height: data.height,
+          thumbnail: thumbnail,
+          rotation: data.rotation          
+        }
+        self.emit('newvideo', video);
       });
 
       self.emit('ready');

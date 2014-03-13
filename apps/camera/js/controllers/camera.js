@@ -5,8 +5,10 @@ define(function(require, exports, module) {
  * Dependencies
  */
 
+var preparePreviewBlob = require('lib/prepare-preview-blob');
 var debug = require('debug')('controller:camera');
 var bindAll = require('lib/bind-all');
+var createThumbnailImage = require('lib/create-thumbnail-image');
 
 /**
  * Exports
@@ -28,7 +30,6 @@ function CameraController(app) {
   this.storage = app.storage;
   this.settings = app.settings;
   this.activity = app.activity;
-  this.filmstrip = app.filmstrip;
   this.viewfinder = app.views.viewfinder;
   this.controls = app.views.controls;
   this.hud = app.views.hud;
@@ -126,7 +127,6 @@ CameraController.prototype.capture = function() {
 };
 
 CameraController.prototype.onNewImage = function(image) {
-  var filmstrip = this.filmstrip;
   var storage = this.storage;
   var blob = image.blob;
   var self = this;
@@ -135,14 +135,16 @@ CameraController.prototype.onNewImage = function(image) {
   // the photo to device storage
   storage.addImage(blob, function(filepath) {
     debug('stored image', filepath);
-    if (!self.activity.active) {
-      filmstrip.addImageAndShow(filepath, blob);
-      self.app.emit('addItem', { filepath: filepath, media: image });
-    }
+
+    preparePreviewBlob(blob, function(metadata) {
+      metadata.thumbnail = image.thumbnail;
+      image = metadata;
+      image.filepath = filepath;
+      self.app.emit('newimage', image);
+    });
   });
 
   debug('new image', image);
-  this.app.emit('newimage', image);
 };
 
 /**
@@ -164,12 +166,6 @@ CameraController.prototype.onNewVideo = function(video) {
   var tmpBlob = video.blob;
   var app = this.app;
 
-  // Add the video to the filmstrip,
-  // then save lazily so as not to block UI
-  if (!this.activity.active) {
-    this.filmstrip.addVideoAndShow(video);
-  }
-
   storage.addVideo(tmpBlob, function(blob, filepath) {
     debug('stored video', filepath);
     video.filepath = filepath;
@@ -178,7 +174,6 @@ CameraController.prototype.onNewVideo = function(video) {
     // Add the poster image to the image storage
     poster.filepath = video.filepath.replace('.3gp', '.jpg');
     storage.addImage(poster.blob, { filepath: poster.filepath });
-    app.emit('addItem', { filepath: filepath, media: video });
 
     app.emit('newvideo', video);
   });
@@ -302,7 +297,7 @@ CameraController.prototype.onBlur = function() {
   // If the lockscreen is locked
   // then forget everything when closing camera
   if (this.app.inSecureMode) {
-    this.filmstrip.clear();
+    this.app.emit("previewGalleryClose");
   }
 
   debug('torn down');

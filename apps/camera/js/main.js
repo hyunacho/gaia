@@ -15,7 +15,6 @@ require(['config/require', 'config'], function() {
     var Sounds = require('lib/sounds');
     var Config = require('lib/config');
     var Settings = require('lib/settings');
-    var Filmstrip = require('lib/filmstrip');
     var sounds = new Sounds(require('config/sounds'));
     var config = new Config(require('config/app'));
     var settings = new Settings(config.get());
@@ -62,7 +61,6 @@ require(['config/require', 'config'], function() {
       camera: camera,
       sounds: sounds,
       controllers: controllers,
-      filmstrip: Filmstrip,
       storage: new Storage()
     });
 

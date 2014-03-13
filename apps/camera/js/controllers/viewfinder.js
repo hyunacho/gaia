@@ -25,7 +25,6 @@ function ViewfinderController(app) {
   this.app = app;
   this.camera = app.camera;
   this.activity = app.activity;
-  this.filmstrip = app.filmstrip;
   this.settings = app.settings;
   this.viewfinder = app.views.viewfinder;
   this.bindEvents();
@@ -90,7 +89,6 @@ ViewfinderController.prototype.onZoomChange = function(zoom) {
 ViewfinderController.prototype.onViewfinderClick = function() {
   var recording = this.app.get('recording');
   if (recording || this.activity.active) { return; }
-  this.filmstrip.toggle();
   debug('click');
 };
 

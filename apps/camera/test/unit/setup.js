@@ -13,7 +13,9 @@ mocha.setup({
     'Format',
     'VideoPlayer',
     'GestureDetector',
-    'debug'
+    'debug',
+    'confirm',
+    'MediaFrame'
   ]
 });
 

@@ -52,22 +52,25 @@ suite('controllers/preview-gallery', function() {
 
   suite('PreviewGalleryController()', function() {
     setup(function() {
-      this.oldConfirm = window.confirm;
-      window.confirm = sinon.stub();
+      sinon.stub(window, 'confirm');
       window.confirm.returns(true);
+    });
+
+    teardown(function() {
+      window.confirm.restore();
     });
 
     test('Should listen to the following events', function() {
       this.previewGalleryController = new
       this.PreviewGalleryController(this.app);
       assert.ok(this.app.on.calledWith('preview'));
-      assert.ok(this.app.on.calledWith('addItem'));
+      assert.ok(this.app.on.calledWith('newimage'));
+      assert.ok(this.app.on.calledWith('newvideo'));
 
       assert.ok(this.previewGallery.on.calledWith('click:gallery'));
       assert.ok(this.previewGallery.on.calledWith('click:share'));
       assert.ok(this.previewGallery.on.calledWith('click:delete'));
       assert.ok(this.previewGallery.on.calledWith('click:back'));
-      assert.ok(this.previewGallery.on.calledWith('previewItemChange'));
 
       assert.ok(this.storage.on.calledWith('itemdeleted'));
     });
@@ -75,7 +78,7 @@ suite('controllers/preview-gallery', function() {
     test('Should open the gallery app when gallery button is pressed',
       function() {
       window.MozActivity = sinon.spy();
-      this.previewGalleryController.galleryButtonClick();
+      this.previewGalleryController.onGalleryButtonClick();
 
       assert.ok(window.MozActivity.calledWith(
       {
@@ -149,9 +152,8 @@ suite('controllers/preview-gallery', function() {
       this.previewGalleryController.storage.video = storageStub;
       this.previewGalleryController.deleteCurrentItem();
 
-      assert.ok(this.previewGalleryController.deleteItem.calledWith
-        ('root/fileName'));
-
+      assert.ok(this.previewGalleryController.deleteItem
+                .calledWith('root/fileName'));
     });
 
     test('Should deleteCurrentItem which is video', function() {
@@ -173,11 +175,11 @@ suite('controllers/preview-gallery', function() {
       this.previewGalleryController.storage.video = storageStub;
       this.previewGalleryController.deleteCurrentItem();
 
-      assert.ok(this.previewGalleryController.deleteItem.calledWith
-        ('root/fileName'));
+      assert.ok(this.previewGalleryController.deleteItem
+                .calledWith('root/fileName'));
     });
 
-   test('Check onNewMedia callback', function() {
+    test('Check onNewMedia callback', function() {
       var item = {
          media: {
            blob: sinon.spy()
@@ -197,51 +199,28 @@ suite('controllers/preview-gallery', function() {
          path: 'home/DCIM/abc.jpg'
       };
       this.previewGalleryController.deleteItem = sinon.spy();
-      this.previewGalleryController.itemDeleted(data);
+      this.previewGalleryController.onItemDeleted(data);
       assert.ok(this.previewGalleryController.deleteItem.called);
     });
 
-   test('Check handleswipe up', function() {
-      var e = {
-         detail: {
-            direction: 'up',
-            vy: -2
-  }
-      };
+    test('Check onItemChange when direction is \'up\'', function() {
       this.previewGalleryController.previewGallery.close = sinon.spy();
-      this.previewGalleryController.handleSwipe(e);
+      this.previewGalleryController.onItemChange('up');
       assert.ok(this.previewGalleryController.previewGallery.close.called);
     });
 
-    test('Check handleswipe left', function() {
-      var e = {
-         detail: {
-            direction: 'left',
-            vx: -2
-  }
-      };
+    test('Check onItemChange when direction is \'left\'', function() {
       this.previewGalleryController.currentItemIndex = -2;
       this.previewGalleryController.previewItem = sinon.spy();
-      this.previewGalleryController.handleSwipe(e);
+      this.previewGalleryController.onItemChange('left');
       assert.ok(this.previewGalleryController.previewItem.called);
     });
 
-    test('Check handleswipe right', function() {
-      var e = {
-         detail: {
-            direction: 'right',
-            vx: 2
-  }
-      };
+    test('Check onItemChange when direction is \'right\'', function() {
       this.previewGalleryController.currentItemIndex = 2;
       this.previewGalleryController.previewItem = sinon.spy();
-      this.previewGalleryController.handleSwipe(e);
+      this.previewGalleryController.onItemChange('right');
       assert.ok(this.previewGalleryController.previewItem.called);
     });
-
-    teardown(function() {
-      window.confirm = this.oldConfirm;
-    });
   });
-
 });

@@ -85,14 +85,14 @@
   content: "\e619";
 }
 .icon-hdr-menu:before {
-	content: "\e606";
+  content: "\e606";
 }
 .icon-camera-back:before {
-	content: "\e608";
+  content: "\e608";
 }
 .icon-preview-delete:before {
-	content: "\e60b";
+  content: "\e60b";
 }
 .icon-preview-share:before {
-	content: "\e614";
+  content: "\e614";
 }

@@ -7,7 +7,6 @@ define(function(require, exports, module) {
 
 var debug = require('debug')('controller:preview-gallery');
 var bindAll = require('lib/bind-all');
-var prepareBlob = require('lib/prepare-preview-blob');
 var broadcast = require('lib/broadcast');
 
 /**
@@ -31,18 +30,20 @@ function PreviewGalleryController(app) {
 }
 
 PreviewGalleryController.prototype.bindEvents = function() {
-  this.previewGallery.on('click:gallery', this.galleryButtonClick);
+  this.previewGallery.on('click:gallery', this.onGalleryButtonClick);
   this.previewGallery.on('click:share', this.shareCurrentItem);
   this.previewGallery.on('click:delete', this.deleteCurrentItem);
   this.previewGallery.on('click:back', this.closePreview);
-  this.previewGallery.on('previewItemChange', this.handleSwipe);
 
   this.app.on('preview', this.previewItem);
-  this.app.on('addItem', this.onNewMedia);
+  this.app.on('newimage', this.onNewMedia);
+  this.app.on('newvideo', this.onNewMedia);
+  this.app.on('previewGalleryClose', this.closePreview);
 
-  this.storage.on('itemdeleted', this.itemDeleted);
+  this.storage.on('itemdeleted', this.onItemDeleted);
   broadcast.on('storageUnavailable', this.closePreview);
   broadcast.on('storageShared', this.closePreview);
+  broadcast.on('itemChange', this.onItemChange);
 
   debug('events bound');
 };
@@ -58,9 +59,7 @@ PreviewGalleryController.prototype.configure = function() {
  *
  * @private
  */
-PreviewGalleryController.prototype.galleryButtonClick = function(event) {
-  var MozActivity = window.MozActivity;
-
+PreviewGalleryController.prototype.onGalleryButtonClick = function(event) {
   // Can't launch the gallery if the lockscreen is locked.
   // The button shouldn't even be visible in this case, but
   // let's be really sure here.
@@ -79,7 +78,7 @@ PreviewGalleryController.prototype.shareCurrentItem = function() {
   var index = this.currentItemIndex;
   var item = this.items[index];
   var type = item.isImage ? 'image/*' : 'video/*';
-  var nameonly = item.filepath.substring(
+  var filename = item.filepath.substring(
     item.filepath.lastIndexOf('/') + 1);
   var activity = new window.MozActivity({
     name: 'share',
@@ -87,7 +86,7 @@ PreviewGalleryController.prototype.shareCurrentItem = function() {
       type: type,
       number: 1,
       blobs: [item.blob],
-      filenames: [nameonly],
+      filenames: [filename],
       filepaths: [item.filepath] /* temporary hack for bluetooth app */
     }
   });
@@ -96,12 +95,16 @@ PreviewGalleryController.prototype.shareCurrentItem = function() {
   };
 };
 
+
+/**
+ * Delete the current item 
+ * when the delete button is pressed.
+ * @private
+ */
 PreviewGalleryController.prototype.deleteCurrentItem = function() {
   // The button should be gone, but hard exit from this function
   // just in case.
-  if (this.app.inSecureMode) {
-    return;
-  }
+  if (this.app.inSecureMode) { return; }
 
   var index = this.currentItemIndex;
   var item = this.items[index];
@@ -137,11 +140,16 @@ PreviewGalleryController.prototype.deleteCurrentItem = function() {
                      e.target.error);
       };
     }
-
   }
 };
 
-// Remove the item with corresponding filepath.
+/**
+ * Delete the item with corresponding filepath
+ * and update the thumbnail icon 
+ * on the viewfinder if needed.
+ *
+ * @param  {String} filepath
+ */
 PreviewGalleryController.prototype.deleteItem = function(filepath) {
   var deleteIdx = -1;
   var deletedItem = null;
@@ -178,45 +186,41 @@ PreviewGalleryController.prototype.deleteItem = function(filepath) {
     this.closePreview()
   } 
   else {
-    if(deleteIdx == this.items.length) {
+    if (deleteIdx == this.items.length) {
       this.currentItemIndex = this.items.length - 1;
     }
-    else if(deleteIdx == 0) {      
+    else if (deleteIdx == 0) {
       // Update thumbnail icon to the previous image when delete the latest image
       var newItem = this.items[this.currentItemIndex];
-      if(newItem.isImage)
-        this.controls.setThumbnail(newItem.blob);
-      else        
-        this.controls.setThumbnail(newItem.media.blob);
+      this.controls.setThumbnail(newItem.thumbnail);
     }
-    this.previewItem();
+
+    var isPreviewOpened = this.previewGallery.isPreviewOpened();
+    if (isPreviewOpened)
+      this.previewItem();
   }
 };
 
 PreviewGalleryController.prototype.closePreview = function() {
-  this.viewfinder.els.video.play();
+  this.app.camera.resumePreview();
   this.currentItemIndex = 0;
   this.previewGallery.close();
+  this.app.emit('previewGalleryClosed');
 };
 
-PreviewGalleryController.prototype.handleSwipe = function(e) {
-  // Because the stuff around the media frame does not change position
-  // when the phone is rotated, we don't alter these directions based
-  // on orientation. To dismiss the preview, the user always swipes toward
-  // the top.
-
-  switch (e.detail.direction) {
-  case 'up':   // close the preview if the swipe is fast enough
-    if (e.detail.vy < -1) { this.previewGallery.close(); }
+PreviewGalleryController.prototype.onItemChange = function(direction) {
+  switch (direction) {
+  case 'up':   // close the preview
+    this.previewGallery.close();
     break;
-  case 'left': // go to next image if fast enough
-    if (e.detail.vx < -1 && this.currentItemIndex < this.items.length - 1) {
+  case 'left': // go to next image
+    if (this.currentItemIndex < this.items.length - 1) {
       this.currentItemIndex += 1;
       this.previewItem();
     }
     break;
-  case 'right': // go to previous image if fast enough
-    if (e.detail.vx > 1 && this.currentItemIndex > 0) {
+  case 'right': // go to previous
+    if (this.currentItemIndex > 0) {
       this.currentItemIndex -= 1;
       this.previewItem();
     }
@@ -225,22 +229,14 @@ PreviewGalleryController.prototype.handleSwipe = function(e) {
 };
 
 PreviewGalleryController.prototype.onNewMedia = function(item) {
-  var self = this;
-  var isImage = item.media.blob.type.contains('image') ? true : false;
+  var isImage = item.blob.type.contains('image') ? true : false;
 
-  if(isImage) {
-    prepareBlob(item.media.blob, function(newItem) {
-      newItem.filepath = item.filepath;
-      newItem.isImage = true;
-      self.items.unshift(newItem);
-    });
-  }
-  else {
-    var newItem = item;
-    newItem.filepath = item.filepath;
-    newItem.isImage = false;
-    this.items.unshift(newItem);
-  }
+  if (isImage)
+    item.isImage = true;
+  else
+    item.isImage = false;
+  
+  this.items.unshift(item);
 };
 
 PreviewGalleryController.prototype.previewItem = function() {
@@ -248,18 +244,29 @@ PreviewGalleryController.prototype.previewItem = function() {
   var item = this.items[index];
 
   this.previewGallery.open();
-  this.previewGallery.updateCountText(index+1, this.items.length);
-  if(item.isImage)
+  this.previewGallery.updateCountText(index + 1, this.items.length);
+  if (item.isImage)
     this.previewGallery.showImage(item);
   else
-    this.previewGallery.showVideo(item.media);
+    this.previewGallery.showVideo(item);
+
+  this.app.emit('previewGalleryOpened');
 };
 
-PreviewGalleryController.prototype.itemDeleted = function(data) {
-  var startString = data.path.indexOf('DCIM');
-  var filepath = null;
+/**
+ * Delete items in Gallery app
+ * when the preview gallery is opened.
+ *
+ * Delete items in the preview gallery also. 
+ *
+ * @param  {Object} data
+ */
+PreviewGalleryController.prototype.onItemDeleted = function(data) {
+  var startString = data.path.indexOf('DCIM/');
+  var filepath = data;
 
-  if(startString != 0)
+  if (startString < -1) { return; }
+  else if (startString > 0)
     filepath = data.path.substr(startString);
 
   this.deleteItem(filepath);

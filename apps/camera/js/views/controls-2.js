@@ -70,6 +70,7 @@ module.exports = View.extend({
 
   removeThumbnail: function() {
     this.els.thumbnail.removeChild(this.els.image);
+    window.URL.revokeObjectURL(this.els.image.src);
     this.els.image = null;
   }
 });

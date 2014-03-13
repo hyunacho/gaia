@@ -33,7 +33,6 @@ return View.extend({
     this.els.mediaFrame = this.find('.js-media-frame');
     this.els.countText = this.find('.js-count-text')
 
-    bind(this.els.mediaFrame, 'swipe', this.handleSwipe);
     attach.on(this.el, 'click', '.js-btn', this.onButtonClick);
 
     orientation.on('orientation', this.setOrientation);
@@ -44,6 +43,7 @@ return View.extend({
     this.frame = new MediaFrame(this.els.mediaFrame);
     this.items = [];
     addPanAndZoomHandlers(this.frame);
+
   },
 
   template: function() {
@@ -65,10 +65,6 @@ return View.extend({
       '</footer>';
   },
 
-  handleSwipe: function(e) {
-    this.emit('previewItemChange', e);
-  },
-
   onButtonClick: function(e, el) {
     var name = el.getAttribute('name');
     this.emit('click:' + name, e);
@@ -84,38 +80,15 @@ return View.extend({
     this.frame.clear();
   },
 
+  isPreviewOpened: function() {
+    return !this.el.classList.contains('offscreen');
+  },
+
   updateCountText: function(current, total) {
     this.els.countText.textContent = current + '/' + total;
   },
 
   setOrientation: function(orientation) {
-    this.els.mediaFrame.dataset.orientation = orientation;
-
-    // When we rotate the media frame, we also have to change its size
-    var containerWidth = this.els.frameContainer.offsetWidth;
-    var containerHeight = this.els.frameContainer.offsetHeight;
-    if (orientation === 0 || orientation === 180) {
-      this.els.mediaFrame.style.width = containerWidth + 'px';
-      this.els.mediaFrame.style.height = containerHeight + 'px';
-      this.els.mediaFrame.style.top = 0 + 'px';
-      this.els.mediaFrame.style.left = 0 + 'px';
-
-      this.els.countText.style.width = containerWidth + 'px';
-      this.els.previewControl.style.width = containerWidth + 'px';
-    }
-    else {
-      this.els.mediaFrame.style.width = containerHeight + 'px';
-      this.els.mediaFrame.style.height = containerWidth + 'px';
-      this.els.mediaFrame.style.top = ((containerHeight - containerWidth) / 2) + 'px';
-      this.els.mediaFrame.style.left = ((containerWidth - containerHeight) / 2) + 'px';
-
-      this.els.countText.style.width = containerHeight + 'px';
-      this.els.previewControl.style.width = containerHeight + 'px';
-    }
-
-    // And rotate so this new size fills the screen
-    this.els.mediaFrame.style.transform = 'rotate(-' + orientation + 'deg)';
-
     // And we have to resize the frame (and its video player)
     this.frame.resize();
     this.frame.video.setPlayerSize();
@@ -132,7 +105,6 @@ return View.extend({
       image.preview,
       image.rotation,
       image.mirrored);
-    return this;
   },
 
   showVideo: function(video) {
@@ -142,9 +114,7 @@ return View.extend({
       video.width,
       video.height,
       video.rotation);
-    return this;
   }
-
 });
 
 });

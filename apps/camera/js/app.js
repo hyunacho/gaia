@@ -59,7 +59,6 @@ function App(options) {
   this.inSecureMode = (this.win.location.hash === '#secure');
   this.controllers = options.controllers;
   this.geolocation = options.geolocation;
-  this.filmstrip = options.filmstrip;
   this.activity = options.activity;
   this.views = options.views;
   this.config = options.config;
@@ -110,7 +109,6 @@ App.prototype.teardown = function() {
  */
 App.prototype.runControllers = function() {
   debug('running controllers');
-  this.filmstrip = this.filmstrip(this);
   this.controllers.settings(this);
   this.controllers.activity(this);
   this.controllers.timer(this);
@@ -163,6 +161,8 @@ App.prototype.bindEvents = function() {
   bind(this.el, 'click', this.onClick);
   this.on('focus', this.onFocus);
   this.on('blur', this.onBlur);
+  this.on('previewGalleryOpened', lockscreen.enableTimeout);
+  this.on('previewGalleryClosed', lockscreen.disableTimeout);
   debug('events bound');
 };
 
@@ -300,19 +300,6 @@ App.prototype.miscStuff = function() {
   LazyL10n.get(function() {
     dcf.init();
     performanceTesting.dispatch('startup-path-done');
-  });
-
-  // The screen wakelock should be on
-  // at all times except when the
-  // filmstrip preview is shown.
-  broadcast.on('filmstripItemPreview', function() {
-    lockscreen.enableTimeout();
-  });
-
-  // When the filmstrip preview is hidden
-  // we can enable the  again.
-  broadcast.on('filmstripPreviewHide', function() {
-    lockscreen.disableTimeout();
   });
 
   debug('misc stuff done');
