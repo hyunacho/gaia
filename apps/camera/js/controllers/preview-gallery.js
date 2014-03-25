@@ -34,8 +34,6 @@ function PreviewGalleryController(app) {
   bindAll(this);
   this.app = app;
   this.storage = this.app.storage;
-  this.viewfinder = app.views.viewfinder;
-  this.controls = app.views.controls;
   this.bindEvents();
   this.configure();
   debug('initialized');
@@ -74,6 +72,11 @@ PreviewGalleryController.prototype.openPreview = function() {
   this.view.on('click:back', this.closePreview);
   this.view.on('itemChange', this.handleItemChange);
 
+  // If lockscreen is locked, hide all control buttons
+  var secureMode = this.app.inSecureMode;
+  this.view.set('secure-mode', secureMode);
+  this.view.open();
+
   this.previewItem();
 };
 
@@ -90,8 +93,8 @@ PreviewGalleryController.prototype.closePreview = function() {
     this.view.close();
     this.view.destroy();
     this.view = null;
-    this.app.emit('previewgallery:closed');
   }
+  this.app.emit('previewgallery:closed');
 };
 
 /**
@@ -237,14 +240,6 @@ PreviewGalleryController.prototype.onNewMedia = function(item) {
 PreviewGalleryController.prototype.previewItem = function() {
   var index = this.currentItemIndex;
   var item = this.items[index];
-  var isPreviewOpened = this.view.isPreviewOpened();
-
-  if(!isPreviewOpened) {
-    // If lockscreen is locked, hide all control buttons
-    var secureMode = this.app.inSecureMode;
-    this.view.set('secure-mode', secureMode);
-    this.view.open();
-  }
   this.view.updateCountText(index + 1, this.items.length);
 
   if (item.isVideo) { this.view.showVideo(item); }
