@@ -14,7 +14,7 @@ var View = require('vendor/view');
  */
 
 module.exports = View.extend({
-  name: 'controls',
+  name: 'controls-dual',
   className: 'test-controls',
 
   initialize: function() {
@@ -27,7 +27,6 @@ module.exports = View.extend({
 
     // Bind events
     attach.on(this.el, 'click', '.js-btn', this.onButtonClick);
-    attach.on(this.el, 'click', '.js-switch', this.onButtonClick);
     debug('rendered');
   },
 
@@ -40,24 +39,22 @@ module.exports = View.extend({
   template: function() {
     /*jshint maxlen:false*/
     return '' +
-      '<div class="controls-left">' +
+      '<div class="controls-dual-left">' +
         '<div class="controls-button controls-gallery-button test-gallery icon-gallery js-btn" name="gallery"></div>' +
         '<div class="controls-button controls-thumbnail-button js-thumbnail js-btn" name="thumbnail"></div>' +
-        '<div class="controls-button controls-cancel-pick-button test-cancel-pick icon-cancel js-btn" name="cancel">×</div>' +
+        '<div class="controls-button controls-cancel-pick-button test-cancel-pick icon-cancel js-btn" name="cancel">x</div>' +
       '</div>' +
-      '<div class="controls-middle">' +
-        '<div class="capture-button test-capture js-btn rotates" name="capture">' +
+      '<div class="controls-dual-middle">' +
+        '<div class="capture-button-dual test-capture js-btn rotates" name="capture">' +
           '<div class="circle outer-circle"></div>' +
           '<div class="circle inner-circle"></div>' +
           '<div class="center icon"></div>' +
         '</div>' +
       '</div>' +
-      '<div class="controls-right">' +
-        '<div class="mode-switch test-switch js-switch icon" name="switch">' +
-          '<div class="mode-icon icon rotates"></div>' +
-          '<div class="selected-mode">' +
-            '<div class="selected-mode-icon rotates"></div>' +
-          '</div>' +
+      '<div class="controls-dual-right">' +
+        '<div class="video-record-dual js-btn" name="videoRecord">' +
+          '<div class="circle outer-circle"></div>' +
+          '<div class="center dot"></div>' +
         '</div>' +
       '</div>';
   },

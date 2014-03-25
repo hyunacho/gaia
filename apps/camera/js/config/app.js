@@ -2,7 +2,9 @@ define(function(require, exports, module) {
 'use strict';
 
 module.exports = {
+  madaiFeatures: false,
   showSettings: true,
+  dualShutter: true,
   enableZoom: true,
   viewfinder: {
     scaleType: 'fill'
@@ -276,22 +278,22 @@ module.exports = {
       {
         key: 'timer'
       },
-      // {
-      //   key: 'pictureSizesBack',
-      //   condition: { 'cameras': 'back' }
-      // },
-      // {
-      //   key: 'pictureSizesFront',
-      //   condition: { 'cameras': 'front' }
-      // },
-      // {
-      //   key: 'recorderProfilesBack',
-      //   condition: { 'cameras': 'back' }
-      // },
-      // {
-      //   key: 'recorderProfilesFront',
-      //   condition: { 'cameras': 'front' }
-      // }
+      {
+        key: 'pictureSizesBack',
+        condition: { 'cameras': 'back' }
+      },
+      {
+        key: 'pictureSizesFront',
+        condition: { 'cameras': 'front' }
+      },
+      {
+        key: 'recorderProfilesBack',
+        condition: { 'cameras': 'back' }
+      },
+      {
+        key: 'recorderProfilesFront',
+        condition: { 'cameras': 'front' }
+      }
     ]
   }
 };

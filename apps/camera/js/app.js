@@ -9,6 +9,7 @@ var performanceTesting = require('performanceTesting');
 var ViewfinderView = require('views/viewfinder');
 var RecordingTimerView = require('views/recording-timer');
 var ControlsView = require('views/controls');
+var ControlsDualView = require('views/controls-dual');
 var FocusRing = require('views/focus-ring');
 var ZoomBarView = require('views/zoom-bar');
 var lockscreen = require('lib/lock-screen');
@@ -85,6 +86,10 @@ App.prototype.boot = function() {
 App.prototype.setInitialMode = function() {
   var mode = this.activity.mode;
   if (mode) { this.set('mode', mode, { silent: true }); }
+  
+  var dualShutter = this.settings.dualShutter.selected('value');
+  this.ControlsView = dualShutter ? ControlsDualView : ControlsView;
+
 };
 
 App.prototype.teardown = function() {
@@ -105,8 +110,8 @@ App.prototype.runControllers = function() {
   this.controllers.camera(this);
   this.controllers.viewfinder(this);
   this.controllers.recordingTimer(this);
-  this.controllers.indicators(this);
   this.controllers.previewGallery(this);
+  this.controllers.indicators(this);
   this.controllers.controls(this);
   this.controllers.confirm(this);
   this.controllers.overlay(this);
@@ -121,7 +126,7 @@ App.prototype.initializeViews = function() {
   this.views.viewfinder = new ViewfinderView();
   this.views.recordingTimer = new RecordingTimerView();
   this.views.focusRing = new FocusRing();
-  this.views.controls = new ControlsView();
+  this.views.controls = new this.ControlsView();
   this.views.hud = new HudView();
   this.views.zoomBar = new ZoomBarView();
   debug('views initialized');

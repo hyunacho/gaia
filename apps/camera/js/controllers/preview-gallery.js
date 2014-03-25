@@ -163,15 +163,12 @@ PreviewGalleryController.prototype.deleteCurrentItem = function() {
     msg = navigator.mozL10n.get('delete-photo?');
   }
 
-  if (window.confirm(msg)) {
+  if (confirm(msg)) {
     this.updatePreviewGallery(index);
 
     // Actually delete the file
-    if (item.isVideo) {
-      this.storage.deleteVideo(filepath);
-    } else {
-      this.storage.deleteImage(filepath);
-    }
+    if (item.isVideo) { this.storage.deleteVideo(filepath); }
+    else { this.storage.deleteImage(filepath); }
   }
 };
 
@@ -194,8 +191,8 @@ PreviewGalleryController.prototype.updatePreviewGallery = function(index) {
       this.currentItemIndex = this.items.length - 1;
     }
 
-    var isPreviewOpened = this.view.isPreviewOpened();
-    if (isPreviewOpened) {
+    var isOpened = this.view ? true : false;
+    if (isOpened) {
       this.previewItem();
     }
   }
@@ -245,11 +242,8 @@ PreviewGalleryController.prototype.previewItem = function() {
   var item = this.items[index];
   this.view.updateCountText(index + 1, this.items.length);
 
-  if (item.isVideo) {
-    this.view.showVideo(item);
-  } else {
-    this.view.showImage(item);
-  }
+  if (item.isVideo) { this.view.showVideo(item); }
+  else { this.view.showImage(item); }
 
   this.app.emit('previewgallery:opened');
 };
@@ -279,18 +273,14 @@ PreviewGalleryController.prototype.onItemDeleted = function(data) {
 };
 
 /**
- * As a privacy feature, when the camera app is used from the lockscreen
- * and the lockscreen is actually locked with a passcode, we don't want
- * the camera to retain any state from one use to the next. So if the
- * camera is hidden (i.e. if the phone returns to the lockscreen) we
- * forget our state.  In practice, it appears that the system app actually
- * kills the camera when this happens, so this code is redundant.
+ * If the lockscreen is locked then
+ * close the preview and forget everything taken images/videos
+ * when lost focus on the preview gallery
  */
 PreviewGalleryController.prototype.onBlur = function() {
   if (this.app.inSecureMode) {
     this.closePreview();
-    this.configure();          // Forget all stored images
-    this.updateThumbnail();    // Get rid of any thumbnail
+    this.configure();
   }
 };
 

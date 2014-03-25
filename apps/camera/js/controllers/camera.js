@@ -49,9 +49,13 @@ CameraController.prototype.bindEvents = function() {
   camera.on('configured', app.firer('camera:configured'));
   camera.on('change:recording', app.setter('recording'));
   camera.on('shutter', app.firer('camera:shutter'));
+  camera.on('shutter-dual', app.firer('camera:shutter-dual'));
   camera.on('loaded', app.firer('camera:loaded'));
   camera.on('ready', app.firer('camera:ready'));
   camera.on('busy', app.firer('camera:busy'));
+
+  // dual
+  camera.on('dual-ready', app.firer('camera:dual-ready'));
 
   // Camera
   camera.on('filesizelimitreached', this.onFileSizeLimitReached);
@@ -65,7 +69,7 @@ CameraController.prototype.bindEvents = function() {
   app.on('timer:ended', this.capture);
   app.on('blur', this.onBlur);
   app.on('settings:configured', this.onSettingsConfigured);
-
+  app.on('toggleRecordingDual', this.onToggleRecordingDual); // for dual
   settings.pictureSizes.on('change:selected', this.onPictureSizeChange);
   settings.recorderProfiles.on('change:selected', this.onRecorderProfileChange);
   settings.flashModes.on('change:selected', this.setFlashMode);
@@ -136,7 +140,29 @@ CameraController.prototype.onSettingsConfigured = function() {
  CameraController.prototype.capture = function() {
   if (this.shouldCountdown()) { return; }
   var position = this.app.geolocation.position;
-  this.camera.capture({ position: position });
+  // For taking a picture during video recording on dual shutter mode
+  var recording = this.camera.get('recording');
+  var dualShutter = this.settings.dualShutter.selected('value');
+
+  if(dualShutter && recording) {
+    this.camera.takePicture({ position: position });
+  }
+  else {
+    this.camera.capture({ position: position });
+  }
+};
+
+CameraController.prototype.onToggleRecordingDual = function() {
+  var position = this.app.geolocation.position;
+  var recording = this.camera.get('recording');
+  if (recording) {
+    this.camera.stopRecording({ position: position });
+    this.app.settings.get('mode').next();
+  }
+  else {
+    if (this.shouldCountdown()) { return; }
+    this.camera.startRecording({ position: position });
+  }
 };
 
 /**
@@ -247,7 +273,10 @@ CameraController.prototype.showSizeLimitAlert = function() {
 };
 
 CameraController.prototype.setMode = function(mode) {
-  this.setFlashMode();
+  var madaiFeatures = this.settings.madaiFeatures.selected('value');
+  if (madaiFeatures) { this.setFlashModeDual(mode); }
+  else { this.setFlashMode(); }
+
   this.camera.setMode(mode);
   this.viewfinder.fadeOut(this.camera.configure);
 };
@@ -270,8 +299,12 @@ CameraController.prototype.setFlashMode = function() {
 CameraController.prototype.onBlur = function() {
   var recording = this.camera.get('recording');
   var camera = this.camera;
+  var dualShutter = this.settings.dualShutter.selected('value');
 
   if (recording) {
+    if(dualShutter) {
+      this.app.settings.get('mode').next();
+    }
     camera.stopRecording();
   }
 
@@ -299,7 +332,10 @@ CameraController.prototype.setWhiteBalance = function() {
 
 CameraController.prototype.setHDR = function(hdr) {
   if (this.hdrDisabled) { return; }
-  this.camera.setHDR(hdr);
+
+  var madaiFeatures = this.settings.madaiFeatures.selected('value');
+  if (madaiFeatures) { this.camera.setHDR(hdr); }
+  else {}
 };
 
 CameraController.prototype.onFlashModeChange = function(flashModes) {
@@ -317,5 +353,37 @@ CameraController.prototype.onHDRChange = function(hdr) {
     this.settings.flashModesPicture.select('off');
   }
 };
+
+/**
+ * Flash mode for the dual shutter
+ * Support 'auto' mode in video mode
+ * Only MADAI feature
+ */
+CameraController.prototype.setFlashModeDual = function(mode){
+  var flashModeCamera = this.settings.flashModesPicture.selected('key');
+  if (mode == 'video') {
+    switch (flashModeCamera) {
+      case 'on':
+        this.camera.setFlashMode('torch');
+        break;
+      case 'auto':
+        var luminance = this.camera.getLuminance();
+        if (luminance == 'low') {
+          this.camera.setFlashMode('torch');
+        }
+        else {
+          this.camera.setFlashMode('off');
+        }
+        break;
+      case 'off':
+        this.camera.setFlashMode('off');
+        break;
+    }
+  }
+  else {
+    this.setFlashMode();
+  }
+};
+
 
 });

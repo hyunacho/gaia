@@ -87,9 +87,7 @@ return View.extend({
   },
 
   previewMenuFadeIn: function() {
-    if (this.videoPlaying) {
-      return;
-    }
+    if (this.videoPlaying) { return; }
     this.els.previewMenu.classList.add('visible');
     if (this.previewTimer) {
       clearTimeout(this.previewTimer);
@@ -104,9 +102,7 @@ return View.extend({
   },
 
   orientationSwipe: function(e) {
-    if (this.videoPlaying) {
-      this.handleVideoStop();
-    }
+    if (this.videoPlaying) { this.handleVideoStop(); }
     this.emit('itemChange', e);
   },
 
@@ -126,10 +122,6 @@ return View.extend({
     this.previewMenuFadeOut();
     this.el.classList.add('offscreen');
     this.frame.clear();
-  },
-
-  isPreviewOpened: function() {
-    return !this.el.classList.contains('offscreen');
   },
 
   updateCountText: function(current, total) {

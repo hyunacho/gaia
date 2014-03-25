@@ -45,7 +45,7 @@ suite('controllers/preview-gallery', function() {
 
     // Our test instance
     this.previewGalleryController = new this.PreviewGalleryController(this.app);
-
+    
     // For convenience
     this.camera = this.app.camera;
     this.previewGallery = this.previewGalleryController.view;
@@ -81,6 +81,7 @@ suite('controllers/preview-gallery', function() {
       assert.ok(this.app.on.calledWith('preview'));
       assert.ok(this.app.on.calledWith('newmedia'));
       assert.ok(this.app.on.calledWith('blur'));
+
       assert.ok(this.storage.on.calledWith('itemdeleted'));
     });
 
@@ -97,7 +98,7 @@ suite('controllers/preview-gallery', function() {
       var item = {
         blob: {},
         filepath: 'root/folder1/folder2/fileName',
-        isImage: true
+        isVideo: false
       };
       this.previewGalleryController.items = [item];
       this.previewGalleryController.currentItemIndex = 0;
@@ -137,13 +138,14 @@ suite('controllers/preview-gallery', function() {
       var item = {
         blob: {},
         filepath: 'root/fileName',
-        isVideo: false
+        isImage: true
       };
       this.previewGalleryController.items = [item];
       this.previewGalleryController.currentItemIndex = 0;
+      this.previewGalleryController.deleteItem = sinon.spy();
       this.previewGalleryController.deleteCurrentItem();
 
-      assert.ok(this.previewGalleryController.storage.deleteImage
+      assert.ok(this.previewGalleryController.deleteItem
                 .calledWith('root/fileName'));
     });
 
@@ -151,7 +153,7 @@ suite('controllers/preview-gallery', function() {
       var item = {
         blob: {},
         filepath: 'root/fileName',
-        isVideo: true
+        isImage: false
       };
       this.previewGalleryController.items = [item];
       this.previewGalleryController.currentItemIndex = 0;

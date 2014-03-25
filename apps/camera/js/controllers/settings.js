@@ -228,7 +228,14 @@ var aliases = {
     },
     get: function() {
       var mode = this.settings.mode.selected('key');
-      return this.settings[this.map[mode]];
+      var madaiFeatures = this.settings.madaiFeatures.selected('value');
+      if (madaiFeatures) {
+        mode = 'picture';
+        return this.settings[this.map[mode]];
+      }
+      else {
+        return this.settings[this.map[mode]];
+      }
     }
   }
 };
