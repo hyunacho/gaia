@@ -194,8 +194,8 @@
   margin-top: -0.8rem;
   margin-left: -0.8rem;
   border-radius: 50%;
-  width: 1.6rem;
-  height: 1.6rem;
+  width: 1.4rem;
+  height: 1.4rem;
   background: #D92E2E;
   opacity: 1;
 }
@@ -203,14 +203,14 @@
 .video-record-dual:active .dot {
   border-radius: 15%;
   background-color: #FFFFFF;
-  transform: scale(1);
+  transform: scale(1.14);
   transition: transform 100ms ease-in;
 }
 
 .controls-dual[mode=video] .video-record-dual .dot {
   border-radius: 15%;
   background-color: #FFFFFF;
-  transform: scale(1.4);
+  transform: scale(1.14);
   transition: transform 100ms ease-in;
 }
 
