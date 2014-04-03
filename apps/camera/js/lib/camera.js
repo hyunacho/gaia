@@ -134,6 +134,13 @@ Camera.prototype.formatCapabilities = function(capabilities) {
 };
 
 Camera.prototype.configure = function() {
+  // To avoid getting/setting mozCamera on dual shutter mode 
+  // when receive blur/focus events
+  if (!this.mozCamera) {
+    debug('error - `mozCamera` is undefined or null');
+    return;
+  }
+
   var self = this;
   var success = function() {
     self.emit('configured');
@@ -378,8 +385,16 @@ Camera.prototype.takePicture = function(options) {
     self.resumePreview();
     self.set('focus', 'none');
     self.emit('newimage', image);
+
     debug('success taking picture');
-    complete();
+    var recording = self.get('recording');
+    if(recording) {
+      self.emit('dual-ready');
+    }
+    else {
+      complete();
+    }
+
   }
 
   function complete() {
@@ -399,7 +414,9 @@ Camera.prototype.takePicture = function(options) {
  * @private
  */
 Camera.prototype.focus = function(done) {
-  if (!this.autoFocus.auto) { return done(); }
+  // For dual. image capturing during the recording.
+  var recording = this.get('recording');
+  if (!this.autoFocus.auto || recording) { return done(); }
   var reset = function() { self.set('focus', 'none'); };
   var self = this;
 
@@ -575,6 +592,12 @@ Camera.prototype.onRecordingError = function(id) {
  * @private
  */
 Camera.prototype.onShutter = function() {
+  var recording = this.get('recording');
+  if(recording) {
+    this.emit('shutter-dual');
+    return;
+  }
+
   this.emit('shutter');
 };
 
@@ -602,6 +625,9 @@ Camera.prototype.onPreviewStateChange = function(state) {
 Camera.prototype.onRecorderStateChange = function(msg) {
   if (msg === 'FileSizeLimitReached') {
     this.emit('filesizelimitreached');
+  }
+  else if (msg == 'Stopped') {
+    this.emit('stopped');
   }
 };
 

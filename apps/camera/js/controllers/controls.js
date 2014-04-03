@@ -34,7 +34,8 @@ function ControlsController(app) {
 ControlsController.prototype.bindEvents = function() {
   this.app.settings.mode.on('change:selected', this.controls.setter('mode'));
   this.app.on('newthumbnail', this.onNewThumbnail);
-  this.app.on('camera:ready', this.controls.enable);
+  //this.app.on('camera:ready', this.controls.enable);
+  this.app.on('camera:ready', this.onReady);
   this.app.on('camera:busy', this.controls.disable);
   this.app.on('change:recording', this.onRecordingChange);
   this.app.on('camera:timeupdate', this.controls.setVideoTimer);
@@ -46,6 +47,13 @@ ControlsController.prototype.bindEvents = function() {
   this.app.on('timer:started', this.onTimerStarted);
   this.app.on('timer:cleared', this.restore);
   this.app.on('camera:shutter', this.restore);
+
+  // For dual shutter
+  this.app.on('camera:dual-ready', this.dualReady);
+  this.app.on('camera:stopped', this.app.settings.mode.next);
+  this.app.on('viewfinder:updated', this.checkVideoRecording);
+  this.controls.on('click:videoRecord', this.onVideoButtonClick);
+
   debug('events bound');
 };
 
@@ -85,6 +93,12 @@ ControlsController.prototype.configure = function() {
 ControlsController.prototype.onCaptureClick = function() {
   this.controls.set('capture-active', true);
   this.app.fire('capture');
+
+  // For dual shutter
+  var recording = this.app.camera.get('recording');
+  if (recording) {
+    this.controls.set('recording-capture', true);
+  }
 };
 
 ControlsController.prototype.onRecordingChange = function(recording) {
@@ -131,6 +145,11 @@ ControlsController.prototype.onTimerStarted = function() {
  */
 ControlsController.prototype.restore = function() {
   this.controls.set('capture-active', false);
+
+  // For dual shutter
+  var videoMode = this.app.settings.mode.selected('key') === 'video';
+  if (videoMode) { this.app.settings.mode.next(); }
+
   this.controls.enable();
 };
 
@@ -181,6 +200,45 @@ ControlsController.prototype.onGalleryButtonClick = function(event) {
   // Gallery to be launched (Bug 957709)
   controls.disable();
   setTimeout(controls.enable, 2000);
+};
+
+/**
+* When start the recording,
+* change the mode to video and wait for updating the preview.
+* After updating the preview, start the recording in checkVideoRecording().
+* In recording mode, stop the recording
+* and then change the mode to camera in CameraController.
+*/
+ControlsController.prototype.onVideoButtonClick = function() {
+  var notRecording = !this.app.camera.get('recording');
+
+  if (notRecording) {
+    this.controls.disable();
+    this.app.settings.mode.next();
+    this.preparedRecording = true;
+  }
+  else { // stop
+    this.app.emit('toggleRecordingDual');
+  }
+};
+
+ControlsController.prototype.startRecording = function() {
+    this.app.emit('toggleRecordingDual');
+    this.preparedRecording = false;
+};
+
+ControlsController.prototype.onReady = function() {
+  if (this.preparedRecording) {
+    this.startRecording();
+  }
+  else {
+    this.controls.enable();
+  }
+};
+
+ControlsController.prototype.dualReady = function() {
+  this.controls.set('recording-capture', false);
+  this.controls.enable();
 };
 
 });

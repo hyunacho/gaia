@@ -10,6 +10,7 @@ var NotificationView = require('views/notification');
 var ViewfinderView = require('views/viewfinder');
 var orientation = require('lib/orientation');
 var ControlsView = require('views/controls');
+var ControlsDualView = require('views/controls-dual');
 var FocusRing = require('views/focus-ring');
 var ZoomBarView = require('views/zoom-bar');
 var lockscreen = require('lib/lock-screen');
@@ -75,6 +76,9 @@ App.prototype.boot = function() {
   if (this.didBoot) {
     return;
   }
+  
+  // for dual
+  this.setControlsViewMode();
 
   this.initializeViews();
   this.runControllers();
@@ -86,6 +90,11 @@ App.prototype.boot = function() {
   debug('booted');
 
   this.didBoot = true;
+};
+
+App.prototype.setControlsViewMode = function() {
+  var dualShutter = !this.settings.dualShutter.get('disabled');
+  this.ControlsView = dualShutter ? ControlsDualView : ControlsView;
 };
 
 App.prototype.teardown = function() {
@@ -122,7 +131,7 @@ App.prototype.initializeViews = function() {
   debug('initializing views');
   this.views.viewfinder = new ViewfinderView();
   this.views.focusRing = new FocusRing();
-  this.views.controls = new ControlsView();
+  this.views.controls = new this.ControlsView();
   this.views.hud = new HudView();
   this.views.zoomBar = new ZoomBarView();
   this.views.notification = new NotificationView();

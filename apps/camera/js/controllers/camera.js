@@ -53,6 +53,12 @@ CameraController.prototype.bindEvents = function() {
   camera.on('ready', app.firer('camera:ready'));
   camera.on('busy', app.firer('camera:busy'));
 
+  // dual
+  camera.on('shutter-dual', app.firer('camera:shutter-dual'));
+  camera.on('dual-ready', app.firer('camera:dual-ready'));
+  camera.on('stopped', app.firer('camera:stopped'));
+  app.on('toggleRecordingDual', this.onToggleRecordingDual);
+
   // Camera
   camera.on('filesizelimitreached', this.onFileSizeLimitReached);
   camera.on('newimage', this.onNewImage);
@@ -143,7 +149,38 @@ CameraController.prototype.capture = function() {
   }
 
   var position = this.app.geolocation.position;
-  this.camera.capture({ position: position });
+  // For taking a picture during video recording on dual shutter mode
+  var recording = this.camera.get('recording');
+  var dualShutter = !this.settings.dualShutter.get('disabled');
+
+  if(dualShutter && recording) {
+    this.camera.takePicture({ position: position });
+  }
+  else {
+    this.camera.capture({ position: position });
+  }
+};
+
+CameraController.prototype.onToggleRecordingDual = function() {
+  if (this.shouldCountdown()) {
+    this.app.emit('startcountdown');
+    return;
+  }
+  
+  var position = this.app.geolocation.position;
+  this.camera.toggleRecording({ position: position });
+
+  // var position = this.app.geolocation.position;
+  // var recording = this.camera.get('recording');
+  // if (recording) {
+  //   this.camera.stopRecording({ position: position });
+  //   this.app.settings.mode.next();
+  // }
+  // else {
+  //   if (this.shouldCountdown()) { return; }
+  //   this.camera.startRecording({ position: position });
+  // }
+
 };
 
 /**
@@ -283,8 +320,12 @@ CameraController.prototype.setFlashMode = function() {
 CameraController.prototype.onBlur = function() {
   var recording = this.camera.get('recording');
   var camera = this.camera;
+  var dualShutter = !this.settings.dualShutter.get('disabled');
 
   if (recording) {
+    if(dualShutter) {
+      this.app.settings.mode.next();
+    }
     camera.stopRecording();
   }
 

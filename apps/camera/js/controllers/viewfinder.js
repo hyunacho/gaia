@@ -62,6 +62,7 @@ ViewfinderController.prototype.bindEvents = function() {
   this.app.on('settings:opened', this.hideGrid);
   this.app.on('settings:closed', this.configureGrid);
   this.camera.on('zoomChange', this.onZoomChange);
+  this.app.on('camera:shutter-dual', this.viewfinder.shutter);
 };
 
 ViewfinderController.prototype.loadStream = function() {
@@ -90,6 +91,7 @@ ViewfinderController.prototype.updatePreview = function() {
   // newly set dimensions before fading in.
   // https://bugzilla.mozilla.org/show_bug.cgi?id=982230
   setTimeout(this.viewfinder.fadeIn, 300);
+  //this.app.emit('viewfinder:updated');
 };
 
 ViewfinderController.prototype.onPinchChange = function(zoom) {

@@ -2,6 +2,9 @@ define(function(require, exports, module) {
 'use strict';
 
 module.exports = {
+  dualShutter: {
+    disabled: false,
+  },
   zoom: {
     disabled: false
   },
