@@ -9,6 +9,7 @@ define(function(require, exports, module) {
 
 var prepareBlob = require('lib/prepare-preview-blob');
 var debug = require('debug')('controller:confirm');
+var resizeImage = require('lib/resize-image');
 var ConfirmView = require('views/confirm');
 var bindAll = require('lib/bind-all');
 
@@ -41,7 +42,7 @@ function ConfirmController(app) {
 }
 
 ConfirmController.prototype.renderView = function() {
-  if (!this.activity.pick) {
+  if (!this.activity.active) {
     return;
   }
 
@@ -49,11 +50,12 @@ ConfirmController.prototype.renderView = function() {
     this.confirmView.show();
     return;
   }
-
   this.confirmView = new this.ConfirmView();
+  this.confirmView.hide();
   this.confirmView.render().appendTo(this.container);
   this.confirmView.on('click:select', this.onSelectMedia);
   this.confirmView.on('click:retake', this.onRetakeMedia);
+  this.camera.resumePreview();
 };
 
 /**
@@ -86,9 +88,10 @@ ConfirmController.prototype.bindEvents = function() {
  *
  */
 ConfirmController.prototype.onNewMedia = function(newMedia) {
-  if (!this.activity.pick) { return; }
+  if (!this.activity.active) { return; }
 
   this.newMedia = newMedia;
+  this.renderView();
   if (newMedia.isVideo) { // Is video
     this.confirmView.showVideo(newMedia);
   } else { // Is Image
@@ -97,7 +100,32 @@ ConfirmController.prototype.onNewMedia = function(newMedia) {
 };
 
 ConfirmController.prototype.onSelectMedia = function() {
-  this.app.emit('confirm:selected', this.newMedia);
+  var activity = this.activity;
+  var needsResizing;
+  var media = {
+    blob: this.newMedia.blob
+  };
+
+  if (this.newMedia.isVideo) { // Is Video
+    media.type = 'video/3gpp';
+    media.poster = this.newMedia.poster.blob;
+  } else { // Is Image
+    media.type = 'image/jpeg';
+    needsResizing = activity.data.width || activity.data.height;
+    debug('needs resizing: %s', needsResizing);
+    if (needsResizing) {
+      resizeImage({
+        blob: this.newMedia.blob,
+        width: activity.data.width,
+        height: activity.data.height
+      }, function(newBlob) {
+        media.blob = newBlob;
+        activity.postResult(media);
+      });
+      return;
+    }
+  }
+  activity.postResult(media);
 };
 
 ConfirmController.prototype.onRetakeMedia = function() {

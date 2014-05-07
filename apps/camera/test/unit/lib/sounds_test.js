@@ -1,9 +1,3 @@
-require('/shared/test/unit/mocks/mock_audio.js')
-
-var mocksHelperForSounds = new MocksHelper([
-  'Audio'
-]).init();
-
 suite('Sounds', function() {
   /*jshint maxlen:false*/
   /*global req*/
@@ -31,8 +25,6 @@ suite('Sounds', function() {
       setting: 'camera.recordingsound.enabled'
     }
   ];
-
-  mocksHelperForSounds.attachTestHelpers();
 
   suiteSetup(function(done) {
     req(['lib/sounds'], function(sounds) {
@@ -181,7 +173,7 @@ suite('Sounds', function() {
     test('Should return an Audio object with the given src', function() {
       var url = this.mockSound.url;
       var audio = this.sounds.createAudio(url);
-      assert.ok(audio instanceof window.Audio);
+      assert.ok(audio instanceof window.HTMLAudioElement);
       assert.ok(~audio.src.indexOf(url));
     });
 
@@ -193,10 +185,7 @@ suite('Sounds', function() {
 
   suite('Sounds#playSound()', function() {
     setup(function() {
-      this.mockSound.audio = {
-        play: sinon.spy(),
-        cloneNode: function() { return this; }
-      };
+      this.mockSound.audio = { play: sinon.spy() };
     });
 
     test('Should *not* play the sound if it\'s not enabled', function() {

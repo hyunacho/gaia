@@ -25,6 +25,7 @@ function IndicatorsController(app) {
   this.app = app;
   this.settings = app.settings;
   this.onSettingsConfigured = this.onSettingsConfigured.bind(this);
+  this.geolocation = app.geolocation;
   this.configure();
   debug('initialized');
 }
@@ -58,6 +59,7 @@ IndicatorsController.prototype.bindEvents = function() {
   this.settings.hdr.on('change:selected', this.view.setter('hdr'));
   this.app.on('change:batteryStatus', this.view.setter('battery'));
   this.app.on('change:recording', this.view.setter('recording'));
+  this.geolocation.on('change:geolocation', this.view.setter('geolocation'));
   this.app.on('settings:configured', this.onSettingsConfigured);
   debug('events bound');
 };
@@ -74,6 +76,8 @@ IndicatorsController.prototype.onSettingsConfigured = function() {
   this.configureEnabled();
   this.view.set('hdr', this.settings.hdr.selected('key'));
   this.view.set('timer', this.settings.timer.selected('key'));
+  var eventParameter = this.geolocation.position ? 'on' : 'off';
+  this.view.set('geolocation', eventParameter);
   this.view.show();
   debug('configured');
 };

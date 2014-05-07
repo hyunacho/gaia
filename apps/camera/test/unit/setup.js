@@ -16,8 +16,7 @@ mocha.setup({
     'CONFIG_AVG_JPEG_COMPRESSION_RATIO',
     'MediaFrame',
     'confirm',
-    'MozActivity',
-    'CustomDialog'
+    'MozActivity'
   ]
 });
 
@@ -41,7 +40,6 @@ requireApp('camera/js/vendor/alameda.js', function() {
       'VideoPlayer': '../shared/js/media/video_player',
       'MediaFrame': '../shared/js/media/media_frame',
       'BlobView': '../shared/js/blobview',
-      'CustomDialog': '../shared/js/custom_dialog',
       'debug': 'vendor/debug'
     },
     shim: {
@@ -70,12 +68,7 @@ requireApp('camera/js/vendor/alameda.js', function() {
       },
       'GestureDetector': {
         exports: 'GestureDetector'
-      },
-      'CustomDialog': {
-        exports: 'CustomDialog'
       }
     }
   });
 });
-
-require('/shared/test/unit/mocks/mocks_helper.js');

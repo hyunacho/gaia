@@ -5,7 +5,7 @@ suite('lib/picture-sizes/format-picture-sizes', function() {
 
   suiteSetup(function(done) {
     var self = this;
-    req(['lib/format-picture-sizes'], function(formatPictureSizes) {
+    req(['lib/picture-sizes/format-picture-sizes'], function(formatPictureSizes) {
       self.formatPictureSizes = formatPictureSizes;
       done();
     });
@@ -44,14 +44,8 @@ suite('lib/picture-sizes/format-picture-sizes', function() {
   });
 
   test('Should exlude given keys', function() {
-    var options = this.formatPictureSizes(this.sizes, { exclude: { keys: ['2048x1536'] }});
+    var options = this.formatPictureSizes(this.sizes, { exclude: ['2048x1536'] });
     var found = options.some(function(size) { return size.key === '2048x1536'; });
-    assert.isFalse(found);
-  });
-
-  test('Should exlude given aspects', function() {
-    var options = this.formatPictureSizes(this.sizes, { exclude: { aspects: ['11:9'] }});
-    var found = options.some(function(size) { return size.data.aspect === '11:9'; });
     assert.isFalse(found);
   });
 
@@ -61,5 +55,25 @@ suite('lib/picture-sizes/format-picture-sizes', function() {
     var someGreater = options.some(function(item) { return item.pixelSize > maxPixelSize; });
 
     assert.isFalse(someGreater, 'should be none greater than: ' + maxPixelSize);
+  });
+
+  suite('title', function() {
+    test('Should include the apect ratio', function() {
+      assert.ok(this.options[0].title.indexOf('4:3') > -1);
+    });
+
+    test('Should include MP value for > 1MP', function() {
+      assert.isTrue(this.options[0].title.indexOf('3MP') > -1);
+      assert.isFalse(this.options[4].title.indexOf('MP') > -1);
+    });
+
+    test('Should include the resolution', function() {
+      assert.isTrue(this.options[0].title.indexOf('2048x1536') > -1);
+    });
+
+    test('Should allow \'MP\' string to be localized', function() {
+      this.options = this.formatPictureSizes(this.sizes, { mp: 'REPLACED' });
+      assert.isTrue(this.options[0].title.indexOf('REPLACED') > -1);
+    });
   });
 });

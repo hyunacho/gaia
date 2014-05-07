@@ -52,7 +52,7 @@ Setting.prototype.resetOptions = function(list) {
   this.updateSelected({ silent: true });
 };
 
-Setting.prototype.filterOptions = function(keys, options) {
+Setting.prototype.filterOptions = function(keys) {
   var available = this.options.available = {};
   var hash = this.options.all;
   var filtered = [];
@@ -66,7 +66,7 @@ Setting.prototype.filterOptions = function(keys, options) {
   });
 
   this.sortByIndex(filtered);
-  this.set('options', filtered, options);
+  this.set('options', filtered, { silent: true });
   this.updateSelected({ silent: true });
 };
 
@@ -160,8 +160,8 @@ Setting.prototype.sortByIndex = function(list) {
  *
  * @private
  */
-Setting.prototype.updateSelected = function(options) {
-  this.select(this.get('selected') || this.fetched, options);
+Setting.prototype.updateSelected = function() {
+  this.select(this.get('selected') || this.fetched, { silent: true });
 };
 
 /**

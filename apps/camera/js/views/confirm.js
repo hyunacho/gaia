@@ -25,6 +25,8 @@ module.exports = View.extend({
   render: function() {
     var l10n = navigator.mozL10n;
 
+    this.show();
+
     this.el.innerHTML = this.template({
       retake: l10n.get('retake-button'),
       select: l10n.get('select-button')

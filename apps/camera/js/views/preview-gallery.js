@@ -81,7 +81,7 @@ return View.extend({
               '</span>' +
             '</button>' +
             '<button class="js-btn" name="options" >' +
-              '<span class="preview-option-icon icon-preview-options">' +
+              '<span class="preview-option-icon icon-options">' +
               '</span>' +
             '</button>' +
           '</menu>' +
@@ -231,6 +231,10 @@ return View.extend({
     this.previewMenuFadeOut();
     this.el.classList.add('offscreen');
     this.frame.clear();
+  },
+
+  isPreviewOpened: function() {
+    return !this.el.classList.contains('offscreen');
   },
 
   updateCountText: function(current, total) {

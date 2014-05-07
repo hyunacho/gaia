@@ -153,7 +153,8 @@ Sounds.prototype.playSound = function(sound) {
  */
 Sounds.prototype.createAudio = function(url) {
   var audio = new Audio(url);
-  audio.mozAudioChannelType = 'notification';
+  // MADAI ONLY. Shutter shound should be always played
+  audio.mozAudioChannelType = 'publicnotification'; // notification
   return audio;
 };
 

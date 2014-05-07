@@ -24,10 +24,13 @@ module.exports = View.extend({
     this.els.flash = this.find('.js-flash');
     this.els.camera = this.find('.js-camera');
     this.els.settings = this.find('.js-settings');
+    bind(this.el, 'click', this.onClick);
     bind(this.els.flash, 'click', this.onFlashClick);
     bind(this.els.camera, 'click', this.onCameraClick);
     bind(this.els.settings, 'click', this.onSettingsClick, true);
   },
+
+  onClick: function(event) { event.stopPropagation(); },
 
   setFlashMode: function(mode) {
     if (!mode) { return; }
@@ -59,7 +62,12 @@ module.exports = View.extend({
     '<div class="hud_btn hud_flash rotates test-toggle-flash js-flash"></div>' +
     '<div class="hud_btn hud_settings rotates icon-settings js-settings">' +
     '</div>';
-  }
+  },
+
+  getHudRect: function() {
+    return this.el.getBoundingClientRect();
+  },
+
 });
 
 });

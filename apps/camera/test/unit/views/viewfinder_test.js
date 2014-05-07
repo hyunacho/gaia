@@ -13,13 +13,25 @@ suite('views/viewfinder', function() {
   });
 
   setup(function() {
+    var width = 300;
+    var height = 500;
+
     this.viewfinder = new this.ViewfinderView();
-    this.viewfinder.width = 300;
-    this.viewfinder.height = 500;
+
+    this.container = this.viewfinder.container = {
+      width: height,
+      height: width,
+      aspect: height / width
+    };
   });
 
   suite('ViewfinderView#updatePreview()', function() {
     setup(function() {
+      this.viewfinder.el = {
+        clientWidth: this.container.height,
+        clientHeight: this.container.width
+      };
+      
       sinon.stub(this.viewfinder, 'updatePreviewMetrics');
     });
 
@@ -64,14 +76,7 @@ suite('views/viewfinder', function() {
   });
 
   suite('ViewfinderView#updatePreviewMetrics()', function() {
-    setup(function() {
-      this.viewfinder.container = {
-        width: this.viewfinder.height,
-        height: this.viewfinder.width
-      };
-
-      this.container = this.viewfinder.container;
-    });
+    setup(function() {});
 
     test('Should set a \'scale-type\' attribute', function() {
       var previewSize = { width: 400, height: 300 };

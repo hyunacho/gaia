@@ -2,54 +2,32 @@ define(function(require, exports, module) {
 'use strict';
 
 module.exports = {
-  globals : {
-    // The maximum picture size that camera is allowed to take
-    CONFIG_MAX_IMAGE_PIXEL_SIZE: 5242880,
-    CONFIG_MAX_SNAPSHOT_PIXEL_SIZE: 5242880,
-
-    // Size of the exif preview embeded in images taken by camera
-    CONFIG_REQUIRED_EXIF_PREVIEW_WIDTH: 0,
-    CONFIG_REQUIRED_EXIF_PREVIEW_HEIGHT: 0,
-
-    // Minimum EXIF preview size that will be displayed as a
-    // full-screen preview
-    //CONFIG_REQUIRED_EXIF_PREVIEW_SIZE: { width: 640, height: 480},
-
-    // The minimum available disk space to start recording a video.
-    RECORD_SPACE_MIN: 1024 * 1024 * 2,
-
-    // Number of bytes left on disk to let us stop recording.
-    RECORD_SPACE_PADDING: 1024 * 1024 * 1,
-
-    // Minimum video duration length for creating a video that contains at least
-    // few samples, see bug 899864.
-    MIN_RECORDING_TIME: 1000,
-
-    // Amount of inactivity time (in milliseconds) to hide the Zoom Bar
-    ZOOM_BAR_INACTIVITY_TIMEOUT: 3000,
-
-    // Amount (%) to adjust the Zoom Bar by when tapping the min/max indicators
-    ZOOM_BAR_INDICATOR_INTERVAL: 10,
-
-    // Used to adjust sensitivity for pinch-to-zoom gesture
-    // (smaller values = more sensitivity)
-    ZOOM_GESTURE_SENSITIVITY: 0.425
+  dualShutter: {
+    disabled: false,
   },
-
+  madaiFeatures: {
+    disabled: false,
+  },
   zoom: {
     disabled: false
   },
-
   caf: {
     // Set this property to true if you want to disable continuous auto focus
     // even on hardware that supports it.
     disabled: false
   },
-
   viewfinder: {
-    scaleType: 'fill'
+    scaleType: 'fit' // Changed to 'fit' for MADAI from 'fill'
   },
-
+  focusModes: {
+    modes: {
+      continuousFocus: true,
+      faceTracking: true,
+      touchFocus: true,
+      autoFocus: true,
+      fixedFocus: true
+    }
+  },
   battery: {
     levels: {
       low: 15,
@@ -59,41 +37,9 @@ module.exports = {
       healthy: 100
     }
   },
-
-  sounds: {
-    list: [
-      {
-        name: 'shutter',
-        setting: 'camera.shutter.enabled',
-        url: './resources/sounds/shutter.ogg'
-      },
-      {
-        name: 'recordingStart',
-        url: './resources/sounds/camcorder_start.opus',
-        setting: 'camera.recordingsound.enabled'
-      },
-      {
-        name: 'recordingEnd',
-        url: './resources/sounds/camcorder_end.opus',
-        setting: 'camera.recordingsound.enabled'
-      }
-    ]
+  geolocation: {
+    promptDelay: 2000
   },
-
-  activity: {
-
-    // The amount to scale pixelSize derived from
-    // 'pick' activities that define `width` or `height`
-    // parameters. The larger the scale factor, the larger
-    // the activity `maxPixelSize` icreasing the probability
-    // that a larger pictureSize will be chosen for the activity.
-    maxPixelSizeScaleFactor: 2.5
-  },
-
-  loadingScreen: {
-    delay: 600
-  },
-
   mode: {
     options: [
       {
@@ -142,14 +88,12 @@ module.exports = {
     title: 'camera-resolution',
     header: 'camera-resolution-header',
     icon: 'icon-picture-size',
+    maxPixelSize: window.CONFIG_MAX_IMAGE_PIXEL_SIZE,
     options: [
       // {
       //   key: '2048x1536'
       // }
     ],
-    exclude: {
-      aspects: ['5:3', '11:9', '16:9']
-    },
     persistent: true
   },
 
@@ -157,15 +101,15 @@ module.exports = {
     title: 'camera-resolution',
     header: 'camera-resolution-header',
     icon: 'icon-picture-size',
+    maxPixelSize: window.CONFIG_MAX_IMAGE_PIXEL_SIZE,
     options: [
       // {
       //   key: '2048x1536'
       // }
     ],
-    exclude: {
-      keys: ['1920x1088'],
-      aspects: ['5:3', '11:9', '16:9'],
-    },
+    // TO DO: set the default
+    selected: ['1920x1080'], 
+    exclude: ['1920x1088'],
     persistent: true
   },
 
@@ -174,7 +118,9 @@ module.exports = {
     header: 'video-resolution-header',
     icon: 'icon-video-size',
     options: [],
-    exclude: ['high', '1080p'],
+    // TO DO: set the default
+    selected: ['720p'], 
+    exclude: ['high'], // ['high', '1080p'],
     persistent: true
   },
 
@@ -313,23 +259,23 @@ module.exports = {
 
   settingsMenu: {
     items: [
+       {
+         key: 'hdr'
+       },
       // {
       //   key: 'scene'
       // },
       {
-        key: 'hdr'
+        key: 'grid'
       },
       {
         key: 'timer'
       },
-      // {
-      //   key: 'pictureSizes'
-      // },
-      // {
-      //   key: 'recorderProfiles'
-      // },
       {
-        key: 'grid'
+        key: 'pictureSizes'
+      },
+      {
+        key: 'recorderProfiles'
       }
     ]
   }

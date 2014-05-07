@@ -10,7 +10,6 @@ define(function(require, exports, module) {
  */
 
 var debug = require('debug')('controller:controls');
-var ControlsView = require('views/controls');
 var bindAll = require('lib/bind-all');
 
 /**
@@ -30,8 +29,7 @@ function ControlsController(app) {
   bindAll(this);
   this.app = app;
   this.activity = app.activity;
-  this.view = app.views.controls || new ControlsView();
-  this.app.views.controls = this.view;
+  this.controls = app.views.controls;
   this.bindEvents();
   this.configure();
   debug('initialized');
@@ -43,23 +41,33 @@ function ControlsController(app) {
  * @private
  */
 ControlsController.prototype.bindEvents = function() {
-  this.app.settings.mode.on('change:selected', this.view.setter('mode'));
-  this.app.settings.mode.on('change:options', this.configureMode);
+  this.app.settings.mode.on('change:selected', this.controls.setter('mode'));
 
   // App
   this.app.on('change:recording', this.onRecordingChange);
   this.app.on('camera:shutter', this.captureHighlightOff);
-  this.app.on('camera:busy', this.view.disable);
+  this.app.on('camera:busy', this.controls.disable);
   this.app.on('timer:started', this.onTimerStarted);
   this.app.on('newthumbnail', this.onNewThumbnail);
-  this.app.on('timer:cleared', this.restore);
+  // this.app.on('timer:cleared', this.restore); // For single button
   this.app.on('camera:ready', this.restore);
 
-  // View
-  this.view.on('click:thumbnail', this.app.firer('preview'));
-  this.view.on('click:switch', this.onSwitchButtonClick);
-  this.view.on('click:cancel', this.onCancelButtonClick);
-  this.view.on('click:capture', this.onCaptureClick);
+  // Controls
+  this.controls.on('click:thumbnail', this.app.firer('preview'));
+  this.controls.on('click:gallery', this.onGalleryButtonClick);
+  this.controls.on('click:switch', this.onSwitchButtonClick);
+  this.controls.on('click:cancel', this.onCancelButtonClick);
+  this.controls.on('click:auto-focus', this.app.firer('touchFocus:disable'));
+  this.controls.on('click:capture', this.onCaptureClick);
+
+  this.app.camera.on('change:focusMode', this.onFocusModeChange);
+
+  // For dual shutter
+  this.app.on('camera:dual-ready', this.dualReady);
+  this.app.on('camera:recordingError', this.restoreVideo);
+  this.app.on('viewfinder:updated', this.startRecording);
+  this.app.on('timer:cleared', this.timerCleared);
+  this.controls.on('click:videoRecord', this.onVideoButtonClick);
 
   debug('events bound');
 };
@@ -70,32 +78,24 @@ ControlsController.prototype.bindEvents = function() {
  * @private
  */
 ControlsController.prototype.configure = function() {
+  var isSwitchable = this.app.settings.mode.get('options').length > 1;
   var initialMode = this.app.settings.mode.selected('key');
-  var isCancellable = !!this.app.activity.pick;
+  var isCancellable = !!this.app.activity.active;
 
   // The gallery button should not
   // be shown if an activity is pending
   // or the application is in 'secure mode'.
-  this.view.set('cancel', isCancellable);
-  this.view.set('mode', initialMode);
+  var showGallery = !this.app.activity.active && !this.app.inSecureMode;
 
-  // Disable view until camera
-  // 'ready' enables it.
-  this.view.set('faded');
-  this.view.disable();
-
-  this.configureMode();
-
-  // Put it in the DOM
-  this.view.appendTo(this.app.el);
+  this.controls.set('gallery', showGallery);
+  this.controls.set('cancel', isCancellable);
+  this.controls.set('switchable', isSwitchable);
+  this.controls.set('mode', initialMode);
 
   debug('cancelable: %s', isCancellable);
+  debug('switchable: %s', isSwitchable);
+  debug('gallery: %s', showGallery);
   debug('mode: %s', initialMode);
-};
-
-ControlsController.prototype.configureMode = function() {
-  var isSwitchable = this.app.settings.mode.get('options').length > 1;
-  this.view.set('switchable', isSwitchable);
 };
 
 /**
@@ -113,6 +113,13 @@ ControlsController.prototype.configureMode = function() {
 ControlsController.prototype.onCaptureClick = function() {
   this.captureHighlightOn();
   this.app.emit('capture');
+
+  // For dual shutter
+  var dualShutter = !this.app.settings.dualShutter.get('disabled');
+  var recording = this.app.camera.get('recording');
+  if (dualShutter && recording) {
+    this.captureHighlightOn();
+  }
 };
 
 /**
@@ -124,8 +131,12 @@ ControlsController.prototype.onCaptureClick = function() {
  * @private
  */
 ControlsController.prototype.onRecordingChange = function(recording) {
-  this.view.set('recording', recording);
+  this.controls.set('recording', recording);
   if (!recording) { this.onRecordingEnd(); }
+
+  // For dual shutter. When press the video button continuously
+  var dualShutter = !this.app.settings.dualShutter.get('disabled');
+  if (dualShutter && recording) { this.recordingReady = false; }
 };
 
 /**
@@ -136,6 +147,11 @@ ControlsController.prototype.onRecordingChange = function(recording) {
  */
 ControlsController.prototype.onRecordingEnd = function() {
   this.captureHighlightOff();
+
+  // For dual shutter
+  var dualShutter = !this.app.settings.dualShutter.get('disabled');
+  if (dualShutter) { this.app.settings.mode.next(); }
+
 };
 
 /**
@@ -147,9 +163,9 @@ ControlsController.prototype.onRecordingEnd = function() {
  */
 ControlsController.prototype.onNewThumbnail = function(thumbnailBlob) {
   if (thumbnailBlob) {
-    this.view.setThumbnail(thumbnailBlob);
+    this.controls.setThumbnail(thumbnailBlob);
   } else {
-    this.view.removeThumbnail();
+    this.controls.removeThumbnail();
   }
 };
 
@@ -162,7 +178,7 @@ ControlsController.prototype.onNewThumbnail = function(thumbnailBlob) {
  */
 ControlsController.prototype.onTimerStarted = function() {
   this.captureHighlightOn();
-  this.view.disable();
+  this.controls.disable();
 };
 
 /**
@@ -172,9 +188,48 @@ ControlsController.prototype.onTimerStarted = function() {
  * @private
  */
 ControlsController.prototype.restore = function() {
+  // For dual shutter
+  // Receive 'ready' event from onPreviewStateChange before the timer cleared.
+  // Because change the mode when press the video button.
+  var dualShutter = !this.app.settings.dualShutter.get('disabled');
+  var timerActive = this.app.get('timerActive');
+  if (dualShutter && timerActive) { return; }
+  // When press the video button continuously
+  if (dualShutter && this.recordingReady) { return; }
+
   this.captureHighlightOff();
-  this.view.unset('faded');
-  this.view.enable();
+  this.controls.enable();
+};
+
+/**
+ * For dual shutter
+ * Restores the mode and video state
+ * when video recording is failed
+ * @private
+ */
+ControlsController.prototype.restoreVideo = function() {
+  this.app.settings.mode.next();
+  this.recordingReady = false;
+};
+
+/**
+ * For dual shutter
+ * Restores the capture/video button to its
+ * unpressed state and re-enables buttons.
+ *
+ * @private
+ */
+ControlsController.prototype.timerCleared = function() {
+  // For dual shutter
+  // Change the mode from video to camera
+  var dualShutter = !this.app.settings.dualShutter.get('disabled');
+  var isVideo = (this.app.camera.mode === 'video') ? true : false;
+  if (dualShutter && isVideo) {
+    this.restoreVideo();
+  }
+
+  this.captureHighlightOff();
+  this.controls.enable();
 };
 
 /**
@@ -184,7 +239,7 @@ ControlsController.prototype.restore = function() {
  * @private
  */
 ControlsController.prototype.captureHighlightOn = function() {
-  this.view.set('capture-active');
+  this.controls.set('capture-active', true);
 };
 
 /**
@@ -194,7 +249,7 @@ ControlsController.prototype.captureHighlightOn = function() {
  * @private
  */
 ControlsController.prototype.captureHighlightOff = function() {
-  this.view.unset('capture-active');
+  this.controls.set('capture-active', false);
 };
 
 /**
@@ -204,13 +259,23 @@ ControlsController.prototype.captureHighlightOff = function() {
  * @private
  */
 ControlsController.prototype.onSwitchButtonClick = function() {
-  this.view.disable();
+  this.controls.disable();
   this.app.settings.mode.next();
 };
 
-
+/**
+ * Cancel the current activity
+ * when the cancel button is
+ * pressed.
+ *
+ * This means the device will
+ * navigate back to the app
+ * that initiated the activity.
+ *
+ * @private
+ */
 ControlsController.prototype.onCancelButtonClick = function() {
-  this.app.emit('activitycanceled');
+  this.activity.cancel();
 };
 
 /**
@@ -221,7 +286,9 @@ ControlsController.prototype.onCancelButtonClick = function() {
  */
 ControlsController.prototype.onGalleryButtonClick = function(event) {
   event.stopPropagation();
+
   var MozActivity = window.MozActivity;
+  var controls = this.controls;
 
   // Can't launch the gallery if the lockscreen is locked.
   // The button shouldn't even be visible in this case, but
@@ -236,8 +303,53 @@ ControlsController.prototype.onGalleryButtonClick = function(event) {
 
   // Wait 2000ms before re-enabling the
   // Gallery to be launched (Bug 957709)
-  this.view.disable();
-  setTimeout(this.view.enable, 2000);
+  controls.disable();
+  setTimeout(controls.enable, 2000);
+};
+
+/**
+* When start the recording,
+* change the mode to video and wait for updating the preview.
+* After updating the preview, start the recording in startRecording().
+* In recording mode, stop the recording
+* and then change the mode to camera in CameraController.
+*/
+ControlsController.prototype.onVideoButtonClick = function() {
+  var dualShutter = !this.app.settings.dualShutter.get('disabled');
+  if (!dualShutter) { return; }
+
+  var notRecording = !this.app.camera.get('recording');
+
+  if (notRecording) {
+    this.controls.disable();
+    this.app.settings.mode.next();
+    this.recordingReady = true;
+  }
+  else { // stop
+    this.app.emit('toggleRecordingDual');
+  }
+};
+
+ControlsController.prototype.startRecording = function() {
+  var dualShutter = !this.app.settings.dualShutter.get('disabled');
+  if (!dualShutter) { return; }
+
+   if (this.recordingReady) {
+    this.app.emit('toggleRecordingDual');
+  }
+};
+
+ControlsController.prototype.dualReady = function() {
+  var dualShutter = !this.app.settings.dualShutter.get('disabled');
+  if (!dualShutter) { return; }
+
+  this.captureHighlightOff();
+  this.controls.enable();
+};
+
+ControlsController.prototype.onFocusModeChange = function(value) {
+  var mode = (this.app.camera.mode === 'video') ? value : false;
+  this.controls.set('focus', mode);
 };
 
 });

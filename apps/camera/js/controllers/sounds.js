@@ -2,37 +2,21 @@ define(function(require, exports, module) {
 'use strict';
 
 /**
- * Dependencies
- */
-
-var debug = require('debug')('controller:sounds');
-var Sounds = require('lib/sounds');
-
-/**
  * Exports
  */
 
-module.exports = function(app) { return new SoundsController(app); };
-module.exports.SoundsController = SoundsController;
+exports = module.exports = function(app) { return new SoundsController(app); };
+exports.SoundsController = SoundsController;
 
 /**
  * Initialize a new `SoundsController`
- *
- * @param {App} app [description]
+ * @param {[type]} app [description]
  */
 function SoundsController(app) {
-  debug('initializing');
-  var list = app.settings.sounds.get('list');
-  this.sounds = new Sounds(list);
-  this.app = app;
-  this.bindEvents();
-  debug('initialized');
+  this.sounds = app.sounds;
+  app.on('change:recording', this.onRecordingChange);
+  app.on('camera:shutter', this.sounds.player('shutter'));
 }
-
-SoundsController.prototype.bindEvents = function() {
-  this.app.on('change:recording', this.onRecordingChange.bind(this));
-  this.app.on('camera:shutter', this.sounds.player('shutter'));
-};
 
 /**
  * Plays the start/end recording sound.

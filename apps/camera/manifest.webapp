@@ -14,9 +14,11 @@
     "device-storage:pictures":{ "access": "readwrite" },
     "device-storage:videos":{ "access": "readwrite" },
     "settings":{ "access": "readonly" },
+    "permissions":{},
     "camera":{},
     "geolocation":{},
-    "audio-channel-notification":{}
+    "audio-channel-notification":{},
+    "webapps-manage":{}
   },
   "activities": {
     "record": {
@@ -42,6 +44,10 @@
     "en-US": {
       "name": "Camera",
       "description": "Gaia Camera"
+    },
+    "ja": {
+      "name": "カメラ",
+      "description": "Gaia カメラ"
     },
     "fr": {
       "name": "Photo",

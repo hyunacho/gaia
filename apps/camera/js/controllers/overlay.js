@@ -26,7 +26,7 @@ function OverlayController(app) {
   bindAll(this);
   this.app = app;
   this.activity = app.activity;
-  this.localize = app.localize;
+  this.storage = app.storage;
   this.batteryOverlay = null;
   this.storageOverlay = null;
   this.bindEvents();
@@ -34,8 +34,8 @@ function OverlayController(app) {
 }
 
 OverlayController.prototype.bindEvents = function() {
-  this.app.on('storage:changed', this.onStorageChanged);
-  this.app.on('change:batteryStatus', this.onBatteryChanged);
+  this.storage.on('statechange', this.onStorageStateChange);
+  this.app.on('change:batteryStatus', this.onBatteryStatusChange);
 };
 
 /**
@@ -45,16 +45,16 @@ OverlayController.prototype.bindEvents = function() {
  *
  * @param  {String} value  ['nospace'|'shared'|'unavailable'|'available']
  */
-OverlayController.prototype.onStorageChanged = function(state) {
-  debug('storage changed: \'%s\'', state);
+OverlayController.prototype.onStorageStateChange = function(value) {
+  debug('storage state change: \'%s\'', value);
 
   if (this.storageOverlay) {
     this.storageOverlay.destroy();
     this.storageOverlay = null;
   }
 
-  if (state !== 'available') {
-    this.storageOverlay = this.createOverlay(state);
+  if (value !== 'available') {
+    this.storageOverlay = this.createOverlay(value);
   }
 };
 
@@ -65,26 +65,28 @@ OverlayController.prototype.onStorageChanged = function(state) {
  *
  * @param  {String} status  ['shutdown'|'critical'|'verylow'|'low']
  */
-OverlayController.prototype.onBatteryChanged = function(state) {
-  debug('battery state change: \'%s\'', state);
+OverlayController.prototype.onBatteryStatusChange = function(status) {
+  debug('battery state change: \'%s\'', status);
 
   if (this.batteryOverlay) {
     this.batteryOverlay.destroy();
     this.batteryOverlay = null;
   }
 
-  if (state === 'shutdown') {
-    this.batteryOverlay = this.createOverlay(state);
+  if (status === 'shutdown') {
+    this.batteryOverlay = this.createOverlay(status);
   }
 };
 
 OverlayController.prototype.createOverlay = function(type) {
   var data = this.getOverlayData(type);
-  var self = this;
+  var activity = this.activity;
 
-  if (!data) { return; }
+  if (!data) {
+    return;
+  }
 
-  var isClosable = this.activity.pick;
+  var isClosable = activity.active;
   var overlay = new Overlay({
     type: type,
     closable: isClosable,
@@ -94,7 +96,7 @@ OverlayController.prototype.createOverlay = function(type) {
   overlay
     .appendTo(document.body)
     .on('click:close-btn', function() {
-      self.app.emit('activitycanceled');
+      activity.cancel();
     });
 
   debug('inserted \'%s\' overlay', type);
@@ -109,30 +111,31 @@ OverlayController.prototype.createOverlay = function(type) {
  * @return {Object}
  */
 OverlayController.prototype.getOverlayData = function(type) {
+  var l10n = navigator.mozL10n;
   var data = {};
 
   switch (type) {
     case 'unavailable':
-      data.title = this.localize('nocard2-title');
-      data.body = this.localize('nocard3-text');
+      data.title = l10n.get('nocard2-title');
+      data.body = l10n.get('nocard3-text');
     break;
     case 'nospace':
-      data.title = this.localize('nospace2-title');
-      data.body = this.localize('nospace2-text');
+      data.title = l10n.get('nospace2-title');
+      data.body = l10n.get('nospace2-text');
     break;
     case 'shared':
-      data.title = this.localize('pluggedin-title');
-      data.body = this.localize('pluggedin-text');
+      data.title = l10n.get('pluggedin-title');
+      data.body = l10n.get('pluggedin-text');
     break;
     case 'shutdown':
-      data.title = this.localize('battery-shutdown-title');
-      data.body = this.localize('battery-shutdown-text');
+      data.title = l10n.get('battery-shutdown-title');
+      data.body = l10n.get('battery-shutdown-text');
     break;
     default:
       return false;
   }
 
-  data.closeButtonText = this.localize('close-button');
+  data.closeButtonText = l10n.get('close-button');
 
   return data;
 };

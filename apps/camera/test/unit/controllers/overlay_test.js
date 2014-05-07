@@ -3,66 +3,83 @@
 'use strict';
 
 suite('controllers/overlay', function() {
+  var Controller;
+
   suiteSetup(function(done) {
     var self = this;
 
+    this.modules = {};
+
     req([
-      'app',
       'controllers/overlay',
+      'lib/activity',
       'views/overlay'
-    ], function(App, controller, Overlay) {
-      self.Controller = controller;
-      self.Overlay = Overlay;
-      self.App = App;
+    ], function(controller, activity, Overlay) {
+      Controller = self.modules.controller = controller;
+      self.modules.activity = activity;
+      self.modules.Overlay = Overlay;
       done();
     });
   });
 
   setup(function() {
-    this.app = sinon.createStubInstance(this.App);
-    this.app.activity = {
-      pick: false,
-      cancel: sinon.spy()
+    var Activity = this.modules.activity;
+
+    this.app = {
+      on: sinon.spy(),
+      camera: {
+        get: sinon.spy()
+      },
+      storage: {
+        on: sinon.spy()
+      },
+      activity: new Activity()
     };
 
-    this.app.localize.withArgs('nocard2-title').returns('nocard title');
-    this.app.localize.withArgs('nocard3-text').returns('nocard body');
-    this.app.localize.withArgs('nospace2-title').returns('nospace title');
-    this.app.localize.withArgs('nospace2-text').returns('nospace body');
-    this.app.localize.withArgs('pluggedin-title').returns('pluggedin title');
-    this.app.localize.withArgs('pluggedin-text').returns('pluggedin body');
+    navigator.mozL10n = { get: sinon.stub() };
+    navigator.mozL10n.get.withArgs('nocard2-title').returns('nocard title');
+    navigator.mozL10n.get.withArgs('nocard3-text').returns('nocard body');
+    navigator.mozL10n.get.withArgs('nospace2-title').returns('nospace title');
+    navigator.mozL10n.get.withArgs('nospace2-text').returns('nospace body');
+    navigator.mozL10n.get.withArgs(
+      'pluggedin-title').returns('pluggedin title');
+    navigator.mozL10n.get.withArgs('pluggedin-text').returns('pluggedin body');
+  });
+
+  teardown(function() {
+    delete navigator.mozL10n;
   });
 
   suite('OverlayController()', function() {
     test('Should bind to the storage state change event', function() {
-      this.controller = new this.Controller(this.app);
-      assert.ok(this.app.on.calledWith('storage:changed'));
+      this.controller = new Controller(this.app);
+      assert.ok(this.app.storage.on.calledWith('statechange'));
     });
   });
 
-  suite('OverlayController#onStorageChanged()', function() {
+  suite('OverlayController#onStorageStateChange()', function() {
     setup(function() {
-      this.controller = new this.Controller(this.app);
+      this.controller = new Controller(this.app);
       sinon.stub(this.controller, 'createOverlay');
     });
 
     test('Should *not* insert a new overlay', function() {
-      this.controller.onStorageChanged('available');
+      this.controller.onStorageStateChange('available');
       assert.isFalse(this.controller.createOverlay.called);
     });
 
     test('Should call createOverlay whenever the value is not \'available\'', function() {
-      this.controller.onStorageChanged('foo');
+      this.controller.onStorageStateChange('foo');
       assert.isTrue(this.controller.createOverlay.calledWith('foo'));
     });
   });
 
   suite('OverlayController#createOverlay()', function() {
     setup(function() {
-      this.OverlayProto = this.Overlay.prototype;
+      this.OverlayProto = this.modules.Overlay.prototype;
       sinon.stub(this.OverlayProto, 'initialize');
       sinon.stub(this.OverlayProto, 'appendTo', function() { return this; });
-      this.controller = new this.Controller(this.app);
+      this.controller = new Controller(this.app);
     });
 
     teardown(function() {
@@ -80,13 +97,13 @@ suite('controllers/overlay', function() {
       assert.isTrue(this.OverlayProto.appendTo.called);
     });
 
-    test('Should not be closable if activity not pending', function() {
+    test('Should not be closable only if not activity pending', function() {
       this.controller.createOverlay('unavailable');
       assert.isFalse(this.OverlayProto.initialize.args[0][0].closable);
     });
 
     test('Should be closable only if activity is pending', function() {
-      this.app.activity.pick = true;
+      this.app.activity.active = true;
       this.controller.createOverlay('unavailable');
       assert.isTrue(this.OverlayProto.initialize.args[0][0].closable);
     });
@@ -99,7 +116,7 @@ suite('controllers/overlay', function() {
 
   suite('OverlayController#getOverlayData()', function() {
     setup(function() {
-      this.controller = new this.Controller(this.app);
+      this.controller = new Controller(this.app);
     });
 
     test('Should return correct data for \'unavailable\'', function() {
@@ -126,21 +143,21 @@ suite('controllers/overlay', function() {
     });
   });
 
-  suite('OverlayController#onBatteryChanged()', function() {
+  suite('OverlayController#onBatteryStatusChange()', function() {
     setup(function() {
-      this.controller = new this.Controller(this.app);
+      this.controller = new Controller(this.app);
       sinon.stub(this.controller, 'createOverlay');
     });
 
     test('Should call createOverlay if status is shutdown', function() {
       this.controller.previousOverlay = 'foo';
-      this.controller.onBatteryChanged('shutdown');
+      this.controller.onBatteryStatusChange('shutdown');
       assert.isTrue(this.controller.createOverlay.calledWith('shutdown'));
     });
 
     test('Should call destroyOverlays if previous is shutdown', function() {
       this.controller.previousOverlay = 'shutdown';
-      this.controller.onBatteryChanged('foo');
+      this.controller.onBatteryStatusChange('foo');
     });
   });
 });

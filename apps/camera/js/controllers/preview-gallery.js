@@ -5,12 +5,12 @@ define(function(require, exports, module) {
  * Dependencies
  */
 
-var createThumbnailImage = require('lib/create-thumbnail-image');
 var debug = require('debug')('controller:preview-gallery');
-var PreviewGalleryView = require('views/preview-gallery');
-var preparePreview = require('lib/prepare-preview-blob');
 var bindAll = require('lib/bind-all');
-var dialog = require('CustomDialog');
+var PreviewGalleryView = require('views/preview-gallery');
+var createThumbnailImage = require('lib/create-thumbnail-image');
+var preparePreview = require('lib/prepare-preview-blob');
+var CustomDialog = require('CustomDialog');
 
 /**
  * The size of the thumbnail images we generate.
@@ -32,17 +32,17 @@ function PreviewGalleryController(app) {
   debug('initializing');
   bindAll(this);
   this.app = app;
-  this.dialog = app.dialog || dialog; // test hook
+  this.storage = this.app.storage;
   this.bindEvents();
   this.configure();
   debug('initialized');
 }
 
 PreviewGalleryController.prototype.bindEvents = function() {
-  this.app.on('storage:itemdeleted', this.onItemDeleted);
+  this.storage.on('itemdeleted', this.onItemDeleted);
   this.app.on('preview', this.openPreview);
   this.app.on('newmedia', this.onNewMedia);
-  this.app.on('hidden', this.onHidden);
+  this.app.on('blur', this.onBlur);
   debug('events bound');
 };
 
@@ -54,7 +54,7 @@ PreviewGalleryController.prototype.configure = function() {
 
 PreviewGalleryController.prototype.openPreview = function() {
   // If we're handling a pick activity the preview gallery is not used
-  if (this.app.activity.pick) {
+  if (this.app.activity.active) {
     return;
   }
 
@@ -62,6 +62,9 @@ PreviewGalleryController.prototype.openPreview = function() {
   this.view = new PreviewGalleryView()
     .render()
     .appendTo(this.app.el);
+
+  // MADAI ONLY. volume key event for capturing.
+  this.app.views.previewGallery = this.view;
 
   this.view.on('click:gallery', this.onGalleryButtonClick);
   this.view.on('click:share', this.shareCurrentItem);
@@ -77,7 +80,6 @@ PreviewGalleryController.prototype.openPreview = function() {
 
   this.app.set('previewGalleryOpen', true);
   this.previewItem();
-  this.app.emit('previewgallery:opened');
 };
 
 PreviewGalleryController.prototype.closePreview = function() {
@@ -93,6 +95,8 @@ PreviewGalleryController.prototype.closePreview = function() {
     this.view.close();
     this.view.destroy();
     this.view = null;
+    // MADAI ONLY. volume key event for capturing.
+    this.app.views.previewGallery = null;
   }
 
   this.app.set('previewGalleryOpen', false);
@@ -159,20 +163,18 @@ PreviewGalleryController.prototype.shareCurrentItem = function() {
 /**
  * Delete the current item
  * when the delete button is pressed.
- *
  * @private
  */
 PreviewGalleryController.prototype.deleteCurrentItem = function() {
-  // The button should be gone,but
-  // hard exit from this function just in case.
+  // The button should be gone, but hard exit from this function
+  // just in case.
   if (this.app.inSecureMode) { return; }
 
   var index = this.currentItemIndex;
   var item = this.items[index];
   var filepath = item.filepath;
-  var dialog = this.dialog;
-  var self = this;
   var msg;
+  var self = this;
 
   if (item.isVideo) {
     msg = navigator.mozL10n.get('delete-video?');
@@ -181,29 +183,28 @@ PreviewGalleryController.prototype.deleteCurrentItem = function() {
     msg = navigator.mozL10n.get('delete-photo?');
   }
 
-  dialog.show('', msg, {
-      title: navigator.mozL10n.get('cancel'),
-      callback: closeDialog
-    }, {
-      title: navigator.mozL10n.get('delete'),
-      callback: deleteItem,
-      recommend: false
-    });
+  CustomDialog.show('',
+                    msg,
+                    { title: navigator.mozL10n.get('cancel'),
+                      callback: closeDialog },
+                    { title: navigator.mozL10n.get('delete'),
+                      callback: deleteItem,
+                      recommend: false });
 
   function closeDialog() {
-    dialog.hide();
+    CustomDialog.hide();
   }
 
   function deleteItem() {
-    dialog.hide();
+    CustomDialog.hide();
 
     self.updatePreviewGallery(index);
 
     // Actually delete the file
     if (item.isVideo) {
-      self.app.emit('previewgallery:deletevideo', filepath);
+      self.storage.deleteVideo(filepath);
     } else {
-      self.app.emit('previewgallery:deletepicture', filepath);
+      self.storage.deleteImage(filepath);
     }
   }
 };
@@ -227,8 +228,8 @@ PreviewGalleryController.prototype.updatePreviewGallery = function(index) {
       this.currentItemIndex = this.items.length - 1;
     }
 
-    var isOpened = this.view ? true : false;
-    if (isOpened) {
+    var isPreviewOpened = this.view.isPreviewOpened();
+    if (isPreviewOpened) {
       this.previewItem();
     }
   }
@@ -262,7 +263,7 @@ PreviewGalleryController.prototype.previous = function() {
 
 PreviewGalleryController.prototype.onNewMedia = function(item) {
   // If we're handling a pick activity the preview gallery is not used
-  if (this.app.activity.pick) {
+  if (this.app.activity.active) {
     return;
   }
 
@@ -296,6 +297,8 @@ PreviewGalleryController.prototype.previewItem = function() {
   } else {
     this.view.showImage(item);
   }
+
+  this.app.emit('previewgallery:opened');
 };
 
 /**
@@ -330,12 +333,12 @@ PreviewGalleryController.prototype.onItemDeleted = function(data) {
  * forget our state.  In practice, it appears that the system app actually
  * kills the camera when this happens, so this code is redundant.
  */
-PreviewGalleryController.prototype.onHidden = function() {
+PreviewGalleryController.prototype.onBlur = function() {
   if (this.app.inSecureMode) {
+    this.closePreview();
     this.configure();          // Forget all stored images
     this.updateThumbnail();    // Get rid of any thumbnail
   }
-  this.closePreview();
 };
 
 PreviewGalleryController.prototype.updateThumbnail = function() {

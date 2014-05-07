@@ -6,29 +6,35 @@ define(function(require, exports, module) {
  */
 
 var NotificationView = require('views/notification');
-var LoadingView = require('views/loading-screen');
 var ViewfinderView = require('views/viewfinder');
 var orientation = require('lib/orientation');
-var FocusRing = require('views/focus-ring');
+var ControlsView = require('views/controls');
+// For Dual shutter
+var ControlsDualView = require('views/controls-dual');
 var ZoomBarView = require('views/zoom-bar');
 var bindAll = require('lib/bind-all');
 var model = require('vendor/model');
 var debug = require('debug')('app');
 var HudView = require('views/hud');
-var Pinch = require('lib/pinch');
 var bind = require('lib/bind');
+
+// MADAI ONLY. volume key event for capturing.
+var HwKeyEvents = require('lib/hw-key-events');
+
+/**
+ * Locals
+ */
+
+var unbind = bind.unbind;
+
+// Mixin model methods
+model(App.prototype);
 
 /**
  * Exports
  */
 
 module.exports = App;
-
-/**
- * Mixin `Model` API
- */
-
-model(App.prototype);
 
 /**
  * Initialize a new `App`
@@ -41,20 +47,19 @@ model(App.prototype);
  * @constructor
  */
 function App(options) {
-  debug('initialize');
   bindAll(this);
   this.views = {};
   this.el = options.el;
   this.win = options.win;
   this.doc = options.doc;
-  this.require = options.require || window.requirejs;
-  this.LoadingView = options.LoadingView || LoadingView; // test hook
   this.inSecureMode = (this.win.location.hash === '#secure');
   this.controllers = options.controllers;
   this.geolocation = options.geolocation;
+  this.activity = options.activity;
   this.settings = options.settings;
+  this.storage = options.storage;
   this.camera = options.camera;
-  this.activity = {};
+  this.sounds = options.sounds;
   debug('initialized');
 }
 
@@ -65,15 +70,44 @@ function App(options) {
  * @public
  */
 App.prototype.boot = function() {
-  debug('boot');
-  if (this.booted) { return; }
-  this.bindEvents();
+  if (this.didBoot) { return; }
+  
+  // For dual shutter
+  this.setControlsViewMode();
+
+  // MADAI ONLY. volume key event for capturing.
+  var madaiFeatures = !this.settings.madaiFeatures.get('disabled');
+  if (madaiFeatures) { this.initHwKeyEvent(); }
+
   this.initializeViews();
   this.runControllers();
   this.injectViews();
-  this.booted = true;
-  this.showLoading();
+  this.bindEvents();
+  this.configureL10n();
+  this.emit('boot');
+  this.didBoot = true;
   debug('booted');
+};
+
+/**
+ * For dual shutter
+ * Set the controls view type.
+ */
+App.prototype.setControlsViewMode = function() {
+  var dualShutter = !this.settings.dualShutter.get('disabled');
+  this.ControlsView = dualShutter ? ControlsDualView : ControlsView;
+};
+
+/**
+ * MADAI ONLY. volume key event for capturing.
+ * Init the HW key events to get
+ */
+App.prototype.initHwKeyEvent = function() {
+  this.hke = new HwKeyEvents();
+};
+
+App.prototype.teardown = function() {
+  this.unbindEvents();
 };
 
 /**
@@ -83,30 +117,23 @@ App.prototype.boot = function() {
  * @private
  */
 App.prototype.runControllers = function() {
-  debug('run controllers');
+  debug('running controllers');
   this.controllers.settings(this);
   this.controllers.activity(this);
+  this.controllers.timer(this);
   this.controllers.camera(this);
   this.controllers.viewfinder(this);
   this.controllers.recordingTimer(this);
   this.controllers.indicators(this);
+  this.controllers.previewGallery(this);
   this.controllers.controls(this);
+  this.controllers.confirm(this);
   this.controllers.overlay(this);
+  this.controllers.sounds(this);
   this.controllers.hud(this);
   this.controllers.zoomBar(this);
+  this.controllers.battery(this);
   debug('controllers run');
-};
-
-/**
- * Lazy load and run a controller.
- *
- * @param  {String} path
- */
-App.prototype.loadController = function(path) {
-  var self = this;
-  this.require([path], function(controller) {
-    controller(self);
-  });
 };
 
 /**
@@ -117,7 +144,9 @@ App.prototype.loadController = function(path) {
 App.prototype.initializeViews = function() {
   debug('initializing views');
   this.views.viewfinder = new ViewfinderView();
-  this.views.focusRing = new FocusRing();
+
+  // For dual shutter
+  this.views.controls = new this.ControlsView(); // new ControlsView();
   this.views.hud = new HudView();
   this.views.zoomBar = new ZoomBarView();
   this.views.notification = new NotificationView();
@@ -132,7 +161,8 @@ App.prototype.initializeViews = function() {
 App.prototype.injectViews = function() {
   debug('injecting views');
   this.views.viewfinder.appendTo(this.el);
-  this.views.focusRing.appendTo(this.el);
+
+  this.views.controls.appendTo(this.el);
   this.views.hud.appendTo(this.el);
   this.views.zoomBar.appendTo(this.el);
   this.views.notification.appendTo(this.el);
@@ -145,25 +175,26 @@ App.prototype.injectViews = function() {
  * @private
  */
 App.prototype.bindEvents = function() {
-  debug('binding events');
-
-  // App
-  this.once('viewfinder:visible', this.onCriticalPathDone);
-  this.once('storage:checked:healthy', this.geolocationWatch);
-  this.on('visible', this.onVisible);
-  this.on('hidden', this.onHidden);
-
-  // DOM
+  this.storage.once('checked:healthy', this.geolocationWatch);
   bind(this.doc, 'visibilitychange', this.onVisibilityChange);
-  bind(this.win, 'localized', this.firer('localized'));
   bind(this.win, 'beforeunload', this.onBeforeUnload);
+  // MADAI ONLY. volume key event for capturing.
+  bind(this.win, 'volKeyEvent', this.firer('volCapture'));
   bind(this.el, 'click', this.onClick);
-
-  // Pinch
-  this.pinch = new Pinch(this.el);
-  this.pinch.on('pinchchanged', this.firer('pinchchanged'));
-
+  this.on('focus', this.onFocus);
+  this.on('blur', this.onBlur);
   debug('events bound');
+};
+
+/**
+ * Detaches event handlers.
+ */
+App.prototype.unbindEvents = function() {
+  unbind(this.doc, 'visibilitychange', this.onVisibilityChange);
+  unbind(this.win, 'beforeunload', this.onBeforeUnload);
+  this.off('focus', this.onFocus);
+  this.off('blur', this.onBlur);
+  debug('events unbound');
 };
 
 /**
@@ -174,56 +205,27 @@ App.prototype.bindEvents = function() {
  * may have made changes since the
  * app was minimised
  */
-App.prototype.onVisible = function() {
+App.prototype.onFocus = function() {
   this.geolocationWatch();
+  this.storage.check();
   orientation.start();
-  debug('visible');
+  debug('focus');
 };
 
 /**
  * Tasks to run when the
  * app is minimised/hidden.
- *
- * @private
  */
-App.prototype.onHidden = function() {
+App.prototype.onBlur = function() {
   this.geolocation.stopWatching();
+  this.activity.cancel();
   orientation.stop();
-  debug('hidden');
+  debug('blur');
 };
 
-/**
- * Emit a click event that other
- * modules can listen to.
- *
- * @private
- */
 App.prototype.onClick = function() {
   debug('click');
   this.emit('click');
-};
-
-/**
- * Log when critical path has completed.
- *
- * @private
- */
-App.prototype.onCriticalPathDone = function() {
-  var start = window.performance.timing.domLoading;
-  var took = Date.now() - start;
-
-  console.log('critical-path took %s', took + 'ms');
-  this.clearLoading();
-  this.loadController(this.controllers.previewGallery);
-  this.loadController(this.controllers.storage);
-  this.loadController(this.controllers.confirm);
-  this.loadController(this.controllers.battery);
-  this.loadController(this.controllers.sounds);
-  this.loadController(this.controllers.timer);
-  this.loadL10n();
-
-  this.criticalPathDone = true;
-  this.emit('criticalpathdone');
 };
 
 /**
@@ -237,8 +239,9 @@ App.prototype.onCriticalPathDone = function() {
  * @private
  */
 App.prototype.geolocationWatch = function() {
-  var shouldWatch = !this.activity.pick && !this.hidden;
-  if (shouldWatch) { this.geolocation.watch(); }
+  var delay = this.settings.geolocation.get('promptDelay');
+  var shouldWatch = !this.activity.active && !this.doc.hidden;
+  if (shouldWatch) { setTimeout(this.geolocation.watch, delay); }
 };
 
 /**
@@ -250,8 +253,8 @@ App.prototype.geolocationWatch = function() {
  * @private
  */
 App.prototype.onVisibilityChange = function() {
-  this.hidden = this.doc.hidden;
-  this.emit(this.hidden ? 'hidden' : 'visible');
+  if (this.doc.hidden) { this.emit('blur'); }
+  else { this.emit('focus'); }
 };
 
 /**
@@ -277,63 +280,10 @@ App.prototype.onBeforeUnload = function() {
  *
  * @private
  */
-App.prototype.loadL10n = function() {
-  this.require(['l10n']);
-};
-
-/**
- * States whether localization
- * has completed or not.
- *
- * @return {Boolean}
- * @public
- */
-App.prototype.localized = function() {
-  var l10n = navigator.mozL10n;
-  return l10n && l10n.readyState === 'complete';
-};
-
-/**
- * Central place to localize a string.
- *
- * @param  {String} key
- * @public
- */
-App.prototype.localize = function(key) {
-  var l10n = navigator.mozL10n;
-  return (l10n && l10n.get(key)) || key;
-};
-
-/**
- * Shows the loading screen after the
- * number of ms defined in config.js
- *
- * @private
- */
-App.prototype.showLoading = function() {
-  debug('show loading');
-  var ms = this.settings.loadingScreen.get('delay');
-  var self = this;
-  clearTimeout(this.loadingTimeout);
-  this.loadingTimeout = setTimeout(function() {
-    self.views.loading = new self.LoadingView();
-    self.views.loading.appendTo(self.el).show();
-    debug('loading shown');
-  }, ms);
-};
-
-/**
- * Clears the loadings screen, or
- * any pending loading screen.
- *
- * @private
- */
-App.prototype.clearLoading = function() {
-  debug('clear loading');
-  var view = this.views.loading;
-  clearTimeout(this.loadingTimeout);
-  if (!view) { return; }
-  view.hide(view.destroy);
+App.prototype.configureL10n = function() {
+  var complete = navigator.mozL10n.readyState === 'complete';
+  bind(this.win, 'localized', this.firer('localized'));
+  if (complete) { this.emit('localized'); }
 };
 
 });
